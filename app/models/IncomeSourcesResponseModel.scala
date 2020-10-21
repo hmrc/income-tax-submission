@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxsubmission.controllers
+package models
 
-import javax.inject.{Inject, Singleton}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.incometaxsubmission.config.AppConfig
+import play.api.libs.json.{Json, OFormat}
 
-import scala.concurrent.Future
+case class IncomeSourcesResponseModel(dividends: Option[DividendsResponseModel])
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject()(appConfig: AppConfig, cc: ControllerComponents)
-    extends BackendController(cc) {
+case class DividendsResponseModel(ukDividends: BigDecimal, otherUkDividends: BigDecimal) {
 
-  def hello(): Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok("Hello world"))
-  }
+}
+
+object DividendsResponseModel {
+  implicit val format: OFormat[DividendsResponseModel] = Json.format[DividendsResponseModel]
+}
+
+object IncomeSourcesResponseModel {
+  implicit val format: OFormat[IncomeSourcesResponseModel] = Json.format[IncomeSourcesResponseModel]
 }
