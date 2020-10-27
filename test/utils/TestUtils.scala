@@ -83,16 +83,18 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
 
   //noinspection ScalaStyle
   def mockAuthAsAgent() = {
+
     val enrolments = Enrolments(Set(
       Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, "1234567890")), "Activated"),
       Enrolment(EnrolmentKeys.Agent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, "0987654321")), "Activated")
     ))
+
     (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, Retrievals.allEnrolments and Retrievals.affinityGroup, *, *)
       .returning(Future.successful(new ~(enrolments, Some(AffinityGroup.Agent))))
 
     (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects( Enrolment(EnrolmentKeys.Individual)
+      .expects(Enrolment(EnrolmentKeys.Individual)
         .withIdentifier(EnrolmentIdentifiers.individualId, "1234567890")
         .withDelegatedAuthRule("mtd-it-auth"), *, *, *)
       .returning(Future.successful(enrolments))

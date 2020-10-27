@@ -22,8 +22,7 @@ import play.api.http.Status._
 import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Result}
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
+import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments, _}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
@@ -246,30 +245,27 @@ class AuthorisedActionSpec extends TestUtils {
 
         "the user is successfully verified as an agent" which {
 
-          lazy val result = {
+          lazy val result: Future[Result] = {
             mockAuthAsAgent()
-            auth.async("1234567890")(block)
+            auth.async("1234567890")(block)(fakeRequest)
           }
 
-          //TODO why is this calling authorise 3 times? In FE it's twice.
           "should return an OK(200) status" in {
 
-            status(result(fakeRequest)) mustBe OK
-            bodyOf(result(fakeRequest)) mustBe "mtditid: 1234567890 arn: 0987654321"
+            status(result) mustBe OK
+            bodyOf(result) mustBe "mtditid: 1234567890 arn: 0987654321"
           }
         }
 
-        //TODO why is this calling authorise 3 times? In FE it's twice.
         "the user is successfully verified as an individual" in {
 
           lazy val result = {
             mockAuth()
-            auth.async("1234567890")(block)
+            auth.async("1234567890")(block)(fakeRequest)
           }
 
-          status(result(fakeRequest)) mustBe OK
-
-          bodyOf(result(fakeRequest)) mustBe "mtditid: 1234567890"
+          status(result) mustBe OK
+          bodyOf(result) mustBe "mtditid: 1234567890"
         }
       }
 
@@ -282,25 +278,14 @@ class AuthorisedActionSpec extends TestUtils {
             mockAuthReturnException(AuthException)
             auth.async("1234567890")(block)
           }
-          status(result(fakeRequest)) mustBe UNAUTHORIZED
-        }
 
-        "there is no MTDITID value in session" in {
-          lazy val result = {
-            lazy val enrolments = Enrolments(Set(
-              Enrolment(EnrolmentKeys.Agent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, "0987654321")), "Activated")
-            ))
-            (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-              .expects(*, Retrievals.allEnrolments and Retrievals.affinityGroup, *, *)
-              .returning(Future.successful(new ~(enrolments, Some(AffinityGroup.Agent))))
-
-            auth.async("1234567890")(block)
-          }
           status(result(fakeRequest)) mustBe UNAUTHORIZED
         }
 
       }
+
       "return an Unauthorised" when {
+
         "the authorisation service returns a NoActiveSession exception" in {
           object NoActiveSession extends NoActiveSession("Some reason")
 
@@ -311,7 +296,9 @@ class AuthorisedActionSpec extends TestUtils {
 
           status(result(fakeRequest)) mustBe UNAUTHORIZED
         }
+
       }
+
     }
   }
 }

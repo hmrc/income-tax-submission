@@ -32,18 +32,18 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
   val getIncomeSourcesService: GetIncomeSourcesService = mock[GetIncomeSourcesService]
   val controller = new GetIncomeSourcesController(getIncomeSourcesService, mockControllerComponents,authorisedAction)
   val nino :String = "123456789"
-  val mtditid :String = "123123123"
+  val mtditid :String = "1234567890"
   val taxYear: Int = 1234
   private val fakeGetRequest = FakeRequest("GET", "/").withSession("MTDITID" -> "12234567890")
 
-  def mockgetIncomeSourcesValid(): CallHandler3[String, Int, HeaderCarrier, Future[Either[ErrorResponse, IncomeSourcesResponseModel]]] = {
+  def mockGetIncomeSourcesValid(): CallHandler3[String, Int, HeaderCarrier, Future[Either[ErrorResponse, IncomeSourcesResponseModel]]] = {
     val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(12345.67,12345.67)))
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int)(_: HeaderCarrier))
       .expects(*, *, *)
       .returning(Future.successful(Right(incomeSources)))
   }
 
-  def mockgetIncomeSourcesInvalid(): CallHandler3[String, Int, HeaderCarrier, Future[Either[ErrorResponse, IncomeSourcesResponseModel]]] = {
+  def mockGetIncomeSourcesInvalid(): CallHandler3[String, Int, HeaderCarrier, Future[Either[ErrorResponse, IncomeSourcesResponseModel]]] = {
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int)(_: HeaderCarrier))
       .expects(*, *, *)
       .returning(Future.successful(Left(InternalServerError)))
@@ -58,7 +58,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       "return an OK 200 response when called as an individual" in {
         val result = {
           mockAuth()
-          mockgetIncomeSourcesValid()
+          mockGetIncomeSourcesValid()
           controller.getIncomeSources(nino, taxYear, mtditid)(fakeGetRequest)
         }
         status(result) mustBe OK
@@ -67,7 +67,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       "return an OK 200 response when called as an agent" in {
         val result = {
           mockAuthAsAgent()
-          mockgetIncomeSourcesValid()
+          mockGetIncomeSourcesValid()
           controller.getIncomeSources(nino, taxYear, mtditid)(fakeGetRequest)
         }
         status(result) mustBe OK
@@ -79,7 +79,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       "return an InternalServerError response when called as an individual" in {
         val result = {
           mockAuth()
-          mockgetIncomeSourcesInvalid()
+          mockGetIncomeSourcesInvalid()
           controller.getIncomeSources(nino, taxYear, mtditid)(fakeGetRequest)
         }
         status(result) mustBe INTERNAL_SERVER_ERROR
@@ -88,7 +88,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       "return an InternalServerError response when called as an agent" in {
         val result = {
           mockAuthAsAgent()
-          mockgetIncomeSourcesInvalid()
+          mockGetIncomeSourcesInvalid()
           controller.getIncomeSources(nino, taxYear, mtditid)(fakeGetRequest)
         }
         status(result) mustBe INTERNAL_SERVER_ERROR

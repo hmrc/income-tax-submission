@@ -79,10 +79,9 @@ class AuthorisedAction @Inject()(
 
   private[predicates] def agentAuthentication(mtdItId: String, block: User[AnyContent] => Future[Result])
                                              (implicit request: Request[AnyContent], hc: HeaderCarrier): Future[Result] = {
-
     val agentDelegatedAuthRuleKey = "mtd-it-auth"
 
-    val agentAuthPredicate: String => Enrolment = identifierId =>
+    def agentAuthPredicate: String => Enrolment = identifierId =>
       Enrolment(EnrolmentKeys.Individual)
         .withIdentifier(EnrolmentIdentifiers.individualId, identifierId)
         .withDelegatedAuthRule(agentDelegatedAuthRuleKey)
