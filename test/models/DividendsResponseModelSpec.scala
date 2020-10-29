@@ -16,10 +16,31 @@
 
 package models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsObject, Json}
+import utils.TestUtils
 
-case class IncomeSourcesResponseModel(dividends: Option[DividendsResponseModel])
+class DividendsResponseModelSpec extends TestUtils {
 
-object IncomeSourcesResponseModel {
-  implicit val format: OFormat[IncomeSourcesResponseModel] = Json.format[IncomeSourcesResponseModel]
+  val validJson: JsObject = Json.obj(
+    "ukDividends" -> 10,
+    "otherUkDividends" -> 5
+  )
+
+  val validModel: DividendsResponseModel = DividendsResponseModel(
+    ukDividends = 10,
+    otherUkDividends = 5
+  )
+
+  "DividendsResponseModel" should {
+
+    "correctly parse from Json" in {
+      validJson.as[DividendsResponseModel] mustBe validModel
+    }
+
+    "correctly parse to Json" in {
+      Json.toJson(validModel) mustBe validJson
+    }
+
+  }
+
 }

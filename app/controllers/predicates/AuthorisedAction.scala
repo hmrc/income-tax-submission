@@ -16,17 +16,16 @@
 
 package controllers.predicates
 
-import common.{EnrolmentIdentifiers, EnrolmentKeys, SessionValues}
+import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
 import javax.inject.Inject
 import models.User
 import play.api.Logger
-import play.api.mvc.Results.{Forbidden, Redirect, Unauthorized}
+import play.api.mvc.Results.{Forbidden, Unauthorized}
 import play.api.mvc._
-import services.AuthService
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, allEnrolments}
 import uk.gov.hmrc.auth.core.retrieve.~
-import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 

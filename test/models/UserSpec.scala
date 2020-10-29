@@ -14,8 +14,34 @@
  * limitations under the License.
  */
 
-package common
+package models
 
-object SessionValues {
-  val CLIENT_MTDITID = "MTDITID"
+import play.api.mvc.AnyContent
+import play.api.test.FakeRequest
+import utils.TestUtils
+
+class UserSpec extends TestUtils {
+
+  ".asAgent" should {
+
+    "return true" when {
+
+      "the user has an ARN" in {
+
+        User[AnyContent]("12234567890", Some("1234567890"))(FakeRequest()).isAgent mustBe true
+
+      }
+    }
+
+    "return false" when {
+
+      "the user does not have an ARN" in {
+
+        User[AnyContent]("12234567890", None)(FakeRequest()).isAgent mustBe false
+
+      }
+    }
+
+  }
+
 }

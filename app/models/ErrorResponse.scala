@@ -15,9 +15,9 @@
  */
 
 package models
-import play.api.libs.json.{JsPath, Writes}
-import play.api.libs.json._
+import play.api.http.Status._
 import play.api.libs.functional.syntax._
+import play.api.libs.json.{JsPath, Writes}
 
 sealed class ErrorResponse(val httpStatusCode: Int, val errorCode: String, val errorMsg: String)
 
@@ -30,13 +30,13 @@ object ErrorResponse {
 }
 
 case object InternalServerError extends ErrorResponse(
-  500, "INTERNAL_SERVER_ERROR", "A downstream service didn't response as expected"
+  INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "A downstream service didn't respond as expected"
 )
 
 case object ServiceUnavailableError extends ErrorResponse(
-  503, "SERVICE_UNAVAILABLE", "The service is temporarily unavailable"
+  SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE", "The service is temporarily unavailable"
 )
 
 case object NotFoundError extends ErrorResponse(
-  404, "NOT_FOUND", "The data requested could not be found"
+  NOT_FOUND, "NOT_FOUND", "The data requested could not be found"
 )

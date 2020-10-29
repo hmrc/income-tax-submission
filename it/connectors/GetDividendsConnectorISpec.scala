@@ -60,8 +60,6 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
       result mustBe Left(expectedResult)
     }
     "return a None for notfound" in {
-      val expectedResult = NotFoundError
-
       stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999", NOT_FOUND, "{}")
       implicit val hc = HeaderCarrier()
       val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))

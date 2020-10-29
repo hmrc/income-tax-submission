@@ -28,13 +28,10 @@ object SubmittedDividendsParser {
     override def read(method: String, url: String, response: HttpResponse): IncomeSourcesResponseModel = {
       response.status match {
         case OK => response.json.validate[SubmittedDividendsModel].fold[IncomeSourcesResponseModel](
-          jsonErrors =>
-            Left(InternalServerError),
-          parsedModel =>
-            Right(Some(parsedModel))
+          _ => Left(InternalServerError),
+          parsedModel => Right(Some(parsedModel))
         )
         case NOT_FOUND => Right(None)
-        case SERVICE_UNAVAILABLE => Left(ServiceUnavailableError)
         case _ => Left(ServiceUnavailableError)
       }
     }

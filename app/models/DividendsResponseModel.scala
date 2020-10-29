@@ -18,8 +18,8 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class IncomeSourcesResponseModel(dividends: Option[DividendsResponseModel])
+case class DividendsResponseModel(ukDividends: BigDecimal, otherUkDividends: BigDecimal)
 
-object IncomeSourcesResponseModel {
-  implicit val format: OFormat[IncomeSourcesResponseModel] = Json.format[IncomeSourcesResponseModel]
+object DividendsResponseModel {
+  implicit val formats: OFormat[DividendsResponseModel] = Json.format[DividendsResponseModel]
 }
