@@ -14,17 +14,34 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxsubmission.config
+package models
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import play.api.mvc.AnyContent
+import play.api.test.FakeRequest
+import utils.TestUtils
 
-@Singleton
-class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) {
+class UserSpec extends TestUtils {
 
-  val authBaseUrl: String = servicesConfig.baseUrl("auth")
+  ".asAgent" should {
 
-  val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
+    "return true" when {
+
+      "the user has an ARN" in {
+
+        User[AnyContent]("12234567890", Some("1234567890"))(FakeRequest()).isAgent mustBe true
+
+      }
+    }
+
+    "return false" when {
+
+      "the user does not have an ARN" in {
+
+        User[AnyContent]("12234567890", None)(FakeRequest()).isAgent mustBe false
+
+      }
+    }
+
+  }
+
 }
