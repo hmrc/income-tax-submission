@@ -45,7 +45,7 @@ class AuthorisedAction @Inject()(
 
 
   def async(mtdItId: String)(block: User[AnyContent] => Future[Result]): Action[AnyContent] = defaultActionBuilder.async { implicit request =>
-    implicit lazy val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
+    implicit lazy val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
     authorised.retrieve(allEnrolments and affinityGroup) {
       case enrolments ~ Some(AffinityGroup.Agent) =>
         checkAuthorisation(block, enrolments, mtdItId, isAgent = true)(request, headerCarrier)
@@ -53,10 +53,10 @@ class AuthorisedAction @Inject()(
         checkAuthorisation(block, enrolments, mtdItId)(request, headerCarrier)
     } recover {
       case _: NoActiveSession =>
-        logger.debug("AgentPredicate][authoriseAsAgent] - No active session. Redirecting to Unauthorised")
+        logger.info("[AgentPredicate][authoriseAsAgent] - No active session. Redirecting to Unauthorised")
         Unauthorized("")
       case _: AuthorisationException =>
-        logger.debug(s"[AgentPredicate][authoriseAsAgent] - Agent does not have delegated authority for Client.")
+        logger.info(s"[AgentPredicate][authoriseAsAgent] - Agent does not have delegated authority for Client.")
         Unauthorized("")
     }
   }
@@ -90,15 +90,15 @@ class AuthorisedAction @Inject()(
         case Some(arn) =>
           block(User(mtdItId, Some(arn)))
         case None =>
-          logger.debug("[AuthorisedAction][CheckAuthorisation] Agent with no HMRC-AS-AGENT enrolment. Rendering unauthorised view.")
+          logger.info("[AuthorisedAction][CheckAuthorisation] Agent with no HMRC-AS-AGENT enrolment. Rendering unauthorised view.")
           Future.successful(Forbidden(""))
       }
     } recover {
       case _: NoActiveSession =>
-        logger.debug("[AgentPredicate][authoriseAsAgent] - No active session. Redirecting to Unauthorised")
+        logger.info("[AgentPredicate][authoriseAsAgent] - No active session. Redirecting to Unauthorised")
         Unauthorized("")
       case ex: AuthorisationException =>
-        logger.debug(s"[AgentPredicate][authoriseAsAgent] - Agent does not have delegated authority for Client.")
+        logger.info(s"[AgentPredicate][authoriseAsAgent] - Agent does not have delegated authority for Client.")
         Unauthorized("")
     }
   }
