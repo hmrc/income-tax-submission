@@ -24,7 +24,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
     "the user is an individual" must {
       "return the income sources for a user" in new Setup {
-        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019", OK,
+        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019&mtditid=123123123", OK,
           """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""")
 
         authorised()
@@ -38,7 +38,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 204 if a user has no recorded income sources" in new Setup {
-        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019", NOT_FOUND)
+        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019&mtditid=123123123", NOT_FOUND)
 
         authorised()
 
@@ -51,7 +51,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 503 if a downstream error occurs" in new Setup {
-        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019", SERVICE_UNAVAILABLE)
+        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
 
         authorised()
 
@@ -64,7 +64,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 401 if the user has no HMRC-MTD-IT enrolment" in new Setup {
-        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019", SERVICE_UNAVAILABLE)
+        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
 
         unauthorisedOtherEnrolment()
 
@@ -80,7 +80,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
     "the user is an agent" must {
       "return the income sources for a user" in new Setup {
-        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019", OK,
+        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019&mtditid=123123123", OK,
           """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""")
 
         agentAuthorised()
@@ -96,7 +96,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 204 if a user has no recorded income sources" in new Setup {
-        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019", NOT_FOUND)
+        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019&mtditid=123123123", NOT_FOUND)
 
         agentAuthorised()
 
@@ -111,7 +111,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 503 if a downstream error occurs" in new Setup {
-        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019", SERVICE_UNAVAILABLE)
+        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
 
         agentAuthorised()
 
@@ -126,7 +126,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 401 if the user has no HMRC-MTD-IT enrolment" in new Setup {
-        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019", SERVICE_UNAVAILABLE)
+        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/123123123/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
 
         unauthorisedOtherEnrolment()
 

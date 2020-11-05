@@ -18,7 +18,7 @@ package controllers
 
 
 import models.{DividendsResponseModel, ErrorResponse, IncomeSourcesResponseModel, InternalServerError}
-import org.scalamock.handlers.CallHandler3
+import org.scalamock.handlers.{CallHandler3, CallHandler4}
 import play.api.http.Status._
 import play.api.test.FakeRequest
 import services.GetIncomeSourcesService
@@ -36,16 +36,16 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
   val taxYear: Int = 1234
   private val fakeGetRequest = FakeRequest("GET", "/").withSession("MTDITID" -> "12234567890")
 
-  def mockGetIncomeSourcesValid(): CallHandler3[String, Int, HeaderCarrier, Future[Either[ErrorResponse, IncomeSourcesResponseModel]]] = {
+  def mockGetIncomeSourcesValid(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[ErrorResponse, IncomeSourcesResponseModel]]] = {
     val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(12345.67,12345.67)))
-    (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int)(_: HeaderCarrier))
-      .expects(*, *, *)
+    (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String)(_: HeaderCarrier))
+      .expects(*, *, *, *)
       .returning(Future.successful(Right(incomeSources)))
   }
 
-  def mockGetIncomeSourcesInvalid(): CallHandler3[String, Int, HeaderCarrier, Future[Either[ErrorResponse, IncomeSourcesResponseModel]]] = {
-    (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int)(_: HeaderCarrier))
-      .expects(*, *, *)
+  def mockGetIncomeSourcesInvalid(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[ErrorResponse, IncomeSourcesResponseModel]]] = {
+    (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String)(_: HeaderCarrier))
+      .expects(*, *, *, *)
       .returning(Future.successful(Left(InternalServerError)))
   }
 

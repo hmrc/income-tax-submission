@@ -28,10 +28,10 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
 
   type IncomeSourceResponse = Either[ErrorResponse, IncomeSourcesResponseModel]
 
-  def getAllIncomeSources(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourceResponse] =  {
+  def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String)(implicit hc: HeaderCarrier): Future[IncomeSourceResponse] =  {
 
     val incomeSources = for {
-      dividends <- FutureEitherOps[ErrorResponse, Option[SubmittedDividendsModel]](dividendsConnector.getSubmittedDividends(nino, taxYear))
+      dividends <- FutureEitherOps[ErrorResponse, Option[SubmittedDividendsModel]](dividendsConnector.getSubmittedDividends(nino, taxYear, mtditid))
     } yield {
       IncomeSourcesResponseModel(dividends.map(res => DividendsResponseModel(res.ukDividends, res.otherUkDividends)))
     }
