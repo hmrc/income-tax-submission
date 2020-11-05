@@ -53,10 +53,10 @@ class AuthorisedAction @Inject()(
         checkAuthorisation(block, enrolments, mtdItId)(request, headerCarrier)
     } recover {
       case _: NoActiveSession =>
-        logger.info("[AgentPredicate][authoriseAsAgent] - No active session. Redirecting to Unauthorised")
+        logger.debug("AgentPredicate][authoriseAsAgent] - No active session. Redirecting to Unauthorised")
         Unauthorized("")
       case _: AuthorisationException =>
-        logger.info(s"[AgentPredicate][authoriseAsAgent] - Agent does not have delegated authority for Client.")
+        logger.debug(s"[AgentPredicate][authoriseAsAgent] - Agent does not have delegated authority for Client.")
         Unauthorized("")
     }
   }
@@ -90,15 +90,15 @@ class AuthorisedAction @Inject()(
         case Some(arn) =>
           block(User(mtdItId, Some(arn)))
         case None =>
-          logger.info("[AuthorisedAction][CheckAuthorisation] Agent with no HMRC-AS-AGENT enrolment. Rendering unauthorised view.")
+          logger.debug("[AuthorisedAction][CheckAuthorisation] Agent with no HMRC-AS-AGENT enrolment. Rendering unauthorised view.")
           Future.successful(Forbidden(""))
       }
     } recover {
       case _: NoActiveSession =>
-        logger.info("[AgentPredicate][authoriseAsAgent] - No active session. Redirecting to Unauthorised")
+        logger.debug("[AgentPredicate][authoriseAsAgent] - No active session. Redirecting to Unauthorised")
         Unauthorized("")
       case ex: AuthorisationException =>
-        logger.info(s"[AgentPredicate][authoriseAsAgent] - Agent does not have delegated authority for Client.")
+        logger.debug(s"[AgentPredicate][authoriseAsAgent] - Agent does not have delegated authority for Client.")
         Unauthorized("")
     }
   }

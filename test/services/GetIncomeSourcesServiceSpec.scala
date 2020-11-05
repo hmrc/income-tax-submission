@@ -38,11 +38,11 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
 
       val expectedResult: IncomeSourcesResponseModel = Left(InternalServerError)
 
-      (connector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
-        .expects("12345678", 1234, *)
+      (connector.getSubmittedDividends(_: String, _: Int, _: String)(_: HeaderCarrier))
+        .expects("12345678", 1234, "87654321", *)
         .returning(Future.successful(expectedResult))
 
-      val result = await(service.getAllIncomeSources("12345678", 1234))
+      val result = await(service.getAllIncomeSources("12345678", 1234, "87654321"))
 
       result mustBe expectedResult
 
