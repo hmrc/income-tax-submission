@@ -27,8 +27,8 @@ class SubmittedDividendsModelSpec extends TestUtils {
   )
 
   val validModel: SubmittedDividendsModel = SubmittedDividendsModel(
-    ukDividends = 10,
-    otherUkDividends = 5
+    ukDividends = Some(10),
+    otherUkDividends = Some(5)
   )
 
   "DividendsResponseModel" should {
