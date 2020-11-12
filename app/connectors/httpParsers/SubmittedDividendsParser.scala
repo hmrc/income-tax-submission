@@ -29,7 +29,10 @@ object SubmittedDividendsParser {
       response.status match {
         case OK => response.json.validate[SubmittedDividendsModel].fold[IncomeSourcesResponseModel](
           _ => Left(InternalServerError),
-          parsedModel => Right(Some(parsedModel))
+          parsedModel => parsedModel match {
+            case SubmittedDividendsModel(None, None) => Right(None)
+            case _ => Right(Some(parsedModel))
+          }
         )
         case NOT_FOUND => Right(None)
         case _ => Left(ServiceUnavailableError)
