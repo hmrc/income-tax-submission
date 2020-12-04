@@ -18,7 +18,7 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
 
   lazy val connector: IncomeTaxDividendsConnector = app.injector.instanceOf[IncomeTaxDividendsConnector]
 
-  val nino: String = "123456789"
+  val nino: String = "AA123123A"
   val taxYear: Int = 1999
   val dividendResult: Option[BigDecimal] = Some(123456.78)
 
