@@ -17,7 +17,7 @@
 package services
 
 import com.codahale.metrics.SharedMetricRegistries
-import connectors.IncomeTaxDividendsConnector
+import connectors.{IncomeTaxDividendsConnector, IncomeTaxInterestConnector}
 import connectors.httpParsers.SubmittedDividendsParser.IncomeSourcesResponseModel
 import models.InternalServerError
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,8 +28,9 @@ import scala.concurrent.Future
 class GetIncomeSourcesServiceSpec extends TestUtils {
   SharedMetricRegistries.clear()
 
-  val connector: IncomeTaxDividendsConnector = mock[IncomeTaxDividendsConnector]
-  val service: GetIncomeSourcesService = new GetIncomeSourcesService(connector, scala.concurrent.ExecutionContext.global)
+  val dividendsConnector: IncomeTaxDividendsConnector = mock[IncomeTaxDividendsConnector]
+  val interestConnector: IncomeTaxInterestConnector = mock[IncomeTaxInterestConnector]
+  val service: GetIncomeSourcesService = new GetIncomeSourcesService(dividendsConnector, interestConnector, scala.concurrent.ExecutionContext.global)
 
 
   ".getAllIncomeSources" should {
@@ -38,7 +39,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
 
       val expectedResult: IncomeSourcesResponseModel = Left(InternalServerError)
 
-      (connector.getSubmittedDividends(_: String, _: Int, _: String)(_: HeaderCarrier))
+      (dividendsConnector.getSubmittedDividends(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects("12345678", 1234, "87654321", *)
         .returning(Future.successful(expectedResult))
 

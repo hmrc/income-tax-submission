@@ -41,8 +41,11 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
 
     for {
       interest <- FutureEitherOps[ErrorResponse, Option[SubmittedInterestModel]](interestConnector.getSubmittedInterest(nino, taxYear, mtditid))
+
     } yield {
-      IncomeSourcesResponseModel(None, interest.map(res => InterestResponseModel(res.taxedUkInterest, res.untaxedUkInterest)))
+
+      IncomeSourcesResponseModel(None,interest.map(res => InterestResponseModel(
+        res.friendlyName, res.incomeSourceId, res.taxedUkInterest, res.untaxedUkInterest)))
     }
 
     incomeSources.value
