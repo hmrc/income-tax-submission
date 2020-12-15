@@ -18,7 +18,7 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class InterestResponseModel(friendlyName: String,
+case class InterestResponseModel(accountName: String,
                                  incomeSourceId: String,
                                  taxedUkInterest: Option[BigDecimal],
                                  untaxedUkInterest: Option[BigDecimal])

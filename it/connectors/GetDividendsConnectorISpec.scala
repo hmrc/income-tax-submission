@@ -27,8 +27,8 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
       "all values are present" in {
         val expectedResult = Some(SubmittedDividendsModel(dividendResult, dividendResult))
 
-        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=123123123", OK, Json.toJson(expectedResult).toString())
-        auditStubs()
+        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=123123123",
+          OK, Json.toJson(expectedResult).toString())
 
         implicit val hc = HeaderCarrier()
         val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
@@ -37,7 +37,7 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
       }
     }
 
-    "return an InternalServerError" in {
+     "return an InternalServerError" in {
       val invalidJson = Json.obj(
         "ukDividends" -> ""
       )

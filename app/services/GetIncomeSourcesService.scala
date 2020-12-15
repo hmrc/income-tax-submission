@@ -16,11 +16,11 @@
 
 package services
 
-import javax.inject.Inject
-import uk.gov.hmrc.http.HeaderCarrier
 import connectors.{IncomeTaxDividendsConnector, IncomeTaxInterestConnector}
-import models.{DividendsResponseModel, ErrorResponse, IncomeSourcesResponseModel, InterestResponseModel, SubmittedDividendsModel, SubmittedInterestModel}
+import javax.inject.Inject
+import models._
 import services.util.FutureEitherOps
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,18 +34,10 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
 
     val incomeSources = for {
       dividends <- FutureEitherOps[ErrorResponse, Option[SubmittedDividendsModel]](dividendsConnector.getSubmittedDividends(nino, taxYear, mtditid))
-
-    } yield {
-      IncomeSourcesResponseModel(dividends.map(res => DividendsResponseModel(res.ukDividends, res.otherUkDividends)), None)
-    }
-
-    for {
       interest <- FutureEitherOps[ErrorResponse, Option[SubmittedInterestModel]](interestConnector.getSubmittedInterest(nino, taxYear, mtditid))
-
     } yield {
-
-      IncomeSourcesResponseModel(None,interest.map(res => InterestResponseModel(
-        res.friendlyName, res.incomeSourceId, res.taxedUkInterest, res.untaxedUkInterest)))
+      IncomeSourcesResponseModel(dividends.map(res => DividendsResponseModel(res.ukDividends, res.otherUkDividends)),
+        interest.map(res => InterestResponseModel(res.accountName, res.incomeSourceId, res.taxedUkInterest, res.untaxedUkInterest)))
     }
 
     incomeSources.value

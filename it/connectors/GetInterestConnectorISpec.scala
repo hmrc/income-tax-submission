@@ -16,7 +16,7 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
   val taxYear: Int = 2020
   val mtditid: String = "123123123"
 
-  val friendlyName: String = "SomeName"
+  val accountName: String = "SomeName"
   val incomeSourceId: String = "12345"
   val untaxedUkInterest: Option[BigDecimal] = Some(12345.67)
   val taxedUkInterest: Option[BigDecimal] = Some(12345.67)
@@ -27,13 +27,12 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
 
       "all values are present" in {
 
-        val expectedResult = Some(SubmittedInterestModel(friendlyName, incomeSourceId, taxedUkInterest, untaxedUkInterest))
+        val expectedResult = Some(SubmittedInterestModel(accountName, incomeSourceId, taxedUkInterest, untaxedUkInterest))
 
         stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
           OK, Json.toJson(expectedResult).toString())
 
         implicit val hc = HeaderCarrier()
-
         val result = await(connector.getSubmittedInterest(nino, taxYear, mtditid)(hc))
 
         result mustBe Right(expectedResult)

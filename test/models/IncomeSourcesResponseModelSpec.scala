@@ -33,7 +33,7 @@ class IncomeSourcesResponseModelSpec extends TestUtils {
     ),
     "interest" ->
       Json.obj(
-        "friendlyName" -> "someName",
+        "accountName" -> "someName",
         "incomeSourceId" -> "12345",
         "taxedUkInterest" -> 12345.67,
         "untaxedUkInterest" -> 12345.67

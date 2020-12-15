@@ -22,27 +22,30 @@ import utils.TestUtils
 class InterestResponseModelSpec extends TestUtils {
 
   val validJson: JsObject = Json.obj(
-    "friendlyName" -> "someName",
+    "accountName" -> "someName",
     "incomeSourceId" -> "12345",
     "taxedUkInterest" -> 50,
     "untaxedUkInterest" -> 10
   )
 
   val validModel: InterestResponseModel = InterestResponseModel(
-    friendlyName = "someName",
+    accountName = "someName",
     incomeSourceId = "12345",
     taxedUkInterest = Some(50),
     untaxedUkInterest = Some(10)
   )
 
-  "InterestResponseModel" should {
-
-    "correctly parse from Json" in {
-      validJson.as[InterestResponseModel] mustBe validModel
-    }
+  "SubmittedInterestModel" should {
 
     "correctly parse to Json" in {
+
       Json.toJson(validModel) mustBe validJson
+    }
+
+    "correctly parse from Json" in {
+
+      validJson.as[InterestResponseModel] mustBe validModel
+
     }
   }
 

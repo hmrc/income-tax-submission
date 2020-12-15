@@ -29,7 +29,7 @@ object SubmittedInterestParser {
         case OK => response.json.validate[SubmittedInterestModel].fold[IncomeSourcesResponseModel](
           _ => Left(InternalServerError),
           parsedModel => parsedModel match {
-            case SubmittedInterestModel(" ", " ", None, None) => Right(None)
+            case SubmittedInterestModel("", "", None, None) => Right(None)
             case _ => Right(Some(parsedModel))
           }
         )
