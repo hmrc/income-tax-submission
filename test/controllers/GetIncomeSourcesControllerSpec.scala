@@ -38,7 +38,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
 
   def mockGetIncomeSourcesValid(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[ErrorResponse, IncomeSourcesResponseModel]]] = {
     val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(12345.67),Some(12345.67))),
-      Some(InterestResponseModel("someName", "12345", Some(12345.67), Some(12345.67))))
+      Some(Seq(InterestResponseModel("someName", "12345", Some(12345.67), Some(12345.67)))))
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String)(_: HeaderCarrier))
       .expects(*, *, *, *)
       .returning(Future.successful(Right(incomeSources)))
@@ -54,7 +54,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
 
   "calling .getIncomeSources" should {
 
-    "with existing dividend sources" should {
+    "with either existing dividend or interest sources" should {
 
       "return an OK 200 response when called as an individual" in {
         val result = {
@@ -75,7 +75,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       }
 
     }
-    "without existing dividend sources" should {
+    "without existing dividend or interest sources" should {
 
       "return an InternalServerError response when called as an individual" in {
         val result = {

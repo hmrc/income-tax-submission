@@ -16,9 +16,9 @@
 
 package connectors.httpParsers
 
-import play.api.http.Status.{NOT_FOUND, OK, SERVICE_UNAVAILABLE}
-import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import models._
+import play.api.http.Status.{NOT_FOUND, OK}
+import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 
 object SubmittedDividendsParser {

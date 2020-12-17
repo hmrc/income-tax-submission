@@ -2,7 +2,7 @@
 package connectors
 
 import helpers.WiremockSpec
-import models.SubmittedInterestModel
+import models.{InternalServerError, ServiceUnavailableError, SubmittedInterestModel}
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -38,6 +38,47 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
         result mustBe Right(expectedResult)
 
       }
+    }
+
+      "return an InternalServerError" in {
+
+        val invalidJson = Json.obj(
+          "accountName" -> ""
+        )
+
+        val expectedResult = InternalServerError
+
+        stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
+          OK, invalidJson.toString())
+
+        implicit val hc = HeaderCarrier()
+        val result = await(connector.getSubmittedInterest(nino, taxYear, mtditid)(hc))
+
+        result mustBe Left(expectedResult)
+      }
+
+    "return a ServiceUnavailableError" in {
+
+      val expectedResult = ServiceUnavailableError
+
+      stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
+        SERVICE_UNAVAILABLE, "{}")
+
+      implicit val hc = HeaderCarrier()
+      val result = await(connector.getSubmittedInterest(nino, taxYear, mtditid)(hc))
+
+      result mustBe Left(expectedResult)
+    }
+
+    "return a none for a NotFound" in {
+
+      stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
+        NOT_FOUND, "{}")
+
+      implicit val hc = HeaderCarrier()
+      val result = await(connector.getSubmittedInterest(nino, taxYear, mtditid)(hc))
+
+      result mustBe Right(None)
     }
   }
 }

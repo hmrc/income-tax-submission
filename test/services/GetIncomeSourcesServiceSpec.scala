@@ -17,9 +17,10 @@
 package services
 
 import com.codahale.metrics.SharedMetricRegistries
+import connectors.httpParsers.SubmittedDividendsParser.{IncomeSourcesResponseModel => IncomeSourceResponseDividends}
+import connectors.httpParsers.SubmittedInterestParser.{IncomeSourcesResponseModel => IncomeSourceResponseInterest}
 import connectors.{IncomeTaxDividendsConnector, IncomeTaxInterestConnector}
-import connectors.httpParsers.SubmittedDividendsParser.IncomeSourcesResponseModel
-import models.InternalServerError
+import models._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
@@ -33,19 +34,54 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
   val service: GetIncomeSourcesService = new GetIncomeSourcesService(dividendsConnector, interestConnector, scala.concurrent.ExecutionContext.global)
 
 
-  ".getAllIncomeSources" should {
+  ".getAllIncomeSources" when {
 
-    "return the connector response" in {
+    "there are no errors" should {
 
-      val expectedResult: IncomeSourcesResponseModel = Left(InternalServerError)
+      "return an IncomeSourceResponseModel with existing dividends and interest" in {
 
-      (dividendsConnector.getSubmittedDividends(_: String, _: Int, _: String)(_: HeaderCarrier))
+        val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(SubmittedDividendsModel(Some(12345.67), Some(12345.67))))
+        val expectedInterestResult: IncomeSourceResponseInterest = Right(Some(SubmittedInterestModel("someName", "123", Some(1234.56), Some(1234.56))))
+
+        val incomeSourcesResult = Right(IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(12345.67), Some(12345.67))),
+          Some(List(InterestResponseModel("someName", "123", Some(1234.56), Some(1234.56))))))
+
+
+        (dividendsConnector.getSubmittedDividends(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects("12345678", 1234, "87654321", *)
+          .returning(Future.successful(expectedDividendsResult))
+
+        (interestConnector.getSubmittedInterest(_: String, _: Int, _: String)(_: HeaderCarrier))
+          .expects("12345678", 1234, "87654321", *)
+          .returning(Future.successful(expectedInterestResult))
+
+        val result = await(service.getAllIncomeSources("12345678", 1234, "87654321"))
+
+        result mustBe incomeSourcesResult
+
+      }
+
+    }
+  }
+
+    "when there are errors" should {
+
+      "return an InternalServerError" in {
+
+      val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(SubmittedDividendsModel(Some(12345.67), Some(12345.67))))
+
+
+        (dividendsConnector.getSubmittedDividends(_: String, _: Int, _: String)(_: HeaderCarrier))
         .expects("12345678", 1234, "87654321", *)
-        .returning(Future.successful(expectedResult))
+        .returning(Future.successful(expectedDividendsResult))
+
+      (interestConnector.getSubmittedInterest(_: String, _: Int, _: String)(_: HeaderCarrier))
+        .expects("12345678", 1234, "87654321", *)
+        .returning(Future.successful(Left(InternalServerError)))
 
       val result = await(service.getAllIncomeSources("12345678", 1234, "87654321"))
 
-      result mustBe expectedResult
+      result mustBe Left(InternalServerError)
 
     }
   }
