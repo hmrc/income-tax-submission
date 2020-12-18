@@ -40,6 +40,18 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
       }
     }
 
+    "return a none when no interest values are found" in {
+
+      val body = SubmittedInterestModel("", "", None, None)
+      stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
+        OK, Json.toJson(body).toString())
+
+      implicit val hc = HeaderCarrier()
+      val result = await(connector.getSubmittedInterest(nino, taxYear, mtditid)(hc))
+
+      result mustBe Right(None)
+    }
+
       "return an InternalServerError" in {
 
         val invalidJson = Json.obj(

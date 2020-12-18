@@ -37,6 +37,19 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
       }
     }
 
+      "return a none when no dividend values found" in {
+
+        val body = SubmittedDividendsModel(None, None)
+        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=123123123",
+          OK, Json.toJson(body).toString())
+
+        implicit val hc = HeaderCarrier()
+        val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
+
+        result mustBe Right(None)
+      }
+
+
      "return an InternalServerError" in {
       val invalidJson = Json.obj(
         "ukDividends" -> ""
