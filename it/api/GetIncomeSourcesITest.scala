@@ -27,18 +27,24 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", OK,
           """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""")
 
+        stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", OK,
+          """{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}""")
+
         authorised()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019", "mtditid" -> "123123123").get) {
           result =>
             result.status mustBe 200
-            result.body mustBe """{"dividends":{"ukDividends":29320682007.99,"otherUkDividends":17060389570.99}}"""
+            result.body mustBe
+              """{"dividends":{"ukDividends":29320682007.99,"otherUkDividends":17060389570.99},"interest":[{"accountName":"someName","incomeSourceId":"123","taxedUkInterest":29320682007.99,"untaxedUkInterest":17060389570.99}]}"""
         }
       }
 
+
       "return 204 if a user has no recorded income sources" in new Setup {
         stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", NOT_FOUND)
+        stubGetWithoutResponseBody(s"/income-tax-interest/incom-tax/nino/A123123A/sources\\?taxYear=2019&mtditid=123123123", NOT_FOUND)
 
         authorised()
 
@@ -52,7 +58,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
       "return 503 if a downstream error occurs" in new Setup {
         stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
-
+        stubGetWithoutResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
         authorised()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
@@ -65,7 +71,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
       "return 401 if the user has no HMRC-MTD-IT enrolment" in new Setup {
         stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
-
+        stubGetWithoutResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
         unauthorisedOtherEnrolment()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
@@ -82,7 +88,8 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       "return the income sources for a user" in new Setup {
         stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", OK,
           """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""")
-
+        stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", OK,
+          """{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}""")
         agentAuthorised()
 
         whenReady(
@@ -91,13 +98,13 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         ) {
           result =>
             result.status mustBe 200
-            result.body mustBe """{"dividends":{"ukDividends":29320682007.99,"otherUkDividends":17060389570.99}}"""
+            result.body mustBe """{"dividends":{"ukDividends":29320682007.99,"otherUkDividends":17060389570.99},"interest":[{"accountName":"someName","incomeSourceId":"123","taxedUkInterest":29320682007.99,"untaxedUkInterest":17060389570.99}]}"""
         }
       }
 
       "return 204 if a user has no recorded income sources" in new Setup {
         stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", NOT_FOUND)
-
+        stubGetWithoutResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", NOT_FOUND)
         agentAuthorised()
 
         whenReady(
@@ -112,7 +119,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
       "return 503 if a downstream error occurs" in new Setup {
         stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
-
+        stubGetWithoutResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
         agentAuthorised()
 
         whenReady(
@@ -127,7 +134,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
       "return 401 if the user has no HMRC-MTD-IT enrolment" in new Setup {
         stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
-
+        stubGetWithoutResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
         unauthorisedOtherEnrolment()
 
         whenReady(

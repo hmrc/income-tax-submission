@@ -26,6 +26,7 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val authBaseUrl: String = servicesConfig.baseUrl("auth")
 
   val dividendsBaseUrl: String = servicesConfig.baseUrl("income-tax-dividends")
+  val interestBaseUrl: String = servicesConfig.baseUrl("income-tax-interest")
 
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")

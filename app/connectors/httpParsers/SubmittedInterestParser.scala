@@ -20,17 +20,16 @@ import models._
 import play.api.http.Status.{NOT_FOUND, OK}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
+object SubmittedInterestParser {
+  type IncomeSourcesResponseModel = Either[ErrorResponse, Option[SubmittedInterestModel]]
 
-object SubmittedDividendsParser {
-  type IncomeSourcesResponseModel = Either[ErrorResponse, Option[SubmittedDividendsModel]]
-
-  implicit object SubmittedDividendsHttpReads extends HttpReads[IncomeSourcesResponseModel] {
+  implicit object SubmittedInterestHttpReads extends HttpReads[IncomeSourcesResponseModel] {
     override def read(method: String, url: String, response: HttpResponse): IncomeSourcesResponseModel = {
       response.status match {
-        case OK => response.json.validate[SubmittedDividendsModel].fold[IncomeSourcesResponseModel](
+        case OK => response.json.validate[SubmittedInterestModel].fold[IncomeSourcesResponseModel](
           _ => Left(InternalServerError),
           parsedModel => parsedModel match {
-            case SubmittedDividendsModel(None, None) => Right(None)
+            case SubmittedInterestModel("", "", None, None) => Right(None)
             case _ => Right(Some(parsedModel))
           }
         )
@@ -39,4 +38,5 @@ object SubmittedDividendsParser {
       }
     }
   }
+
 }
