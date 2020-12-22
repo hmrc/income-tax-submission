@@ -25,7 +25,7 @@ case class FutureEitherOps[E <: ErrorResponse, R](value: Future[Either[E, R]])(i
 
   def map[B](mappingFunction: R => B): FutureEitherOps[E, B] = {
     FutureEitherOps(value.map {
-      case Right(value) => Right(mappingFunction(value))
+      case Right(mappedValue) => Right(mappingFunction(mappedValue))
       case Left(error) => Left(error)
     })
   }
@@ -33,7 +33,7 @@ case class FutureEitherOps[E <: ErrorResponse, R](value: Future[Either[E, R]])(i
   def flatMap[O](mappingFunction: R => FutureEitherOps[E, O]): FutureEitherOps[E, O] = FutureEitherOps(value.flatMap{
     case Right(currentRight) => mappingFunction(currentRight).value.map {
       case Right(nextRight) => Right(nextRight)
-      case left => left
+      case left@Left(_) => left
     }
     case Left(currentLeft) => Future.successful(Left(currentLeft))
   })

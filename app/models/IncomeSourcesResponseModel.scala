@@ -18,7 +18,7 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class IncomeSourcesResponseModel(dividends: Option[DividendsResponseModel], interest: Option[Seq[InterestResponseModel]])
+case class IncomeSourcesResponseModel(dividends: Option[DividendsResponseModel], interest: Option[Seq[SubmittedInterestModel]])
 
 object IncomeSourcesResponseModel {
   implicit val format: OFormat[IncomeSourcesResponseModel] = Json.format[IncomeSourcesResponseModel]
