@@ -28,7 +28,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
           """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""")
 
         stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", OK,
-          """{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}""")
+          """[{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}]""")
 
         authorised()
 
@@ -89,7 +89,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", OK,
           """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""")
         stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", OK,
-          """{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}""")
+          """[{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}]""")
         agentAuthorised()
 
         whenReady(

@@ -24,7 +24,7 @@ class IncomeSourcesResponseModelSpec extends TestUtils {
   SharedMetricRegistries.clear()
 
   val model: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(123456.78), Some(123456.78))),
-    Some(Seq(InterestResponseModel("someName", "12345", Some(12345.67), Some(12345.67)))))
+    Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))))
 
   val jsonModel: JsObject = Json.obj("dividends" ->
     Json.obj(

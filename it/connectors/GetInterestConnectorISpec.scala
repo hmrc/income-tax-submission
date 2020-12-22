@@ -27,7 +27,7 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
 
       "all values are present" in {
 
-        val expectedResult = Some(SubmittedInterestModel(accountName, incomeSourceId, taxedUkInterest, untaxedUkInterest))
+        val expectedResult = Some(Seq(SubmittedInterestModel(accountName, incomeSourceId, taxedUkInterest, untaxedUkInterest)))
 
         stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
           OK, Json.toJson(expectedResult).toString())
@@ -42,7 +42,7 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
 
     "return a none when no interest values are found" in {
 
-      val body = SubmittedInterestModel("", "", None, None)
+      val body = Seq.empty[SubmittedInterestModel]
       stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
         OK, Json.toJson(body).toString())
 

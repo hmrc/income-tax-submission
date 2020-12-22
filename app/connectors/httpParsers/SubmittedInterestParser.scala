@@ -21,16 +21,17 @@ import play.api.http.Status.{NOT_FOUND, OK}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 object SubmittedInterestParser {
-  type IncomeSourcesResponseModel = Either[ErrorResponse, Option[SubmittedInterestModel]]
+  type IncomeSourcesResponseModel = Either[ErrorResponse, Option[List[SubmittedInterestModel]]]
 
   implicit object SubmittedInterestHttpReads extends HttpReads[IncomeSourcesResponseModel] {
     override def read(method: String, url: String, response: HttpResponse): IncomeSourcesResponseModel = {
       response.status match {
-        case OK => response.json.validate[SubmittedInterestModel].fold[IncomeSourcesResponseModel](
+        case OK =>
+          response.json.validate[List[SubmittedInterestModel]].fold[IncomeSourcesResponseModel](
           _ => Left(InternalServerError),
-          parsedModel => parsedModel match {
-            case SubmittedInterestModel("", "", None, None) => Right(None)
-            case _ => Right(Some(parsedModel))
+          {
+            case parsedModel if parsedModel.nonEmpty => Right(Some(parsedModel))
+            case _ => Right(None)
           }
         )
         case NOT_FOUND => Right(None)

@@ -17,8 +17,8 @@
 package controllers
 
 
-import models.{DividendsResponseModel, InterestResponseModel, ErrorResponse, IncomeSourcesResponseModel, InternalServerError}
-import org.scalamock.handlers.{CallHandler3, CallHandler4}
+import models._
+import org.scalamock.handlers.CallHandler4
 import play.api.http.Status._
 import play.api.test.FakeRequest
 import services.GetIncomeSourcesService
@@ -38,7 +38,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
 
   def mockGetIncomeSourcesValid(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[ErrorResponse, IncomeSourcesResponseModel]]] = {
     val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(12345.67),Some(12345.67))),
-      Some(Seq(InterestResponseModel("someName", "12345", Some(12345.67), Some(12345.67)))))
+      Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))))
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String)(_: HeaderCarrier))
       .expects(*, *, *, *)
       .returning(Future.successful(Right(incomeSources)))

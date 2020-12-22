@@ -41,10 +41,12 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
       "return an IncomeSourceResponseModel with existing dividends and interest" in {
 
         val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(SubmittedDividendsModel(Some(12345.67), Some(12345.67))))
-        val expectedInterestResult: IncomeSourceResponseInterest = Right(Some(SubmittedInterestModel("someName", "123", Some(1234.56), Some(1234.56))))
+        val expectedInterestResult: IncomeSourceResponseInterest = Right(Some(List(
+          SubmittedInterestModel("someName", "123", Some(1234.56), Some(1234.56))
+        )))
 
         val incomeSourcesResult = Right(IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(12345.67), Some(12345.67))),
-          Some(List(InterestResponseModel("someName", "123", Some(1234.56), Some(1234.56))))))
+          Some(List(SubmittedInterestModel("someName", "123", Some(1234.56), Some(1234.56))))))
 
 
         (dividendsConnector.getSubmittedDividends(_: String, _: Int, _: String)(_: HeaderCarrier))
