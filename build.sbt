@@ -37,6 +37,7 @@ lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
+  .settings(PlayKeys.playDefaultPort := 9304)
   .settings(
     majorVersion := 0,
     scalaVersion := "2.12.11",
