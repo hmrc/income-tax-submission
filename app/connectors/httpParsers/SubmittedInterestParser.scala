@@ -16,28 +16,60 @@
 
 package connectors.httpParsers
 
-import models._
-import play.api.http.Status.{NOT_FOUND, OK}
+import utils.PagerDutyHelper.PagerDutyKeys._
+import utils.PagerDutyHelper.pagerDutyLog
+import models.{ErrorResponseModel, _}
+import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 object SubmittedInterestParser {
-  type IncomeSourcesResponseModel = Either[ErrorResponse, Option[List[SubmittedInterestModel]]]
+  type IncomeSourcesResponseModel = Either[ErrorResponseModel, Option[List[SubmittedInterestModel]]]
 
   implicit object SubmittedInterestHttpReads extends HttpReads[IncomeSourcesResponseModel] {
     override def read(method: String, url: String, response: HttpResponse): IncomeSourcesResponseModel = {
       response.status match {
         case OK =>
           response.json.validate[List[SubmittedInterestModel]].fold[IncomeSourcesResponseModel](
-          _ => Left(InternalServerError),
+          _ => Left(ErrorResponseModel(INTERNAL_SERVER_ERROR, ErrorBodyModel.parsingError)),
           {
             case parsedModel if parsedModel.nonEmpty => Right(Some(parsedModel))
             case _ => Right(None)
           }
         )
         case NOT_FOUND => Right(None)
-        case _ => Left(ServiceUnavailableError)
+        case BAD_REQUEST =>
+          pagerDutyLog(BAD_REQUEST_FROM_API, logMessage(response))
+          handleError(response)
+        case INTERNAL_SERVER_ERROR =>
+          pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_API, logMessage(response))
+          handleError(response)
+        case SERVICE_UNAVAILABLE =>
+          pagerDutyLog(SERVICE_UNAVAILABLE_FROM_API, logMessage(response))
+          handleError(response)
+        case _ =>
+          pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_API, logMessage(response))
+          handleError(response, Some(INTERNAL_SERVER_ERROR))
       }
     }
   }
 
+  private def handleError(response: HttpResponse, statusOverride: Option[Int] = None): IncomeSourcesResponseModel = {
+
+    val status = statusOverride.getOrElse(response.status)
+
+    try {
+      response.json.validate[ErrorBodyModel].fold[IncomeSourcesResponseModel](
+
+        jsonErrors => {
+          Left(ErrorResponseModel(status, ErrorBodyModel.parsingError))
+        },
+        parsedModel => Left(ErrorResponseModel(status, parsedModel)))
+    } catch {
+      case _: Exception => Left(ErrorResponseModel(status, ErrorBodyModel.parsingError))
+    }
+  }
+
+  private def logMessage(response:HttpResponse): Option[String] ={
+    Some(s"[SubmittedInterestParser][read] Received ${response.status} from income-tax-interest. Body:${response.body}")
+  }
 }

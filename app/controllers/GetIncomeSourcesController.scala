@@ -36,7 +36,7 @@ class GetIncomeSourcesController @Inject()(
     getIncomeSourcesService.getAllIncomeSources(nino, taxYear, mtditid).map {
       case Right(IncomeSourcesResponseModel(None,None)) => NoContent
       case Right(responseModel) => Ok(Json.toJson(responseModel))
-      case Left(error) => Status(error.httpStatusCode)(Json.toJson(error))
+      case Left(error) => Status(error.httpStatusCode)(Json.toJson(error.errorBodyModel))
     }
   }
 }
