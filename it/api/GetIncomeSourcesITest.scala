@@ -10,6 +10,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status._
+import play.mvc.BodyParser.Json
 class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures {
 
   trait Setup {
@@ -57,15 +58,16 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 503 if a downstream error occurs" in new Setup {
-        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
-        stubGetWithoutResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
+        val responseBody = "{\"code\":\"SERVICE_UNAVAILABLE\",\"description\":\"The service is temporarily unavailable\"}"
+        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE, responseBody)
+        stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE, responseBody)
         authorised()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019", "mtditid" -> "123123123").get) {
           result =>
             result.status mustBe 503
-            result.body mustBe "{\"code\":\"SERVICE_UNAVAILABLE\",\"message\":\"The service is temporarily unavailable\"}"
+            result.body mustBe "{\"code\":\"SERVICE_UNAVAILABLE\",\"description\":\"The service is temporarily unavailable\"}"
         }
       }
 
@@ -118,8 +120,9 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 503 if a downstream error occurs" in new Setup {
-        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
-        stubGetWithoutResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE)
+        val responseBody = "{\"code\":\"SERVICE_UNAVAILABLE\",\"description\":\"The service is temporarily unavailable\"}"
+        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE, responseBody)
+        stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE, responseBody)
         agentAuthorised()
 
         whenReady(
@@ -128,7 +131,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         ) {
           result =>
             result.status mustBe 503
-            result.body mustBe "{\"code\":\"SERVICE_UNAVAILABLE\",\"message\":\"The service is temporarily unavailable\"}"
+            result.body mustBe "{\"code\":\"SERVICE_UNAVAILABLE\",\"description\":\"The service is temporarily unavailable\"}"
         }
       }
 
