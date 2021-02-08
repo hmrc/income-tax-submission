@@ -31,7 +31,10 @@ object SubmittedDividendsParser {
       response.status match {
         case OK =>
           response.json.validate[SubmittedDividendsModel].fold[IncomeSourcesResponseModel](
-          _ => Left(ErrorResponseModel(INTERNAL_SERVER_ERROR, ErrorBodyModel.parsingError)),
+          _ =>  {
+            pagerDutyLog(BAD_SUCCESS_JSON_FROM_API, Some(s"[SubmittedDividendsParser][read] Invalid Json from API."))
+            Left(ErrorResponseModel(INTERNAL_SERVER_ERROR, ErrorBodyModel.parsingError))
+          },
           {
             case SubmittedDividendsModel(None, None) => Right(None)
             case parsedModel => Right(Some(parsedModel))
@@ -62,6 +65,7 @@ object SubmittedDividendsParser {
       response.json.validate[ErrorBodyModel].fold[IncomeSourcesResponseModel](
 
         jsonErrors => {
+          pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, Some(s"[SubmittedDividendsParser][read] Unexpected Json from API."))
           Left(ErrorResponseModel(status, ErrorBodyModel.parsingError))
         },
         parsedModel => Left(ErrorResponseModel(status, parsedModel)))

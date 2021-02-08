@@ -30,7 +30,10 @@ object SubmittedInterestParser {
       response.status match {
         case OK =>
           response.json.validate[List[SubmittedInterestModel]].fold[IncomeSourcesResponseModel](
-          _ => Left(ErrorResponseModel(INTERNAL_SERVER_ERROR, ErrorBodyModel.parsingError)),
+          _ => {
+            pagerDutyLog(BAD_SUCCESS_JSON_FROM_API, Some(s"[SubmittedInterestParser][read] Invalid Json from API."))
+            Left(ErrorResponseModel(INTERNAL_SERVER_ERROR, ErrorBodyModel.parsingError))
+          },
           {
             case parsedModel if parsedModel.nonEmpty => Right(Some(parsedModel))
             case _ => Right(None)
@@ -61,6 +64,7 @@ object SubmittedInterestParser {
       response.json.validate[ErrorBodyModel].fold[IncomeSourcesResponseModel](
 
         jsonErrors => {
+          pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, Some(s"[SubmittedInterestParser][read] Unexpected Json from API."))
           Left(ErrorResponseModel(status, ErrorBodyModel.parsingError))
         },
         parsedModel => Left(ErrorResponseModel(status, parsedModel)))
