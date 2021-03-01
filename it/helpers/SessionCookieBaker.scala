@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import java.net.URLEncoder
 
 import play.api.http.SecretConfiguration
 import play.api.libs.crypto.DefaultCookieSigner
-import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, PlainText}
+import uk.gov.hmrc.crypto.PlainText
 
 object SessionCookieBaker {
   private val cookieKey = "gvBoGdgzqG1AarzF1LY0zQ=="
@@ -36,7 +36,6 @@ object SessionCookieBaker {
     }
 
     val encodedCookie = encode(sessionData)
-    val encrypted = CompositeSymmetricCrypto.aesGCM(cookieKey, Seq()).encrypt(encodedCookie).value
 
     s"""mdtp="$encodedCookie"; Path=/; HTTPOnly"; Path=/; HTTPOnly""".stripMargin
   }

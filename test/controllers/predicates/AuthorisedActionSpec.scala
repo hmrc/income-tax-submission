@@ -104,7 +104,6 @@ class AuthorisedActionSpec extends TestUtils {
     ".agentAuthenticated" should {
 
       val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(s"${user.mtditid} ${user.arn.get}"))
-      val arn = "0987654321"
 
       "perform the block action" when {
 
