@@ -69,7 +69,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 503 if a downstream error occurs" in new Setup {
-        val responseBody = "{\"code\":\"SERVICE_UNAVAILABLE\",\"description\":\"The service is temporarily unavailable\"}"
+        val responseBody = "{\"code\":\"SERVICE_UNAVAILABLE\",\"reason\":\"The service is temporarily unavailable\"}"
         stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE, responseBody)
         stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE, responseBody)
         authorised()
@@ -78,7 +78,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
           .withQueryStringParameters("taxYear" -> "2019", "mtditid" -> "123123123").get) {
           result =>
             result.status mustBe 503
-            result.body mustBe "{\"code\":\"SERVICE_UNAVAILABLE\",\"description\":\"The service is temporarily unavailable\"}"
+            result.body mustBe "{\"code\":\"SERVICE_UNAVAILABLE\",\"reason\":\"The service is temporarily unavailable\"}"
         }
       }
 
@@ -131,7 +131,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 503 if a downstream error occurs" in new Setup {
-        val responseBody = "{\"code\":\"SERVICE_UNAVAILABLE\",\"description\":\"The service is temporarily unavailable\"}"
+        val responseBody = "{\"code\":\"SERVICE_UNAVAILABLE\",\"reason\":\"The service is temporarily unavailable\"}"
         stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE, responseBody)
         stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123", SERVICE_UNAVAILABLE, responseBody)
         agentAuthorised()
@@ -142,7 +142,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         ) {
           result =>
             result.status mustBe 503
-            result.body mustBe "{\"code\":\"SERVICE_UNAVAILABLE\",\"description\":\"The service is temporarily unavailable\"}"
+            result.body mustBe "{\"code\":\"SERVICE_UNAVAILABLE\",\"reason\":\"The service is temporarily unavailable\"}"
         }
       }
 
