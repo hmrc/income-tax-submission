@@ -18,7 +18,7 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class ErrorBodyModel(code: String, description: String)
+case class ErrorBodyModel(code: String, reason: String)
 
 object ErrorBodyModel {
   implicit val formats: OFormat[ErrorBodyModel] = Json.format[ErrorBodyModel]
