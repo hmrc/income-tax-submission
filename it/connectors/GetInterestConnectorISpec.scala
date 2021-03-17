@@ -17,7 +17,7 @@
 package connectors
 
 import helpers.WiremockSpec
-import models.{ErrorBodyModel, ErrorResponseModel, SubmittedInterestModel}
+import models.{APIErrorBodyModel, APIErrorModel, SubmittedInterestModel}
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -79,8 +79,8 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
     }
 
     "return a BadRequest" in {
-      val errorBody: ErrorBodyModel = ErrorBodyModel("BAD_REQUEST", "That request was bad")
-      val expectedResult = ErrorResponseModel(BAD_REQUEST, errorBody)
+      val errorBody: APIErrorBodyModel = APIErrorBodyModel("BAD_REQUEST", "That request was bad")
+      val expectedResult = APIErrorModel(BAD_REQUEST, errorBody)
 
       stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
         BAD_REQUEST, Json.toJson(errorBody).toString())
@@ -92,9 +92,9 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
     }
 
     "return an InternalServerError" in {
-      val errorBody: ErrorBodyModel = ErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")
+      val errorBody: APIErrorBodyModel = APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")
 
-      val expectedResult = ErrorResponseModel(INTERNAL_SERVER_ERROR, errorBody)
+      val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, errorBody)
 
       stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
         INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString())
@@ -112,7 +112,7 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
           "accountName" -> ""
         )
 
-        val expectedResult = ErrorResponseModel(INTERNAL_SERVER_ERROR, ErrorBodyModel.parsingError)
+        val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)
 
         stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
           OK, invalidJson.toString())
@@ -126,7 +126,7 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
     "return an InternalServerError with parsing error when we can't parse the error body" in {
       val errorBody = "INTERNAL_SERVER_ERROR"
 
-      val expectedResult = ErrorResponseModel(INTERNAL_SERVER_ERROR, ErrorBodyModel.parsingError)
+      val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)
 
       stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
         INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString())
@@ -138,9 +138,9 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
     }
 
     "return an InternalServerError when an unexpected status is thrown" in {
-      val errorBody: ErrorBodyModel = ErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")
+      val errorBody: APIErrorBodyModel = APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")
 
-      val expectedResult = ErrorResponseModel(INTERNAL_SERVER_ERROR, errorBody)
+      val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, errorBody)
 
       stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
         IM_A_TEAPOT, Json.toJson(errorBody).toString())
@@ -154,7 +154,7 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
 
     "return an InternalServerError when an unexpected status is thrown and there is no body" in {
 
-      val expectedResult = ErrorResponseModel(INTERNAL_SERVER_ERROR, ErrorBodyModel.parsingError)
+      val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)
 
       stubGetWithoutResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
         IM_A_TEAPOT)
@@ -168,8 +168,8 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
 
     "return a ServiceUnavailableError" in {
 
-      val errorBody = ErrorBodyModel("SERVICE_UNAVAILABLE", "Something went wrong")
-      val expectedResult = ErrorResponseModel(SERVICE_UNAVAILABLE, errorBody)
+      val errorBody = APIErrorBodyModel("SERVICE_UNAVAILABLE", "Something went wrong")
+      val expectedResult = APIErrorModel(SERVICE_UNAVAILABLE, errorBody)
 
       stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=$mtditid",
         SERVICE_UNAVAILABLE, Json.toJson(errorBody).toString())
