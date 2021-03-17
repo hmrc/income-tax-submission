@@ -1,3 +1,3 @@
 # microservice specific routes
 
-GET        /income-tax/nino/:nino/sources     controllers.GetIncomeSourcesController.getIncomeSources(nino: String, taxYear: Int, mtditid: String)
+GET        /income-tax/nino/:nino/sources     controllers.GetIncomeSourcesController.getIncomeSources(nino: String, taxYear: Int)
