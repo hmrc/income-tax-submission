@@ -66,7 +66,7 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
       result mustBe Right(None)
     }
 
-    "DES Returns multiple errors" in {
+    "API Returns multiple errors" in {
       val expectedResult = APIErrorModel(BAD_REQUEST, APIErrorsBodyModel(Seq(
         APIErrorBodyModel("INVALID_IDTYPE","ID is invalid"),
         APIErrorBodyModel("INVALID_IDTYPE_2","ID 2 is invalid"))))
