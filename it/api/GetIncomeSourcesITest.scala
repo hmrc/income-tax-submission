@@ -30,8 +30,9 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
     val successNino: String = "AA123123A"
     val taxYear: String = "2019"
     val agentClientCookie: Map[String, String] = Map("MTDITID" -> "123123123")
+    val contentTypeHeader = new HttpHeader("Content-Type", "application/json; charset=utf-8")
     val mtditidHeader: HttpHeader = new HttpHeader("mtditid", "123123123")
-    val headers: HttpHeaders = new HttpHeaders(mtditidHeader)
+    val headers: HttpHeaders = new HttpHeaders(mtditidHeader, contentTypeHeader)
     auditStubs()
   }
 
@@ -40,19 +41,19 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
     "the user is an individual" must {
       "return the income sources for a user" in new Setup {
 
-        stubGetWithResponseBodyWithHeaders(
+        stubGetWithResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
           response = """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""",
           headers = headers)
 
-        stubGetWithResponseBodyWithHeaders(
+        stubGetWithResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
           response = """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""",
           headers = headers)
 
-        stubGetWithResponseBodyWithHeaders(
+        stubGetWithResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
           response = """[{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}]""",
@@ -72,11 +73,11 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
 
       "return 204 if a user has no recorded income sources" in new Setup {
-        stubGetWithHeadersWithoutResponseBody(
+        stubGetWithoutResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = NOT_FOUND,
           headers = headers)
-        stubGetWithHeadersWithoutResponseBody(
+        stubGetWithoutResponseBody(
           url = s"/income-tax-interest/incom-tax/nino/A123123A/sources\\?taxYear=2019",
           status = NOT_FOUND,
           headers = headers)
@@ -93,13 +94,13 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
       "return 503 if a downstream error occurs" in new Setup {
         val responseBody = "{\"code\":\"SERVICE_UNAVAILABLE\",\"reason\":\"The service is temporarily unavailable\"}"
-        stubGetWithResponseBodyWithHeaders(
+        stubGetWithResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = SERVICE_UNAVAILABLE,
           response = responseBody,
           headers = headers)
 
-        stubGetWithResponseBodyWithHeaders(
+        stubGetWithResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = SERVICE_UNAVAILABLE,
           response = responseBody,
@@ -115,12 +116,12 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 401 if the user has no HMRC-MTD-IT enrolment" in new Setup {
-        stubGetWithHeadersWithoutResponseBody(
+        stubGetWithoutResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123",
           status = SERVICE_UNAVAILABLE,
           headers = headers)
 
-        stubGetWithHeadersWithoutResponseBody(
+        stubGetWithoutResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123",
           status = SERVICE_UNAVAILABLE,
           headers = headers)
@@ -138,12 +139,12 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
     "the user is an agent" must {
       "return the income sources for a user" in new Setup {
-        stubGetWithResponseBodyWithHeaders(
+        stubGetWithResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
           response = """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""",
           headers = headers)
-        stubGetWithResponseBodyWithHeaders(
+        stubGetWithResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
           response = """[{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}]""",
@@ -161,11 +162,11 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 204 if a user has no recorded income sources" in new Setup {
-        stubGetWithHeadersWithoutResponseBody(
+        stubGetWithoutResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = NOT_FOUND,
           headers = headers)
-        stubGetWithHeadersWithoutResponseBody(
+        stubGetWithoutResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = NOT_FOUND,
           headers = headers)
@@ -183,12 +184,12 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
       "return 503 if a downstream error occurs" in new Setup {
         val responseBody = "{\"code\":\"SERVICE_UNAVAILABLE\",\"reason\":\"The service is temporarily unavailable\"}"
-        stubGetWithResponseBodyWithHeaders(
+        stubGetWithResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = SERVICE_UNAVAILABLE,
           response = responseBody,
           headers = headers)
-        stubGetWithResponseBodyWithHeaders(
+        stubGetWithResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = SERVICE_UNAVAILABLE,
           response = responseBody,
@@ -206,8 +207,8 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 401 if the user has no HMRC-MTD-IT enrolment" in new Setup {
-        stubGetWithHeadersWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019", SERVICE_UNAVAILABLE, headers = headers)
-        stubGetWithHeadersWithoutResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019", SERVICE_UNAVAILABLE, headers = headers)
+        stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019", SERVICE_UNAVAILABLE, headers = headers)
+        stubGetWithoutResponseBody(s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019", SERVICE_UNAVAILABLE, headers = headers)
         unauthorisedOtherEnrolment()
 
         whenReady(

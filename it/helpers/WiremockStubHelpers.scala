@@ -17,39 +17,25 @@
 package helpers
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.http.HttpHeaders
+import com.github.tomakehurst.wiremock.http.{HttpHeader, HttpHeaders}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.JsValue
 
 trait WiremockStubHelpers {
 
+  val contentTypeHeader = new HttpHeader("Content-Type", "application/json; charset=utf-8")
+  val defaultHeader: HttpHeaders = new HttpHeaders(contentTypeHeader)
 
-  def stubGetWithResponseBodyWithHeaders(url: String, status: Int, response: String, headers: HttpHeaders): StubMapping =
+
+  def stubGetWithResponseBody(url: String, status: Int, response: String, headers: HttpHeaders = defaultHeader): StubMapping =
     stubFor(get(urlMatching(url))
       .willReturn(
         aResponse()
           .withStatus(status)
           .withBody(response)
-          .withHeaders(headers)
-          .withHeader("Content-Type", "application/json; charset=utf-8")))
+          .withHeaders(headers)))
 
-
-  def stubGetWithResponseBody(url: String, status: Int, response: String): StubMapping =
-    stubFor(get(urlMatching(url))
-      .willReturn(
-        aResponse()
-          .withStatus(status)
-          .withBody(response)
-          .withHeader("Content-Type", "application/json; charset=utf-8")))
-
-  def stubGetWithoutResponseBody(url: String, status: Int): StubMapping =
-    stubFor(get(urlMatching(url))
-      .willReturn(
-        aResponse()
-          .withStatus(status)))
-
-
-  def stubGetWithHeadersWithoutResponseBody(url: String, status: Int, headers: HttpHeaders): StubMapping =
+  def stubGetWithoutResponseBody(url: String, status: Int, headers: HttpHeaders = defaultHeader): StubMapping =
     stubFor(get(urlMatching(url))
       .willReturn(
         aResponse()
