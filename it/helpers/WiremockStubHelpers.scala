@@ -16,16 +16,13 @@
 
 package helpers
 
-import akka.http.scaladsl.model.HttpHeader
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.http.{HttpHeader, HttpHeaders}
+import com.github.tomakehurst.wiremock.http.HttpHeaders
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.JsValue
 
 trait WiremockStubHelpers {
 
-
-  val defaultHeader: HttpHeader = ("Content-Type", "application/json; charset=utf-8")
 
   def stubGetWithResponseBodyWithHeaders(url: String, status: Int, response: String, headers: HttpHeaders): StubMapping =
     stubFor(get(urlMatching(url))
