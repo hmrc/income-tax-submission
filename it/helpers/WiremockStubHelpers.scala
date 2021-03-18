@@ -23,23 +23,19 @@ import play.api.libs.json.JsValue
 
 trait WiremockStubHelpers {
 
-  val contentTypeHeader = new HttpHeader("Content-Type", "application/json; charset=utf-8")
-  val defaultHeader: HttpHeaders = new HttpHeaders(contentTypeHeader)
 
-
-  def stubGetWithResponseBody(url: String, status: Int, response: String, headers: HttpHeaders = defaultHeader): StubMapping =
+  def stubGetWithResponseBody(url: String, status: Int, response: String): StubMapping =
     stubFor(get(urlMatching(url))
       .willReturn(
         aResponse()
           .withStatus(status)
           .withBody(response)
-          .withHeaders(headers)))
+          .withHeader("Content-Type", "application/json; charset=utf-8")))
 
-  def stubGetWithoutResponseBody(url: String, status: Int, headers: HttpHeaders = defaultHeader): StubMapping =
+  def stubGetWithoutResponseBody(url: String, status: Int): StubMapping =
     stubFor(get(urlMatching(url))
       .willReturn(
         aResponse()
-          .withHeaders(headers)
           .withStatus(status)))
 
   def stubPostWithoutResponseBody(url: String, status: Int, requestBody: String): StubMapping =
