@@ -16,11 +16,26 @@
 
 package helpers
 
+import akka.http.scaladsl.model.HttpHeader
 import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.http.{HttpHeader, HttpHeaders}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.JsValue
 
 trait WiremockStubHelpers {
+
+
+  val defaultHeader: HttpHeader = ("Content-Type", "application/json; charset=utf-8")
+
+  def stubGetWithResponseBodyWithHeaders(url: String, status: Int, response: String, headers: HttpHeaders): StubMapping =
+    stubFor(get(urlMatching(url))
+      .willReturn(
+        aResponse()
+          .withStatus(status)
+          .withBody(response)
+          .withHeaders(headers)
+          .withHeader("Content-Type", "application/json; charset=utf-8")))
+
 
   def stubGetWithResponseBody(url: String, status: Int, response: String): StubMapping =
     stubFor(get(urlMatching(url))
@@ -34,6 +49,14 @@ trait WiremockStubHelpers {
     stubFor(get(urlMatching(url))
       .willReturn(
         aResponse()
+          .withStatus(status)))
+
+
+  def stubGetWithHeadersWithoutResponseBody(url: String, status: Int, headers: HttpHeaders): StubMapping =
+    stubFor(get(urlMatching(url))
+      .willReturn(
+        aResponse()
+          .withHeaders(headers)
           .withStatus(status)))
 
   def stubPostWithoutResponseBody(url: String, status: Int, requestBody: String): StubMapping =
