@@ -29,9 +29,9 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
     implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(5, Seconds))
     val successNino: String = "AA123123A"
     val taxYear: String = "2019"
-    val agentClientCookie: Map[String, String] = Map("MTDITID" -> "123123123")
-    val contentTypeHeader = new HttpHeader("Content-Type", "application/json; charset=utf-8")
-    val mtditidHeader = ("mtditid", "123123123")
+    val agentClientCookie: Map[String, String] = Map("MTDITID" -> "555555555")
+    val mtditidHeader = ("mtditid", "555555555")
+    val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "555555555"))
     auditStubs()
   }
 
@@ -43,17 +43,16 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         stubGetWithResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response = """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""")
+          response = """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""",
+          requestHeaders
+        )
 
-        stubGetWithResponseBody(
-          url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
-          status = OK,
-          response = """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""")
 
         stubGetWithResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response = """[{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}]"""
+          response = """[{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}]""",
+          requestHeaders
         )
 
         authorised()
@@ -73,10 +72,14 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       "return 204 if a user has no recorded income sources" in new Setup {
         stubGetWithoutResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
-          status = NOT_FOUND)
+          status = NOT_FOUND,
+          requestHeaders
+        )
         stubGetWithoutResponseBody(
-          url = s"/income-tax-interest/incom-tax/nino/A123123A/sources\\?taxYear=2019",
-          status = NOT_FOUND)
+          url = s"/income-tax-interest/income-tax/nino/A123123A/sources\\?taxYear=2019",
+          status = NOT_FOUND,
+          requestHeaders
+        )
 
         authorised()
 
@@ -95,12 +98,16 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         stubGetWithResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = SERVICE_UNAVAILABLE,
-          response = responseBody)
+          response = responseBody,
+          requestHeaders
+        )
 
         stubGetWithResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = SERVICE_UNAVAILABLE,
-          response = responseBody)
+          response = responseBody,
+          requestHeaders
+        )
         authorised()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
@@ -116,11 +123,15 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       "return 401 if the user has no HMRC-MTD-IT enrolment" in new Setup {
         stubGetWithoutResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123",
-          status = SERVICE_UNAVAILABLE)
+          status = SERVICE_UNAVAILABLE,
+          requestHeaders
+        )
 
         stubGetWithoutResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123",
-          status = SERVICE_UNAVAILABLE)
+          status = SERVICE_UNAVAILABLE,
+          requestHeaders
+        )
         unauthorisedOtherEnrolment()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
@@ -133,14 +144,18 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         }
       }
 
-      "return 401 if the request has no mtditid header present" in new Setup {
+      "return 401 if the request has no MTDITID header present" in new Setup {
         stubGetWithoutResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123",
-          status = SERVICE_UNAVAILABLE)
+          status = SERVICE_UNAVAILABLE,
+          requestHeaders
+        )
 
         stubGetWithoutResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123",
-          status = SERVICE_UNAVAILABLE)
+          status = SERVICE_UNAVAILABLE,
+          requestHeaders
+        )
         unauthorisedOtherEnrolment()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
@@ -159,11 +174,15 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         stubGetWithResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response = """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""")
+          response = """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""",
+          requestHeaders
+        )
         stubGetWithResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response = """[{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}]""")
+          response = """[{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}]""",
+          requestHeaders
+        )
         agentAuthorised()
 
         whenReady(
@@ -181,10 +200,14 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       "return 204 if a user has no recorded income sources" in new Setup {
         stubGetWithoutResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
-          status = NOT_FOUND)
+          status = NOT_FOUND,
+          requestHeaders
+        )
         stubGetWithoutResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
-          status = NOT_FOUND)
+          status = NOT_FOUND,
+          requestHeaders
+        )
         agentAuthorised()
 
         whenReady(
@@ -204,11 +227,15 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         stubGetWithResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = SERVICE_UNAVAILABLE,
-          response = responseBody)
+          response = responseBody,
+          requestHeaders
+        )
         stubGetWithResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = SERVICE_UNAVAILABLE,
-          response = responseBody)
+          response = responseBody,
+          requestHeaders
+        )
         agentAuthorised()
 
         whenReady(
@@ -226,10 +253,14 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       "return 401 if the user has no HMRC-MTD-IT enrolment" in new Setup {
         stubGetWithoutResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
-          status = SERVICE_UNAVAILABLE)
+          status = SERVICE_UNAVAILABLE,
+          requestHeaders
+        )
         stubGetWithoutResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
-          status = SERVICE_UNAVAILABLE)
+          status = SERVICE_UNAVAILABLE,
+          requestHeaders
+        )
         unauthorisedOtherEnrolment()
 
         whenReady(

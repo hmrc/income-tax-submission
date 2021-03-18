@@ -16,6 +16,7 @@
 
 package connectors
 
+import com.github.tomakehurst.wiremock.http.HttpHeader
 import helpers.WiremockSpec
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel, SubmittedDividendsModel}
 import org.scalatestplus.play.PlaySpec
@@ -23,7 +24,7 @@ import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
 
-class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
+class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec {
 
   lazy val connector: IncomeTaxDividendsConnector = app.injector.instanceOf[IncomeTaxDividendsConnector]
 
@@ -31,37 +32,43 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
   val taxYear: Int = 1999
   val dividendResult: Option[BigDecimal] = Some(123456.78)
 
+  val mtditidHeader = ("mtditid", "123123123")
+  val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "123123123"))
+
   "IncomeTaxDividendsConnector" should {
     "return a SubmittedDividendsModel" when {
       "all values are present" in {
         val expectedResult = Some(SubmittedDividendsModel(dividendResult, dividendResult))
 
-        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=123123123",
-          OK, Json.toJson(expectedResult).toString())
+        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=$taxYear",
+          OK, Json.toJson(expectedResult).toString(),
+          requestHeaders
+        )
 
-        implicit val hc = HeaderCarrier()
-        val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
+        implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
+        val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
 
         result mustBe Right(expectedResult)
       }
     }
 
-      "return a none when no dividend values found" in {
+    "return a none when no dividend values found" in {
 
-        val body = SubmittedDividendsModel(None, None)
-        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=$taxYear&mtditid=123123123",
-          OK, Json.toJson(body).toString())
+      val body = SubmittedDividendsModel(None, None)
+      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=$taxYear",
+        OK, Json.toJson(body).toString(),
+        requestHeaders)
 
-        implicit val hc = HeaderCarrier()
-        val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
+      implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
+      val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
 
-        result mustBe Right(None)
-      }
+      result mustBe Right(None)
+    }
 
     "return a None for notfound" in {
-      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999&mtditid=123123123", NOT_FOUND, "{}")
-      implicit val hc = HeaderCarrier()
-      val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
+      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999", NOT_FOUND, "{}", requestHeaders)
+      implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
+      val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
 
       result mustBe Right(None)
     }
@@ -91,9 +98,10 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
       val errorBody: APIErrorBodyModel = APIErrorBodyModel("BAD_REQUEST", "That request was bad")
       val expectedResult = APIErrorModel(BAD_REQUEST, errorBody)
 
-      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999&mtditid=123123123", BAD_REQUEST, Json.toJson(errorBody).toString())
-      implicit val hc = HeaderCarrier()
-      val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
+      stubGetWithResponseBody(
+        s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999", BAD_REQUEST, Json.toJson(errorBody).toString(), requestHeaders)
+      implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
+      val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -103,9 +111,10 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
 
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, errorBody)
 
-      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999&mtditid=123123123", INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString())
-      implicit val hc = HeaderCarrier()
-      val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
+      stubGetWithResponseBody(
+        s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999", INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString(), requestHeaders)
+      implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
+      val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -117,9 +126,9 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
 
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)
 
-      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999&mtditid=123123123", OK, invalidJson.toString())
-      implicit val hc = HeaderCarrier()
-      val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
+      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999", OK, invalidJson.toString(), requestHeaders)
+      implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
+      val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -129,9 +138,9 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
 
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)
 
-      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999&mtditid=123123123", INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString())
-      implicit val hc = HeaderCarrier()
-      val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
+      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999", INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString(), requestHeaders)
+      implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
+      val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -141,9 +150,10 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
 
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, errorBody)
 
-      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999&mtditid=123123123", IM_A_TEAPOT, Json.toJson(errorBody).toString())
-      implicit val hc = HeaderCarrier()
-      val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
+      stubGetWithResponseBody(
+        s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999", IM_A_TEAPOT, Json.toJson(errorBody).toString(), requestHeaders)
+      implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
+      val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -152,9 +162,10 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
 
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)
 
-      stubGetWithoutResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999&mtditid=123123123", IM_A_TEAPOT)
-      implicit val hc = HeaderCarrier()
-      val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
+      stubGetWithoutResponseBody(
+        s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999", IM_A_TEAPOT)
+      implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
+      val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
 
       result mustBe Left(expectedResult)
     }
@@ -163,9 +174,10 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec{
       val errorBody: APIErrorBodyModel = APIErrorBodyModel("SERVICE_UNAVAILABLE", "Service went down")
       val expectedResult = APIErrorModel(SERVICE_UNAVAILABLE, errorBody)
 
-      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999&mtditid=123123123", SERVICE_UNAVAILABLE, Json.toJson(errorBody).toString())
-      implicit val hc = HeaderCarrier()
-      val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
+      stubGetWithResponseBody(
+        s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999", SERVICE_UNAVAILABLE, Json.toJson(errorBody).toString(), requestHeaders)
+      implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
+      val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
 
       result mustBe Left(expectedResult)
     }

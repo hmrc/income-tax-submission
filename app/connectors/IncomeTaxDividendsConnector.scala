@@ -27,8 +27,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class IncomeTaxDividendsConnector @Inject() (val http: HttpClient,
                                              val config: AppConfig)(implicit ec:ExecutionContext) {
 
-  def getSubmittedDividends(nino: String, taxYear: Int, mtditid: String)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
-    val submittedDividendsUrl: String = config.dividendsBaseUrl + s"/income-tax-dividends/income-tax/nino/$nino/sources?taxYear=$taxYear&mtditid=$mtditid"
+  def getSubmittedDividends(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
+    val submittedDividendsUrl: String = config.dividendsBaseUrl + s"/income-tax-dividends/income-tax/nino/$nino/sources?taxYear=$taxYear"
     http.GET[IncomeSourcesResponseModel](submittedDividendsUrl)
   }
 
