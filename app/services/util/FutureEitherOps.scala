@@ -17,11 +17,11 @@
 package services.util
 
 import uk.gov.hmrc.http.HeaderCarrier
-import models.{ErrorResponseModel}
+import models.{APIErrorModel}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class FutureEitherOps[E <: ErrorResponseModel, R](value: Future[Either[E, R]])(implicit ec: ExecutionContext, hc: HeaderCarrier){
+case class FutureEitherOps[E <: APIErrorModel, R](value: Future[Either[E, R]])(implicit ec: ExecutionContext, hc: HeaderCarrier){
 
   def map[B](mappingFunction: R => B): FutureEitherOps[E, B] = {
     FutureEitherOps(value.map {

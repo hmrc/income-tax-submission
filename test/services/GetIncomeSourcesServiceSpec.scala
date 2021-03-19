@@ -71,7 +71,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
 
       "return an InternalServerError" in {
 
-        val errorModel: ErrorResponseModel = ErrorResponseModel(INTERNAL_SERVER_ERROR, ErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
+        val errorModel: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
         val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(SubmittedDividendsModel(Some(12345.67), Some(12345.67))))
 
         (dividendsConnector.getSubmittedDividends(_: String, _: Int, _: String)(_: HeaderCarrier))

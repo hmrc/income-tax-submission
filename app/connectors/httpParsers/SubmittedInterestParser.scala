@@ -18,22 +18,22 @@ package connectors.httpParsers
 
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
-import models.{ErrorResponseModel, _}
+import models.{APIErrorModel, _}
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
-object SubmittedInterestParser {
-  type IncomeSourcesResponseModel = Either[ErrorResponseModel, Option[List[SubmittedInterestModel]]]
+object SubmittedInterestParser extends APIParser {
+  type IncomeSourcesResponseModel = Either[APIErrorModel, Option[List[SubmittedInterestModel]]]
+
+  override val parserName: String = "SubmittedInterestParser"
+  override val service: String = "income-tax-interest"
 
   implicit object SubmittedInterestHttpReads extends HttpReads[IncomeSourcesResponseModel] {
     override def read(method: String, url: String, response: HttpResponse): IncomeSourcesResponseModel = {
       response.status match {
         case OK =>
           response.json.validate[List[SubmittedInterestModel]].fold[IncomeSourcesResponseModel](
-          _ => {
-            pagerDutyLog(BAD_SUCCESS_JSON_FROM_API, Some(s"[SubmittedInterestParser][read] Invalid Json from API."))
-            Left(ErrorResponseModel(INTERNAL_SERVER_ERROR, ErrorBodyModel.parsingError))
-          },
+          _ => badSuccessJsonFromAPI,
           {
             case parsedModel if parsedModel.nonEmpty => Right(Some(parsedModel))
             case _ => Right(None)
@@ -42,38 +42,17 @@ object SubmittedInterestParser {
         case NOT_FOUND => Right(None)
         case BAD_REQUEST =>
           pagerDutyLog(BAD_REQUEST_FROM_API, logMessage(response))
-          handleError(response)
+          handleAPIError(response)
         case INTERNAL_SERVER_ERROR =>
           pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_API, logMessage(response))
-          handleError(response)
+          handleAPIError(response)
         case SERVICE_UNAVAILABLE =>
           pagerDutyLog(SERVICE_UNAVAILABLE_FROM_API, logMessage(response))
-          handleError(response)
+          handleAPIError(response)
         case _ =>
           pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, logMessage(response))
-          handleError(response, Some(INTERNAL_SERVER_ERROR))
+          handleAPIError(response, Some(INTERNAL_SERVER_ERROR))
       }
     }
-  }
-
-  private def handleError(response: HttpResponse, statusOverride: Option[Int] = None): IncomeSourcesResponseModel = {
-
-    val status = statusOverride.getOrElse(response.status)
-
-    try {
-      response.json.validate[ErrorBodyModel].fold[IncomeSourcesResponseModel](
-
-        jsonErrors => {
-          pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, Some(s"[SubmittedInterestParser][read] Unexpected Json from API."))
-          Left(ErrorResponseModel(status, ErrorBodyModel.parsingError))
-        },
-        parsedModel => Left(ErrorResponseModel(status, parsedModel)))
-    } catch {
-      case _: Exception => Left(ErrorResponseModel(status, ErrorBodyModel.parsingError))
-    }
-  }
-
-  private def logMessage(response:HttpResponse): Option[String] ={
-    Some(s"[SubmittedInterestParser][read] Received ${response.status} from income-tax-interest. Body:${response.body}")
   }
 }

@@ -37,7 +37,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
   private val fakeGetRequest = FakeRequest("GET", "/").withSession("MTDITID" -> "12234567890")
 
 
-  def mockGetIncomeSourcesValid(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[ErrorResponseModel, IncomeSourcesResponseModel]]] = {
+  def mockGetIncomeSourcesValid(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[APIErrorModel, IncomeSourcesResponseModel]]] = {
     val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(12345.67),Some(12345.67))),
       Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))))
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String)(_: HeaderCarrier))
@@ -45,8 +45,8 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       .returning(Future.successful(Right(incomeSources)))
   }
 
-  def mockGetIncomeSourcesInvalid(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[ErrorResponseModel, IncomeSourcesResponseModel]]] = {
-    val invalidIncomeSource: ErrorResponseModel = ErrorResponseModel(INTERNAL_SERVER_ERROR, ErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
+  def mockGetIncomeSourcesInvalid(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[APIErrorModel, IncomeSourcesResponseModel]]] = {
+    val invalidIncomeSource: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
       (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String)(_: HeaderCarrier))
       .expects(*, *, *, *)
       .returning(Future.successful(Left(invalidIncomeSource)))
