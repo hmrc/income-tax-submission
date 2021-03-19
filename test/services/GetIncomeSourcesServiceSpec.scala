@@ -33,6 +33,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
   val dividendsConnector: IncomeTaxDividendsConnector = mock[IncomeTaxDividendsConnector]
   val interestConnector: IncomeTaxInterestConnector = mock[IncomeTaxInterestConnector]
   val service: GetIncomeSourcesService = new GetIncomeSourcesService(dividendsConnector, interestConnector, scala.concurrent.ExecutionContext.global)
+  val mockHeaderCarrier = emptyHeaderCarrier.withExtraHeaders(("mtditid", "87654321"))
 
 
   ".getAllIncomeSources" when {
@@ -51,11 +52,11 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
 
 
         (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
-          .expects("12345678", 1234, *)
+          .expects("12345678", 1234, mockHeaderCarrier)
           .returning(Future.successful(expectedDividendsResult))
 
         (interestConnector.getSubmittedInterest(_: String, _: Int)(_: HeaderCarrier))
-          .expects("12345678", 1234, *)
+          .expects("12345678", 1234, mockHeaderCarrier)
           .returning(Future.successful(expectedInterestResult))
 
         val result = await(service.getAllIncomeSources("12345678", 1234, "87654321"))
@@ -75,11 +76,11 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
         val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(SubmittedDividendsModel(Some(12345.67), Some(12345.67))))
 
         (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
-        .expects("12345678", 1234, *)
+        .expects("12345678", 1234, mockHeaderCarrier)
         .returning(Future.successful(expectedDividendsResult))
 
         (interestConnector.getSubmittedInterest(_: String, _: Int)(_: HeaderCarrier))
-        .expects("12345678", 1234, *)
+        .expects("12345678", 1234, mockHeaderCarrier)
         .returning(Future.successful(Left(errorModel)))
 
         val result = await(service.getAllIncomeSources("12345678", 1234, "87654321"))

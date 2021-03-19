@@ -121,17 +121,6 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
       }
 
       "return 401 if the user has no HMRC-MTD-IT enrolment" in new Setup {
-        stubGetWithoutResponseBody(
-          url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123",
-          status = SERVICE_UNAVAILABLE,
-          requestHeaders
-        )
-
-        stubGetWithoutResponseBody(
-          url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123",
-          status = SERVICE_UNAVAILABLE,
-          requestHeaders
-        )
         unauthorisedOtherEnrolment()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
@@ -146,17 +135,17 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
       "return 401 if the request has no MTDITID header present" in new Setup {
         stubGetWithoutResponseBody(
-          url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123",
+          url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = SERVICE_UNAVAILABLE,
           requestHeaders
         )
 
         stubGetWithoutResponseBody(
-          url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019&mtditid=123123123",
+          url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = SERVICE_UNAVAILABLE,
           requestHeaders
         )
-        unauthorisedOtherEnrolment()
+        authorised()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
@@ -265,7 +254,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources", additionalCookies = agentClientCookie)
-            .withQueryStringParameters("taxYear" -> "2019", "mtditid" -> "123123123")
+            .withQueryStringParameters("taxYear" -> "2019")
             .withHttpHeaders(mtditidHeader)
             .get
         ) {

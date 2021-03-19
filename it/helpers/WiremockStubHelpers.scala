@@ -24,10 +24,6 @@ import play.api.libs.json.JsValue
 
 trait WiremockStubHelpers {
 
-  val contentTypeHeader = new HttpHeader("Content-Type", "application/json; charset=utf-8")
-  val defaultHeader: HttpHeaders = new HttpHeaders(contentTypeHeader)
-
-
   def stubGetWithResponseBody(url: String, status: Int, response: String, requestHeaders: Seq[HttpHeader] = Seq.empty): StubMapping = {
 
     val request = get(urlMatching(url))
