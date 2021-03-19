@@ -21,6 +21,7 @@ import models.User
 import play.api.http.Status._
 import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Result}
+import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments, _}
@@ -119,7 +120,7 @@ class AuthorisedActionSpec extends TestUtils {
               .expects(*, *, *, *)
               .returning(Future.successful(enrolments))
 
-            auth.agentAuthentication("1234567890", block)(fakeRequestWithMtditid, emptyHeaderCarrier)
+            auth.agentAuthentication("1234567890", block)(fakeRequest, emptyHeaderCarrier)
           }
 
           "has a status of OK" in {
@@ -138,7 +139,7 @@ class AuthorisedActionSpec extends TestUtils {
 
           lazy val result = {
             mockAuthReturnException(AuthException)
-            auth.agentAuthentication("1234567890", block)(fakeRequestWithMtditid, emptyHeaderCarrier)
+            auth.agentAuthentication("1234567890", block)(fakeRequest, emptyHeaderCarrier)
           }
           status(result) mustBe UNAUTHORIZED
         }
@@ -152,7 +153,7 @@ class AuthorisedActionSpec extends TestUtils {
 
           lazy val result = {
             mockAuthReturnException(NoActiveSession)
-            auth.agentAuthentication("1234567890", block)(fakeRequestWithMtditid, emptyHeaderCarrier)
+            auth.agentAuthentication("1234567890", block)(fakeRequest, emptyHeaderCarrier)
           }
 
           status(result) mustBe UNAUTHORIZED
@@ -169,7 +170,7 @@ class AuthorisedActionSpec extends TestUtils {
             (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
               .expects(*, *, *, *)
               .returning(Future.successful(enrolments))
-            auth.agentAuthentication("1234567890", block)(fakeRequestWithMtditid, emptyHeaderCarrier)
+            auth.agentAuthentication("1234567890", block)(fakeRequest, emptyHeaderCarrier)
           }
           status(result) mustBe FORBIDDEN
         }
@@ -206,7 +207,7 @@ class AuthorisedActionSpec extends TestUtils {
               .expects(*, *, *, *)
               .returning(Future.successful(enrolments))
 
-            auth.checkAuthorisation(block, enrolments, "1234567890", isAgent = true)(fakeRequestWithMtditid, emptyHeaderCarrier)
+            auth.checkAuthorisation(block, enrolments, "1234567890", isAgent = true)(fakeRequest, emptyHeaderCarrier)
           }
 
           "returns an OK (200) status" in {
@@ -302,9 +303,8 @@ class AuthorisedActionSpec extends TestUtils {
             auth.async(block)
           }
 
-          status(result(fakeRequest)) mustBe UNAUTHORIZED
+          status(result(FakeRequest())) mustBe UNAUTHORIZED
         }
-
       }
 
     }
