@@ -86,10 +86,10 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec {
             "reason" -> "ID 2 is invalid")
         )
       )
-      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999&mtditid=123123123", BAD_REQUEST, responseBody.toString())
+      stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=1999", BAD_REQUEST, responseBody.toString(), requestHeaders)
 
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val result = await(connector.getSubmittedDividends(nino, taxYear, "123123123")(hc))
+      implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
+      val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
 
       result mustBe Left(expectedResult)
     }

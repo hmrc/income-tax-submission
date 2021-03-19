@@ -18,12 +18,10 @@ package connectors
 
 import config.AppConfig
 import connectors.httpParsers.SubmittedInterestParser.{IncomeSourcesResponseModel, SubmittedInterestHttpReads}
-
-import javax.inject.Inject
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 
 class IncomeTaxInterestConnector @Inject()(val http: HttpClient,
                                            val config: AppConfig)(implicit ec: ExecutionContext) {

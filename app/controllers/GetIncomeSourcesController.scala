@@ -16,6 +16,7 @@
 
 package controllers
 
+import com.google.inject.Inject
 import controllers.predicates.AuthorisedAction
 import models.IncomeSourcesResponseModel
 import play.api.libs.json.Json
