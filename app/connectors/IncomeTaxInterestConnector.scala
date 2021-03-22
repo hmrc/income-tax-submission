@@ -17,17 +17,17 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.SubmittedInterestParser.{SubmittedInterestHttpReads, IncomeSourcesResponseModel}
-import javax.inject.Inject
+import connectors.httpParsers.SubmittedInterestParser.{IncomeSourcesResponseModel, SubmittedInterestHttpReads}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class IncomeTaxInterestConnector @Inject() (val http: HttpClient,
-                                            val config: AppConfig)(implicit ec: ExecutionContext) {
+class IncomeTaxInterestConnector @Inject()(val http: HttpClient,
+                                           val config: AppConfig)(implicit ec: ExecutionContext) {
 
-  def getSubmittedInterest(nino: String, taxYear: Int, mtditid: String)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
-    val submittedInterestUrl: String = config.interestBaseUrl + s"/income-tax-interest/income-tax/nino/$nino/sources?taxYear=$taxYear&mtditid=$mtditid"
+  def getSubmittedInterest(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
+    val submittedInterestUrl: String = config.interestBaseUrl + s"/income-tax-interest/income-tax/nino/$nino/sources?taxYear=$taxYear"
     http.GET[IncomeSourcesResponseModel](submittedInterestUrl)
   }
 

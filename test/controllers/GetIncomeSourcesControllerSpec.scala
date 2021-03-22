@@ -34,7 +34,8 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
   val nino :String = "123456789"
   val mtditid :String = "1234567890"
   val taxYear: Int = 1234
-  private val fakeGetRequest = FakeRequest("GET", "/").withSession("MTDITID" -> "12234567890")
+  private val fakeGetRequestWithHeader = FakeRequest("GET", "/").withHeaders("mtditid" -> "1234567890").withSession("MTDITID" -> "12234567890")
+  private val fakeGetRequestWithoutHeader = FakeRequest("GET", "/").withSession("MTDITID" -> "12234567890")
 
 
   def mockGetIncomeSourcesValid(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[APIErrorModel, IncomeSourcesResponseModel]]] = {
@@ -53,7 +54,6 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
   }
 
 
-
   "calling .getIncomeSources" should {
 
     "with either existing dividend or interest sources" should {
@@ -62,7 +62,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
         val result = {
           mockAuth()
           mockGetIncomeSourcesValid()
-          controller.getIncomeSources(nino, taxYear, mtditid)(fakeGetRequest)
+          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeader)
         }
         status(result) mustBe OK
       }
@@ -71,7 +71,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
         val result = {
           mockAuthAsAgent()
           mockGetIncomeSourcesValid()
-          controller.getIncomeSources(nino, taxYear, mtditid)(fakeGetRequest)
+          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeader)
         }
         status(result) mustBe OK
       }
@@ -83,7 +83,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
         val result = {
           mockAuth()
           mockGetIncomeSourcesInvalid()
-          controller.getIncomeSources(nino, taxYear, mtditid)(fakeGetRequest)
+          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeader)
         }
         status(result) mustBe INTERNAL_SERVER_ERROR
       }
@@ -92,9 +92,26 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
         val result = {
           mockAuthAsAgent()
           mockGetIncomeSourcesInvalid()
-          controller.getIncomeSources(nino, taxYear, mtditid)(fakeGetRequest)
+          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeader)
         }
         status(result) mustBe INTERNAL_SERVER_ERROR
+      }
+
+    }
+    "without mtditid present in header" should {
+
+      "return an UNAUTHORIZED 401 response when called as an individual" in {
+        val result = {
+          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithoutHeader)
+        }
+        status(result) mustBe UNAUTHORIZED
+      }
+
+      "return an UNAUTHORIZED 401 response when called as an agent" in {
+        val result = {
+          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithoutHeader)
+        }
+        status(result) mustBe UNAUTHORIZED
       }
 
     }

@@ -32,8 +32,10 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
 
   def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String)(implicit hc: HeaderCarrier): Future[IncomeSourceResponse] =  {
     (for {
-      dividends <- FutureEitherOps[APIErrorModel, Option[SubmittedDividendsModel]](dividendsConnector.getSubmittedDividends(nino, taxYear, mtditid))
-      interest <- FutureEitherOps[APIErrorModel, Option[Seq[SubmittedInterestModel]]](interestConnector.getSubmittedInterest(nino, taxYear, mtditid))
+      dividends <- FutureEitherOps[APIErrorModel, Option[SubmittedDividendsModel]](dividendsConnector.getSubmittedDividends(nino, taxYear)
+      (hc.withExtraHeaders(("mtditid", mtditid))))
+      interest <- FutureEitherOps[APIErrorModel, Option[Seq[SubmittedInterestModel]]](interestConnector.getSubmittedInterest(nino, taxYear)
+      (hc.withExtraHeaders(("mtditid", mtditid))))
     } yield {
       IncomeSourcesResponseModel(dividends.map(res => DividendsResponseModel(res.ukDividends, res.otherUkDividends)), interest)
     }).value

@@ -16,8 +16,8 @@
 
 package controllers
 
+import com.google.inject.Inject
 import controllers.predicates.AuthorisedAction
-import javax.inject.Inject
 import models.IncomeSourcesResponseModel
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -32,8 +32,8 @@ class GetIncomeSourcesController @Inject()(
                                             authorisedAction: AuthorisedAction
                                           )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  def getIncomeSources(nino: String, taxYear: Int, mtditid: String): Action[AnyContent] = authorisedAction.async(mtditid) { implicit user =>
-    getIncomeSourcesService.getAllIncomeSources(nino, taxYear, mtditid).map {
+  def getIncomeSources(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
+    getIncomeSourcesService.getAllIncomeSources(nino, taxYear, user.mtditid).map {
       case Right(IncomeSourcesResponseModel(None,None)) => NoContent
       case Right(responseModel) => Ok(Json.toJson(responseModel))
       case Left(error) => Status(error.status)(error.toJson)
