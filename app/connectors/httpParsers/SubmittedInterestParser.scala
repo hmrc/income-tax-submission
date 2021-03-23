@@ -19,10 +19,11 @@ package connectors.httpParsers
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 import models.{APIErrorModel, _}
+import play.api.Logging
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
-object SubmittedInterestParser extends APIParser {
+object SubmittedInterestParser extends APIParser with Logging {
   type IncomeSourcesResponseModel = Either[APIErrorModel, Option[List[SubmittedInterestModel]]]
 
   override val parserName: String = "SubmittedInterestParser"
@@ -39,7 +40,9 @@ object SubmittedInterestParser extends APIParser {
             case _ => Right(None)
           }
         )
-        case NOT_FOUND => Right(None)
+        case NOT_FOUND =>
+          logger.info(logMessage(response))
+          Right(None)
         case BAD_REQUEST =>
           pagerDutyLog(BAD_REQUEST_FROM_API, logMessage(response))
           handleAPIError(response)
