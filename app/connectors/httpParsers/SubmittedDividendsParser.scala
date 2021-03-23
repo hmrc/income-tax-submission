@@ -17,13 +17,14 @@
 package connectors.httpParsers
 
 import models._
+import play.api.Logging
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 
-object SubmittedDividendsParser extends APIParser {
+object SubmittedDividendsParser extends APIParser with Logging {
   type IncomeSourcesResponseModel = Either[APIErrorModel, Option[SubmittedDividendsModel]]
 
   override val parserName: String = "SubmittedDividendsParser"
@@ -40,7 +41,9 @@ object SubmittedDividendsParser extends APIParser {
             case parsedModel => Right(Some(parsedModel))
           }
         )
-        case NOT_FOUND => Right(None)
+        case NOT_FOUND =>
+          logger.info(logMessage(response))
+          Right(None)
         case BAD_REQUEST =>
           pagerDutyLog(BAD_REQUEST_FROM_API, logMessage(response))
           handleAPIError(response)
