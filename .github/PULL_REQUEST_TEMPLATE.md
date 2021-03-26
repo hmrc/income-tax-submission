@@ -22,12 +22,12 @@ Add a link to the relevant story in Jira
  - [ ]  Have you moved the task to “in pipeline” on Jira ?
 
 ### Checklist PR Raiser
- ##### Before creating PR? 
+##### Before creating PR? 
  - [ ]  Have you run the tests ?
  - [ ]  Have you run the journey tests ? 
  - [ ]  Have you addressed warnings where appropriate? 
 
-##### After Reviewing
+##### After PRs been Reviewed
  - [ ]  Have you checked the PR Builder passes ?
  - [ ]  Have you checked for merge conflicts ?
  - [ ]  Have you checked code coverage isn’t lower than previously ?
