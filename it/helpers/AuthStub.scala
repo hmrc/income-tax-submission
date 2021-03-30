@@ -20,21 +20,13 @@ import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, Json}
+import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Individual}
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel}
 
 trait AuthStub extends {
 
   private val authoriseUri: String = "/auth/authorise"
   private val AGENT_ENROLMENT_KEY = "HMRC-AS-AGENT"
-
-  val successITSAEnrolment: JsObject = Json.obj(
-    "key" -> "HMRC-MTD-IT",
-    "identifiers" -> Json.arr(
-      Json.obj(
-        "key" -> "MTDITID",
-        "value" -> "555555555"
-      )
-    )
-  )
 
   val otherEnrolment: JsObject = Json.obj(
     "key" -> "HMRC-OTHER-ENROLMENT",
@@ -55,7 +47,33 @@ trait AuthStub extends {
     )
   )
 
-  def authorised(response: JsObject = successfulAuthResponse("Individual", successITSAEnrolment)): StubMapping = {
+  private val mtditEnrolment = Json.obj(
+    "key" -> "HMRC-MTD-IT",
+    "identifiers" -> Json.arr(
+      Json.obj(
+        "key" -> "MTDITID",
+        "value" -> "555555555"
+      )
+    )
+  )
+
+  private val ninoEnrolment = Json.obj(
+    "key" -> "HMRC-NI",
+    "identifiers" -> Json.arr(
+      Json.obj(
+        "key" -> "NINO",
+        "value" -> "AA123123A"
+      )
+    )
+  )
+
+  private def successfulAuthResponse(affinityGroup: Option[AffinityGroup], confidenceLevel: Option[ConfidenceLevel], enrolments: JsObject*): JsObject = {
+    affinityGroup.fold(Json.obj())(unwrappedAffinityGroup => Json.obj("affinityGroup" -> unwrappedAffinityGroup)) ++
+      confidenceLevel.fold(Json.obj())(unwrappedConfidenceLevel => Json.obj("confidenceLevel" -> unwrappedConfidenceLevel)) ++
+      Json.obj("allEnrolments" -> enrolments)
+  }
+
+  def authorised(response: JsObject = successfulAuthResponse(Some(Individual), Some(ConfidenceLevel.L200),mtditEnrolment,ninoEnrolment)): StubMapping = {
     stubFor(post(urlMatching(authoriseUri))
       .willReturn(
         aResponse()
@@ -69,7 +87,7 @@ trait AuthStub extends {
       .willReturn(
         aResponse()
           .withStatus(OK)
-          .withBody(successfulAuthResponse("Agent", agentEnrolment).toString())
+          .withBody(successfulAuthResponse(Some(Agent), None, agentEnrolment).toString())
           .withHeader("Content-Type", "application/json; charset=utf-8")))
   }
 
@@ -78,7 +96,7 @@ trait AuthStub extends {
       .willReturn(
         aResponse()
           .withStatus(OK)
-          .withBody(successfulAuthResponse("Individual", otherEnrolment).toString())
+          .withBody(successfulAuthResponse(Some(Individual), Some(ConfidenceLevel.L200), otherEnrolment).toString())
           .withHeader("Content-Type", "application/json; charset=utf-8")))
   }
 
@@ -87,13 +105,9 @@ trait AuthStub extends {
       .willReturn(
         aResponse()
           .withStatus(UNAUTHORIZED)
-          .withBody(successfulAuthResponse("Agent", agentEnrolment).toString())
+          .withBody(successfulAuthResponse(Some(Agent), None, agentEnrolment).toString())
           .withHeader("WWW-Authenticate", """MDTP detail="InsufficientEnrolments""")
       ))
-  }
-
-  private def successfulAuthResponse(affinityGroup: String, enrolments: JsObject*): JsObject = {
-    Json.obj("allEnrolments" -> enrolments, "affinityGroup" -> affinityGroup)
   }
 
   def partialsAuthResponse(enrolments: JsObject*): JsObject = {
