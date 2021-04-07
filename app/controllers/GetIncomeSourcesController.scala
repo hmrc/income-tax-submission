@@ -19,6 +19,7 @@ package controllers
 import com.google.inject.Inject
 import controllers.predicates.AuthorisedAction
 import models.IncomeSourcesResponseModel
+import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.GetIncomeSourcesService
@@ -33,7 +34,10 @@ class GetIncomeSourcesController @Inject()(
                                           )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def getIncomeSources(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
-    getIncomeSourcesService.getAllIncomeSources(nino, taxYear, user.mtditid).map {
+
+    val excludedIncomeSources: Seq[String] = user.headers.get("excluded-income-sources").fold[Seq[String]](Seq.empty)(_.split(","))
+
+    getIncomeSourcesService.getAllIncomeSources(nino, taxYear, user.mtditid, excludedIncomeSources).map {
       case Right(IncomeSourcesResponseModel(None,None)) => NoContent
       case Right(responseModel) => Ok(Json.toJson(responseModel))
       case Left(error) => Status(error.status)(error.toJson)
