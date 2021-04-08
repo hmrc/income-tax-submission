@@ -19,7 +19,6 @@ package controllers
 import com.google.inject.Inject
 import controllers.predicates.AuthorisedAction
 import models.IncomeSourcesResponseModel
-import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.GetIncomeSourcesService
