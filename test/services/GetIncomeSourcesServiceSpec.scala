@@ -38,6 +38,14 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
 
   ".getAllIncomeSources" when {
 
+    "the income sources are off" should {
+      "return an empty response" in {
+        val result = await(service.getAllIncomeSources("12345678", 1234, "87654321", Seq("dividends","interest","gift-aid","employment")))
+
+        result mustBe Right(IncomeSourcesResponseModel(None,None))
+      }
+    }
+
     "there are no errors" should {
 
       "return an IncomeSourceResponseModel with existing dividends and interest" in {

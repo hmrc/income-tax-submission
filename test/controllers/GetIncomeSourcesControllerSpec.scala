@@ -18,7 +18,7 @@ package controllers
 
 
 import models._
-import org.scalamock.handlers.CallHandler4
+import org.scalamock.handlers.{CallHandler4, CallHandler5}
 import play.api.http.Status._
 import play.api.test.FakeRequest
 import services.GetIncomeSourcesService
@@ -35,21 +35,27 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
   val mtditid :String = "1234567890"
   val taxYear: Int = 1234
   private val fakeGetRequestWithHeader = FakeRequest("GET", "/").withHeaders("mtditid" -> "1234567890").withSession("MTDITID" -> "12234567890")
+  private val fakeGetRequestWithExcludedHeader = FakeRequest("GET", "/").withHeaders("mtditid" -> "1234567890",
+    "excluded-income-sources" -> "dividends,interest,gift-aid,employment").withSession("MTDITID" -> "12234567890")
   private val fakeGetRequestWithoutHeader = FakeRequest("GET", "/").withSession("MTDITID" -> "12234567890")
 
-
-  def mockGetIncomeSourcesValid(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[APIErrorModel, IncomeSourcesResponseModel]]] = {
+  def mockGetIncomeSourcesTurnedOff(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
+    (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _:Seq[String])(_: HeaderCarrier))
+      .expects(*, *, *, Seq("dividends","interest","gift-aid","employment"), *)
+      .returning(Future.successful(Right(IncomeSourcesResponseModel(None,None))))
+  }
+  def mockGetIncomeSourcesValid(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
     val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(12345.67),Some(12345.67))),
       Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))))
-    (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String)(_: HeaderCarrier))
-      .expects(*, *, *, *)
+    (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _:Seq[String])(_: HeaderCarrier))
+      .expects(*, *, *, Seq(), *)
       .returning(Future.successful(Right(incomeSources)))
   }
 
-  def mockGetIncomeSourcesInvalid(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[APIErrorModel, IncomeSourcesResponseModel]]] = {
+  def mockGetIncomeSourcesInvalid(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
     val invalidIncomeSource: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
-      (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String)(_: HeaderCarrier))
-      .expects(*, *, *, *)
+      (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _:Seq[String])(_: HeaderCarrier))
+      .expects(*, *, *, Seq(), *)
       .returning(Future.successful(Left(invalidIncomeSource)))
   }
 
@@ -57,6 +63,15 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
   "calling .getIncomeSources" should {
 
     "with either existing dividend or interest sources" should {
+
+      "return a 204 response when sources are turned off" in {
+        val result = {
+          mockAuth()
+          mockGetIncomeSourcesTurnedOff()
+          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithExcludedHeader)
+        }
+        status(result) mustBe NO_CONTENT
+      }
 
       "return an OK 200 response when called as an individual" in {
         val result = {

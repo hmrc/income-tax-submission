@@ -33,7 +33,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
 
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSourcesResponseModel]
 
-  def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String])
+  def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                          (implicit hc: HeaderCarrier): Future[IncomeSourceResponse] =  {
     (for {
       dividends <- FutureEitherOps[APIErrorModel, Option[SubmittedDividendsModel]](getDividends(nino,taxYear,mtditid,excludedIncomeSources))
