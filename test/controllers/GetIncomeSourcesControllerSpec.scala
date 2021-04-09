@@ -18,6 +18,7 @@ package controllers
 
 
 import models._
+import models.giftAid.{GiftAidPaymentsModel, GiftsModel, SubmittedGiftAidModel}
 import org.scalamock.handlers.CallHandler4
 import play.api.http.Status._
 import play.api.test.FakeRequest
@@ -37,10 +38,13 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
   private val fakeGetRequestWithHeader = FakeRequest("GET", "/").withHeaders("mtditid" -> "1234567890").withSession("MTDITID" -> "12234567890")
   private val fakeGetRequestWithoutHeader = FakeRequest("GET", "/").withSession("MTDITID" -> "12234567890")
 
+  val giftAidPayments: GiftAidPaymentsModel = GiftAidPaymentsModel(Some(List("")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
+  val gifts: GiftsModel = GiftsModel(Some(List("")), Some(12345.67), Some(12345.67) , Some(12345.67))
+
 
   def mockGetIncomeSourcesValid(): CallHandler4[String, Int, String, HeaderCarrier, Future[Either[APIErrorModel, IncomeSourcesResponseModel]]] = {
     val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(12345.67),Some(12345.67))),
-      Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))))
+      Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(SubmittedGiftAidModel(Some(giftAidPayments), Some(gifts))))
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String)(_: HeaderCarrier))
       .expects(*, *, *, *)
       .returning(Future.successful(Right(incomeSources)))
@@ -56,7 +60,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
 
   "calling .getIncomeSources" should {
 
-    "with either existing dividend or interest sources" should {
+    "with either existing dividend, interest or giftaid" should {
 
       "return an OK 200 response when called as an individual" in {
         val result = {
@@ -77,7 +81,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       }
 
     }
-    "without existing dividend or interest sources" should {
+    "without existing dividend, interest and giftaid" should {
 
       "return an InternalServerError response when called as an individual" in {
         val result = {

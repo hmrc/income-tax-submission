@@ -34,7 +34,7 @@ class GetIncomeSourcesController @Inject()(
 
   def getIncomeSources(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
     getIncomeSourcesService.getAllIncomeSources(nino, taxYear, user.mtditid).map {
-      case Right(IncomeSourcesResponseModel(None,None)) => NoContent
+      case Right(IncomeSourcesResponseModel(None,None,None)) => NoContent
       case Right(responseModel) => Ok(Json.toJson(responseModel))
       case Left(error) => Status(error.status)(error.toJson)
     }

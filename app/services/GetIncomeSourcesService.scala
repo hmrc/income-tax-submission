@@ -16,9 +16,11 @@
 
 package services
 
-import connectors.{IncomeTaxDividendsConnector, IncomeTaxInterestConnector}
+import connectors.{IncomeTaxDividendsConnector, IncomeTaxGiftAidConnector, IncomeTaxInterestConnector}
+
 import javax.inject.Inject
 import models._
+import models.giftAid.SubmittedGiftAidModel
 import services.util.FutureEitherOps
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -26,6 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsConnector,
                                         interestConnector: IncomeTaxInterestConnector,
+                                        giftAidConnector: IncomeTaxGiftAidConnector,
                                         implicit val ec: ExecutionContext) {
 
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSourcesResponseModel]
@@ -36,8 +39,10 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       (hc.withExtraHeaders(("mtditid", mtditid))))
       interest <- FutureEitherOps[APIErrorModel, Option[Seq[SubmittedInterestModel]]](interestConnector.getSubmittedInterest(nino, taxYear)
       (hc.withExtraHeaders(("mtditid", mtditid))))
+      giftAid <- FutureEitherOps[APIErrorModel, Option[SubmittedGiftAidModel]](giftAidConnector.getSubmittedGiftAid(nino, taxYear)
+      (hc.withExtraHeaders(("mtditid", mtditid))))
     } yield {
-      IncomeSourcesResponseModel(dividends.map(res => DividendsResponseModel(res.ukDividends, res.otherUkDividends)), interest)
+      IncomeSourcesResponseModel(dividends.map(res => DividendsResponseModel(res.ukDividends, res.otherUkDividends)), interest, giftAid)
     }).value
   }
 

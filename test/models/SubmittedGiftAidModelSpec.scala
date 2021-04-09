@@ -16,34 +16,35 @@
 
 package models
 
-import com.codahale.metrics.SharedMetricRegistries
 import models.giftAid.{GiftAidPaymentsModel, GiftsModel, SubmittedGiftAidModel}
 import play.api.libs.json.{JsObject, Json}
 import utils.TestUtils
 
-class IncomeSourcesResponseModelSpec extends TestUtils {
-  SharedMetricRegistries.clear()
+class SubmittedGiftAidModelSpec extends TestUtils {
 
-  val giftAidPayments: GiftAidPaymentsModel = GiftAidPaymentsModel(Some(List("non uk charity name","non uk charity name 2")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
-  val gifts: GiftsModel = GiftsModel(Some(List("charity name")), Some(12345.67), Some(12345.67) , Some(12345.67))
+  val validGiftAidPaymentsModel: GiftAidPaymentsModel = GiftAidPaymentsModel(
+    nonUkCharitiesCharityNames = Some(List("non uk charity name","non uk charity name 2")),
+    currentYear = Some(12345.67),
+    oneOffCurrentYear = Some(12345.67),
+    currentYearTreatedAsPreviousYear = Some(12345.67),
+    nextYearTreatedAsCurrentYear = Some(12345.67),
+    nonUkCharities = Some(12345.67)
+  )
 
-  val model: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(123456.78), Some(123456.78))),
-    Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(SubmittedGiftAidModel(Some(giftAidPayments), Some(gifts))))
+  val validGiftsModel: GiftsModel = GiftsModel(
+    investmentsNonUkCharitiesCharityNames = Some(List("charity name")),
+    landAndBuildings = Some(12345.67),
+    sharesOrSecurities = Some(12345.67),
+    investmentsNonUkCharities = Some(12345.67)
+  )
 
-  val jsonModel: JsObject = Json.obj("dividends" ->
-    Json.obj(
-      "ukDividends" -> 123456.78,
-      "otherUkDividends" -> 123456.78
-    ),
-    "interest" ->
-      Seq(Json.obj(
-        "accountName" -> "someName",
-        "incomeSourceId" -> "12345",
-        "taxedUkInterest" -> 12345.67,
-        "untaxedUkInterest" -> 12345.67
-      )
-    ),"giftAid" -> Json.obj(
-      "giftAidPayments" -> Json.obj(
+  val validGiftAidModel: SubmittedGiftAidModel = SubmittedGiftAidModel(
+    Some(validGiftAidPaymentsModel),
+    Some(validGiftsModel)
+  )
+
+  val validJson: JsObject = Json.obj(
+    "giftAidPayments" -> Json.obj(
       "nonUkCharitiesCharityNames" -> Json.arr(
         "non uk charity name",
         "non uk charity name 2"
@@ -61,19 +62,19 @@ class IncomeSourcesResponseModelSpec extends TestUtils {
       "landAndBuildings" -> 12345.67,
       "sharesOrSecurities" -> 12345.67,
       "investmentsNonUkCharities" -> 12345.67
-    )))
+    )
+  )
 
+  "GiftAidSubmission" should {
 
-
-  "IncomeSourcesResponseModel" should {
-
-    "parse to Json" in {
-      Json.toJson(model) mustBe jsonModel
+    "parse from json" in {
+      validJson.as[SubmittedGiftAidModel] mustBe validGiftAidModel
     }
 
-    "parse from Json" in {
-      jsonModel.as[IncomeSourcesResponseModel]
+    "parse to json" in {
+      Json.toJson(validGiftAidModel) mustBe validJson
     }
+
   }
 
 }
