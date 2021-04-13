@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package models
+package models.giftAid
 
-import models.giftAid.SubmittedGiftAidModel
 import play.api.libs.json.{Json, OFormat}
 
-case class IncomeSourcesResponseModel(dividends: Option[DividendsResponseModel],
-                                      interest: Option[Seq[SubmittedInterestModel]],
-                                      giftAid: Option[SubmittedGiftAidModel]
-                                     )
+case class GiftsModel(investmentsNonUkCharitiesCharityNames: Option[List[String]],
+                      landAndBuildings: Option[BigDecimal],
+                      sharesOrSecurities: Option[BigDecimal],
+                      investmentsNonUkCharities: Option[BigDecimal]
+                     )
 
-object IncomeSourcesResponseModel {
-  implicit val format: OFormat[IncomeSourcesResponseModel] = Json.format[IncomeSourcesResponseModel]
+object GiftsModel {
+  implicit val format: OFormat[GiftsModel] = Json.format[GiftsModel]
 }

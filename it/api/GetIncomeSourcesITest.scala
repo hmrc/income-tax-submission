@@ -55,6 +55,14 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
           requestHeaders
         )
 
+
+        stubGetWithResponseBody(
+          url = s"/income-tax-gift-aid/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = OK,
+          response = """{"giftAidPayments":{"nonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"currentYear":6556249600,"oneOffCurrentYear":59537236000,"currentYearTreatedAsPreviousYear":14979438600,"nextYearTreatedAsCurrentYear":55751930000,"nonUkCharities":82514854000},"gifts":{"investmentsNonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"landAndBuildings":89375515000,"sharesOrSecurities":94768726000,"investmentsNonUkCharities":72965235000}}""",
+          requestHeaders
+        )
+
         authorised()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
@@ -64,7 +72,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
           result =>
             result.status mustBe 200
             result.body mustBe
-              """{"dividends":{"ukDividends":29320682007.99,"otherUkDividends":17060389570.99},"interest":[{"accountName":"someName","incomeSourceId":"123","taxedUkInterest":29320682007.99,"untaxedUkInterest":17060389570.99}]}"""
+              """{"dividends":{"ukDividends":29320682007.99,"otherUkDividends":17060389570.99},"interest":[{"accountName":"someName","incomeSourceId":"123","taxedUkInterest":29320682007.99,"untaxedUkInterest":17060389570.99}],"giftAid":{"giftAidPayments":{"nonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"currentYear":6556249600,"oneOffCurrentYear":59537236000,"currentYearTreatedAsPreviousYear":14979438600,"nextYearTreatedAsCurrentYear":55751930000,"nonUkCharities":82514854000},"gifts":{"investmentsNonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"landAndBuildings":89375515000,"sharesOrSecurities":94768726000,"investmentsNonUkCharities":72965235000}}}"""
         }
       }
 

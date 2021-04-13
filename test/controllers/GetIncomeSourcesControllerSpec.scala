@@ -18,7 +18,8 @@ package controllers
 
 
 import models._
-import org.scalamock.handlers.{CallHandler4, CallHandler5}
+import models.giftAid.{GiftAidPaymentsModel, GiftsModel, SubmittedGiftAidModel}
+import org.scalamock.handlers.CallHandler5
 import play.api.http.Status._
 import play.api.test.FakeRequest
 import services.GetIncomeSourcesService
@@ -42,11 +43,17 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
   def mockGetIncomeSourcesTurnedOff(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _:Seq[String])(_: HeaderCarrier))
       .expects(*, *, *, Seq("dividends","interest","gift-aid","employment"), *)
-      .returning(Future.successful(Right(IncomeSourcesResponseModel(None,None))))
+      .returning(Future.successful(Right(IncomeSourcesResponseModel(None,None, None))))
   }
+
+  val giftAidPayments: GiftAidPaymentsModel = {
+    GiftAidPaymentsModel(Some(List("")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
+  }
+  val gifts: GiftsModel = GiftsModel(Some(List("")), Some(12345.67), Some(12345.67) , Some(12345.67))
+
   def mockGetIncomeSourcesValid(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
     val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(12345.67),Some(12345.67))),
-      Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))))
+      Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(SubmittedGiftAidModel(Some(giftAidPayments), Some(gifts))))
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _:Seq[String])(_: HeaderCarrier))
       .expects(*, *, *, Seq(), *)
       .returning(Future.successful(Right(incomeSources)))
@@ -62,7 +69,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
 
   "calling .getIncomeSources" should {
 
-    "with either existing dividend or interest sources" should {
+    "with either existing dividend, interest or giftaid" should {
 
       "return a 204 response when sources are turned off" in {
         val result = {
@@ -92,7 +99,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       }
 
     }
-    "without existing dividend or interest sources" should {
+    "without existing dividend, interest and giftaid" should {
 
       "return an InternalServerError response when called as an individual" in {
         val result = {

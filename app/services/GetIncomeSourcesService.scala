@@ -16,19 +16,20 @@
 
 package services
 
-import connectors.httpParsers.{SubmittedDividendsParser, SubmittedInterestParser}
-import connectors.{IncomeTaxDividendsConnector, IncomeTaxInterestConnector}
+import connectors.httpParsers.{SubmittedDividendsParser, SubmittedGiftAidParser, SubmittedInterestParser}
+import connectors.{IncomeTaxDividendsConnector, IncomeTaxGiftAidConnector, IncomeTaxInterestConnector}
 import javax.inject.Inject
 import models._
+import models.giftAid.SubmittedGiftAidModel
 import services.util.FutureEitherOps
 import uk.gov.hmrc.http.HeaderCarrier
-
 import scala.concurrent.{ExecutionContext, Future}
 import common.IncomeSources._
 import play.api.Logging
 
 class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsConnector,
                                         interestConnector: IncomeTaxInterestConnector,
+                                        giftAidConnector: IncomeTaxGiftAidConnector,
                                         implicit val ec: ExecutionContext) extends Logging {
 
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSourcesResponseModel]
@@ -38,9 +39,21 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
     (for {
       dividends <- FutureEitherOps[APIErrorModel, Option[SubmittedDividendsModel]](getDividends(nino,taxYear,mtditid,excludedIncomeSources))
       interest <- FutureEitherOps[APIErrorModel, Option[Seq[SubmittedInterestModel]]](getInterest(nino,taxYear,mtditid,excludedIncomeSources))
+      giftAid <- FutureEitherOps[APIErrorModel, Option[SubmittedGiftAidModel]](getGiftAid(nino,taxYear,mtditid,excludedIncomeSources))
     } yield {
-      IncomeSourcesResponseModel(dividends.map(res => DividendsResponseModel(res.ukDividends, res.otherUkDividends)), interest)
+      IncomeSourcesResponseModel(dividends.map(res => DividendsResponseModel(res.ukDividends, res.otherUkDividends)), interest, giftAid)
     }).value
+  }
+
+  def getGiftAid(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String])
+                  (implicit hc: HeaderCarrier): Future[SubmittedGiftAidParser.IncomeSourcesResponseModel] = {
+
+    if(excludedIncomeSources.contains(GIFT_AID)){
+      shutteredIncomeSourceLog(GIFT_AID)
+      Future(Right(None))
+    } else {
+      giftAidConnector.getSubmittedGiftAid(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
+    }
   }
 
   def getDividends(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String])
