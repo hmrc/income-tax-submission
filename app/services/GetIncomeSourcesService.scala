@@ -16,34 +16,70 @@
 
 package services
 
+import connectors.httpParsers.{SubmittedDividendsParser, SubmittedGiftAidParser, SubmittedInterestParser}
 import connectors.{IncomeTaxDividendsConnector, IncomeTaxGiftAidConnector, IncomeTaxInterestConnector}
-
 import javax.inject.Inject
 import models._
 import models.giftAid.SubmittedGiftAidModel
 import services.util.FutureEitherOps
 import uk.gov.hmrc.http.HeaderCarrier
-
 import scala.concurrent.{ExecutionContext, Future}
+import common.IncomeSources._
+import play.api.Logging
 
 class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsConnector,
                                         interestConnector: IncomeTaxInterestConnector,
                                         giftAidConnector: IncomeTaxGiftAidConnector,
-                                        implicit val ec: ExecutionContext) {
+                                        implicit val ec: ExecutionContext) extends Logging {
 
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSourcesResponseModel]
 
-  def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String)(implicit hc: HeaderCarrier): Future[IncomeSourceResponse] =  {
+  def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+                         (implicit hc: HeaderCarrier): Future[IncomeSourceResponse] =  {
     (for {
-      dividends <- FutureEitherOps[APIErrorModel, Option[SubmittedDividendsModel]](dividendsConnector.getSubmittedDividends(nino, taxYear)
-      (hc.withExtraHeaders(("mtditid", mtditid))))
-      interest <- FutureEitherOps[APIErrorModel, Option[Seq[SubmittedInterestModel]]](interestConnector.getSubmittedInterest(nino, taxYear)
-      (hc.withExtraHeaders(("mtditid", mtditid))))
-      giftAid <- FutureEitherOps[APIErrorModel, Option[SubmittedGiftAidModel]](giftAidConnector.getSubmittedGiftAid(nino, taxYear)
-      (hc.withExtraHeaders(("mtditid", mtditid))))
+      dividends <- FutureEitherOps[APIErrorModel, Option[SubmittedDividendsModel]](getDividends(nino,taxYear,mtditid,excludedIncomeSources))
+      interest <- FutureEitherOps[APIErrorModel, Option[Seq[SubmittedInterestModel]]](getInterest(nino,taxYear,mtditid,excludedIncomeSources))
+      giftAid <- FutureEitherOps[APIErrorModel, Option[SubmittedGiftAidModel]](getGiftAid(nino,taxYear,mtditid,excludedIncomeSources))
     } yield {
       IncomeSourcesResponseModel(dividends.map(res => DividendsResponseModel(res.ukDividends, res.otherUkDividends)), interest, giftAid)
     }).value
+  }
+
+  def getGiftAid(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String])
+                  (implicit hc: HeaderCarrier): Future[SubmittedGiftAidParser.IncomeSourcesResponseModel] = {
+
+    if(excludedIncomeSources.contains(GIFT_AID)){
+      shutteredIncomeSourceLog(GIFT_AID)
+      Future(Right(None))
+    } else {
+      giftAidConnector.getSubmittedGiftAid(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
+    }
+  }
+
+  def getDividends(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String])
+                  (implicit hc: HeaderCarrier): Future[SubmittedDividendsParser.IncomeSourcesResponseModel] = {
+
+    if(excludedIncomeSources.contains(DIVIDENDS)){
+      shutteredIncomeSourceLog(DIVIDENDS)
+      Future(Right(None))
+    } else {
+      dividendsConnector.getSubmittedDividends(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
+    }
+  }
+
+  def getInterest(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String])
+                  (implicit hc: HeaderCarrier): Future[SubmittedInterestParser.IncomeSourcesResponseModel] = {
+
+    if(excludedIncomeSources.contains(INTEREST)){
+      shutteredIncomeSourceLog(INTEREST)
+      Future(Right(None))
+    } else {
+      interestConnector.getSubmittedInterest(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
+    }
+  }
+
+  def shutteredIncomeSourceLog(source: String): Unit = {
+    logger.info(s"Income source $source is currently shuttered. Not retrieving data for $source.")
   }
 
 }

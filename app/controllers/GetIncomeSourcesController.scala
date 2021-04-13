@@ -33,8 +33,11 @@ class GetIncomeSourcesController @Inject()(
                                           )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def getIncomeSources(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
-    getIncomeSourcesService.getAllIncomeSources(nino, taxYear, user.mtditid).map {
-      case Right(IncomeSourcesResponseModel(None,None,None)) => NoContent
+
+    val excludedIncomeSources: Seq[String] = user.headers.get("excluded-income-sources").fold[Seq[String]](Seq.empty)(_.split(","))
+
+    getIncomeSourcesService.getAllIncomeSources(nino, taxYear, user.mtditid, excludedIncomeSources).map {
+      case Right(IncomeSourcesResponseModel(None,None, None)) => NoContent
       case Right(responseModel) => Ok(Json.toJson(responseModel))
       case Left(error) => Status(error.status)(error.toJson)
     }
