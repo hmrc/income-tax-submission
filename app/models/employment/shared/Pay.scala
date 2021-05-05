@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package models
+package models.employment.shared
 
-import models.employment.frontend.AllEmploymentData
-import models.giftAid.SubmittedGiftAidModel
 import play.api.libs.json.{Json, OFormat}
 
-case class IncomeSourcesResponseModel(dividends: Option[DividendsResponseModel],
-                                      interest: Option[Seq[SubmittedInterestModel]],
-                                      giftAid: Option[SubmittedGiftAidModel],
-                                      employment: Option[AllEmploymentData])
+case class Pay(taxablePayToDate: BigDecimal,
+               totalTaxToDate: BigDecimal,
+               tipsAndOtherPayments: Option[BigDecimal],
+               payFrequency: String,
+               paymentDate: String,
+               taxWeekNo: Option[Int],
+               taxMonthNo: Option[Int])
 
-object IncomeSourcesResponseModel {
-  implicit val format: OFormat[IncomeSourcesResponseModel] = Json.format[IncomeSourcesResponseModel]
+object Pay {
+  implicit val formats: OFormat[Pay] = Json.format[Pay]
 }
