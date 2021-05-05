@@ -19,7 +19,7 @@ package connectors.httpParsers
 import models.employment.frontend.AllEmploymentData
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
-import models.{APIErrorModel, _}
+import models.APIErrorModel
 import play.api.Logging
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
