@@ -76,18 +76,19 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
                 Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
               ))
             )
-          ),
-          employmentExpenses = Some(
-            EmploymentExpenses(
-              Some("2020-01-04T05:01:01Z"),
-              totalExpenses = Some(800),
-              expenses = Some(Expenses(
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
-              ))
-            )
           )
         )
-      ),Seq(
+      ),
+      hmrcExpenses = Some(
+        EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
+          totalExpenses = Some(800),
+          expenses = Some(Expenses(
+            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+          ))
+        )
+      ),
+      Seq(
         EmploymentSource(
           employmentId = "00000000-0000-0000-2222-000000000000",
           employerRef = Some("666/66666"),
@@ -126,16 +127,16 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
                 Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
               ))
             )
-          ),
-          employmentExpenses = Some(
-            EmploymentExpenses(
-              Some("2020-01-04T05:01:01Z"),
-              totalExpenses = Some(800),
-              expenses = Some(Expenses(
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
-              ))
-            )
           )
+        )
+      ),
+      customerExpenses = Some(
+        EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
+          totalExpenses = Some(800),
+          expenses = Some(Expenses(
+            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+          ))
         )
       )
     )
@@ -159,7 +160,7 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
 
     "return a none when no employment info found" in {
 
-      val body = AllEmploymentData(Seq(),Seq())
+      val body = AllEmploymentData(Seq(),None,Seq(), None)
       stubGetWithResponseBody(s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=$taxYear",
         OK, Json.toJson(body).toString(),
         requestHeaders)

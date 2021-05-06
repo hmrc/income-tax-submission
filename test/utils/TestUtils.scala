@@ -154,18 +154,19 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
                 Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
               ))
             )
-          ),
-          employmentExpenses = Some(
-            EmploymentExpenses(
-              Some("2020-01-04T05:01:01Z"),
-              totalExpenses = Some(800),
-              expenses = Some(Expenses(
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
-              ))
-            )
           )
         )
-      ),Seq(
+      ),
+      hmrcExpenses = Some(
+        EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
+          totalExpenses = Some(800),
+          expenses = Some(Expenses(
+            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+          ))
+        )
+      ),
+      Seq(
         EmploymentSource(
           employmentId = "00000000-0000-0000-2222-000000000000",
           employerRef = Some("666/66666"),
@@ -204,16 +205,16 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
                 Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
               ))
             )
-          ),
-          employmentExpenses = Some(
-            EmploymentExpenses(
-              Some("2020-01-04T05:01:01Z"),
-              totalExpenses = Some(800),
-              expenses = Some(Expenses(
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
-              ))
-            )
           )
+        )
+      ),
+      customerExpenses = Some(
+        EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
+          totalExpenses = Some(800),
+          expenses = Some(Expenses(
+            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+          ))
         )
       )
     )
