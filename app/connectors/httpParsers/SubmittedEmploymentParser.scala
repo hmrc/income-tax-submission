@@ -45,7 +45,7 @@ object SubmittedEmploymentParser extends APIParser with Logging {
           logger.info(logMessage(response))
           Right(None)
         case BAD_REQUEST | UNPROCESSABLE_ENTITY=>
-          pagerDutyLog(FOURXX_RESPONSE_FROM_DES, logMessage(response))
+          pagerDutyLog(FOURXX_RESPONSE_FROM_API, logMessage(response))
           handleAPIError(response)
         case INTERNAL_SERVER_ERROR =>
           pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_API, logMessage(response))
