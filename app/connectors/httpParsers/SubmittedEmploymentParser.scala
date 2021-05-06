@@ -36,7 +36,10 @@ object SubmittedEmploymentParser extends APIParser with Logging {
         case OK =>
           response.json.validate[AllEmploymentData].fold[IncomeSourcesResponseModel](
             _ => badSuccessJsonFromAPI,
-            parsedModel => Right(Some(parsedModel))
+            {
+              case AllEmploymentData(Seq(),Seq()) => Right(None)
+              case parsedModel => Right(Some(parsedModel))
+            }
           )
         case NO_CONTENT =>
           logger.info(logMessage(response))

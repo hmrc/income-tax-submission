@@ -420,8 +420,6 @@ class AuthorisedActionSpec extends TestUtils {
           status(result(fakeRequest)) mustBe UNAUTHORIZED
         }
         "the request does not contain mtditid header" in {
-          object AuthException extends AuthorisationException("Some reason")
-
           lazy val result = {
             auth.async(block)
           }

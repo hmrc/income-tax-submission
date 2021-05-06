@@ -18,8 +18,9 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import helpers.WiremockSpec
-import models.employment.frontend.AllEmploymentData
-import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel, SubmittedDividendsModel}
+import models.employment.frontend._
+import models.employment.shared.{Benefits, Expenses, Pay}
+import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -30,16 +31,119 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
   lazy val connector: IncomeTaxEmploymentConnector = app.injector.instanceOf[IncomeTaxEmploymentConnector]
 
   val nino: String = "AA123123A"
-  val taxYear: Int = 1999
+  val taxYear: Int = 2022
   val dividendResult: Option[BigDecimal] = Some(123456.78)
 
   val mtditidHeader = ("mtditid", "123123123")
   val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "123123123"))
 
+  val allEmploymentData =
+    AllEmploymentData(
+      Seq(
+        EmploymentSource(
+          employmentId = "00000000-0000-0000-1111-000000000000",
+          employerRef = Some("666/66666"),
+          employerName = "Business",
+          payrollId = Some("1234567890"),
+          startDate = Some("2020-01-01"),
+          cessationDate = Some("2020-01-01"),
+          dateIgnored = Some("2020-01-01T10:00:38Z"),
+          submittedOn = None,
+          employmentData = Some(EmploymentData(
+            "2020-01-04T05:01:01Z",
+            employmentSequenceNumber = Some("1002"),
+            companyDirector = Some(false),
+            closeCompany = Some(true),
+            directorshipCeasedDate = Some("2020-02-12"),
+            occPen = Some(false),
+            disguisedRemuneration = Some(false),
+            Pay(
+              taxablePayToDate = 34234.15,
+              totalTaxToDate = 6782.92,
+              tipsAndOtherPayments = Some(67676),
+              payFrequency = "CALENDAR MONTHLY",
+              paymentDate = "2020-04-23",
+              taxWeekNo = Some(32),
+              taxMonthNo = Some(2)
+            )
+          )),
+          employmentBenefits = Some(
+            EmploymentBenefits(
+              "2020-01-04T05:01:01Z",
+              benefits = Some(Benefits(
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+              ))
+            )
+          ),
+          employmentExpenses = Some(
+            EmploymentExpenses(
+              Some("2020-01-04T05:01:01Z"),
+              totalExpenses = Some(800),
+              expenses = Some(Expenses(
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+              ))
+            )
+          )
+        )
+      ),Seq(
+        EmploymentSource(
+          employmentId = "00000000-0000-0000-2222-000000000000",
+          employerRef = Some("666/66666"),
+          employerName = "Business",
+          payrollId = Some("1234567890"),
+          startDate = Some("2020-01-01"),
+          cessationDate = Some("2020-01-01"),
+          dateIgnored = None,
+          submittedOn = Some("2020-01-01T10:00:38Z"),
+          employmentData = Some(
+            EmploymentData(
+              "2020-01-04T05:01:01Z",
+              employmentSequenceNumber = Some("1002"),
+              companyDirector = Some(false),
+              closeCompany = Some(true),
+              directorshipCeasedDate = Some("2020-02-12"),
+              occPen = Some(false),
+              disguisedRemuneration = Some(false),
+              Pay(
+                taxablePayToDate = 34234.15,
+                totalTaxToDate = 6782.92,
+                tipsAndOtherPayments = Some(67676),
+                payFrequency = "CALENDAR MONTHLY",
+                paymentDate = "2020-04-23",
+                taxWeekNo = Some(32),
+                taxMonthNo = Some(2)
+              )
+            )
+          ),
+          employmentBenefits = Some(
+            EmploymentBenefits(
+              "2020-01-04T05:01:01Z",
+              benefits = Some(Benefits(
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+              ))
+            )
+          ),
+          employmentExpenses = Some(
+            EmploymentExpenses(
+              Some("2020-01-04T05:01:01Z"),
+              totalExpenses = Some(800),
+              expenses = Some(Expenses(
+                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
+              ))
+            )
+          )
+        )
+      )
+    )
+
   "IncomeTaxEmploymentConnector" should {
-    "return a SubmittedEmploymentModel" when {
+    "return a AllEmploymentData" when {
       "all values are present" in {
-        val expectedResult = Some(AllEmploymentData(Seq(),Seq()))
+        val expectedResult = Some(allEmploymentData)
 
         stubGetWithResponseBody(s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=$taxYear",
           OK, Json.toJson(expectedResult).toString(),
@@ -66,8 +170,8 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
       result mustBe Right(None)
     }
 
-    "return a None for notfound" in {
-      stubGetWithResponseBody(s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=1999", NOT_FOUND, "{}", requestHeaders)
+    "return a None for no content" in {
+      stubGetWithResponseBody(s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=2022", NO_CONTENT, "{}", requestHeaders)
       implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
       val result = await(connector.getSubmittedEmployment(nino, taxYear)(hc))
 
@@ -87,7 +191,7 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
             "reason" -> "ID 2 is invalid")
         )
       )
-      stubGetWithResponseBody(s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=1999", BAD_REQUEST, responseBody.toString(), requestHeaders)
+      stubGetWithResponseBody(s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=2022", BAD_REQUEST, responseBody.toString(), requestHeaders)
 
       implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
       val result = await(connector.getSubmittedEmployment(nino, taxYear)(hc))
@@ -100,7 +204,7 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
       val expectedResult = APIErrorModel(BAD_REQUEST, errorBody)
 
       stubGetWithResponseBody(
-        s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=1999", BAD_REQUEST, Json.toJson(errorBody).toString(), requestHeaders)
+        s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=2022", BAD_REQUEST, Json.toJson(errorBody).toString(), requestHeaders)
       implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
       val result = await(connector.getSubmittedEmployment(nino, taxYear)(hc))
 
@@ -113,7 +217,7 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, errorBody)
 
       stubGetWithResponseBody(
-        s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=1999", INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString(), requestHeaders)
+        s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=2022", INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString(), requestHeaders)
       implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
       val result = await(connector.getSubmittedEmployment(nino, taxYear)(hc))
 
@@ -127,7 +231,7 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
 
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)
 
-      stubGetWithResponseBody(s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=1999", OK, invalidJson.toString(), requestHeaders)
+      stubGetWithResponseBody(s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=2022", OK, invalidJson.toString(), requestHeaders)
       implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
       val result = await(connector.getSubmittedEmployment(nino, taxYear)(hc))
 
@@ -139,7 +243,7 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
 
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)
 
-      stubGetWithResponseBody(s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=1999", INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString(), requestHeaders)
+      stubGetWithResponseBody(s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=2022", INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString(), requestHeaders)
       implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
       val result = await(connector.getSubmittedEmployment(nino, taxYear)(hc))
 
@@ -152,7 +256,7 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, errorBody)
 
       stubGetWithResponseBody(
-        s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=1999", IM_A_TEAPOT, Json.toJson(errorBody).toString(), requestHeaders)
+        s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=2022", IM_A_TEAPOT, Json.toJson(errorBody).toString(), requestHeaders)
       implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
       val result = await(connector.getSubmittedEmployment(nino, taxYear)(hc))
 
@@ -164,7 +268,7 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)
 
       stubGetWithoutResponseBody(
-        s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=1999", IM_A_TEAPOT)
+        s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=2022", IM_A_TEAPOT)
       implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
       val result = await(connector.getSubmittedEmployment(nino, taxYear)(hc))
 
@@ -176,7 +280,7 @@ class GetEmploymentConnectorISpec extends PlaySpec with WiremockSpec {
       val expectedResult = APIErrorModel(SERVICE_UNAVAILABLE, errorBody)
 
       stubGetWithResponseBody(
-        s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=1999", SERVICE_UNAVAILABLE, Json.toJson(errorBody).toString(), requestHeaders)
+        s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=2022", SERVICE_UNAVAILABLE, Json.toJson(errorBody).toString(), requestHeaders)
       implicit val hc = HeaderCarrier().withExtraHeaders(mtditidHeader)
       val result = await(connector.getSubmittedEmployment(nino, taxYear)(hc))
 

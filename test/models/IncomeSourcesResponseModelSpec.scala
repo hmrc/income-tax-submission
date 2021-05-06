@@ -24,11 +24,12 @@ import utils.TestUtils
 class IncomeSourcesResponseModelSpec extends TestUtils {
   SharedMetricRegistries.clear()
 
-  val giftAidPayments: GiftAidPaymentsModel = GiftAidPaymentsModel(Some(List("non uk charity name","non uk charity name 2")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
-  val gifts: GiftsModel = GiftsModel(Some(List("charity name")), Some(12345.67), Some(12345.67) , Some(12345.67))
+  val giftAidPayments: GiftAidPaymentsModel = GiftAidPaymentsModel(Some(List("non uk charity name", "non uk charity name 2")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
+  val gifts: GiftsModel = GiftsModel(Some(List("charity name")), Some(12345.67), Some(12345.67), Some(12345.67))
 
   val model: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(123456.78), Some(123456.78))),
-    Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(SubmittedGiftAidModel(Some(giftAidPayments), Some(gifts))))
+    Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(SubmittedGiftAidModel(Some(giftAidPayments), Some(gifts))),
+    Some(allEmploymentData))
 
   val jsonModel: JsObject = Json.obj("dividends" ->
     Json.obj(
@@ -42,28 +43,177 @@ class IncomeSourcesResponseModelSpec extends TestUtils {
         "taxedUkInterest" -> 12345.67,
         "untaxedUkInterest" -> 12345.67
       )
-    ),"giftAid" -> Json.obj(
+      ), "giftAid" -> Json.obj(
       "giftAidPayments" -> Json.obj(
-      "nonUkCharitiesCharityNames" -> Json.arr(
-        "non uk charity name",
-        "non uk charity name 2"
+        "nonUkCharitiesCharityNames" -> Json.arr(
+          "non uk charity name",
+          "non uk charity name 2"
+        ),
+        "currentYear" -> 12345.67,
+        "oneOffCurrentYear" -> 12345.67,
+        "currentYearTreatedAsPreviousYear" -> 12345.67,
+        "nextYearTreatedAsCurrentYear" -> 12345.67,
+        "nonUkCharities" -> 12345.67
       ),
-      "currentYear" -> 12345.67,
-      "oneOffCurrentYear" -> 12345.67,
-      "currentYearTreatedAsPreviousYear" -> 12345.67,
-      "nextYearTreatedAsCurrentYear" -> 12345.67,
-      "nonUkCharities" -> 12345.67
-    ),
-    "gifts" -> Json.obj(
-      "investmentsNonUkCharitiesCharityNames" -> Json.arr(
-        "charity name"
+      "gifts" -> Json.obj(
+        "investmentsNonUkCharitiesCharityNames" -> Json.arr(
+          "charity name"
+        ),
+        "landAndBuildings" -> 12345.67,
+        "sharesOrSecurities" -> 12345.67,
+        "investmentsNonUkCharities" -> 12345.67
+      )),
+    "employment" -> Json.obj(
+      "hmrcEmploymentData" -> Json.arr(
+        Json.obj(
+        "employmentId" -> "00000000-0000-0000-1111-000000000000",
+        "employerName" -> "Business",
+        "employerRef" -> "666/66666",
+        "payrollId" -> "1234567890",
+        "startDate" -> "2020-01-01",
+        "cessationDate" -> "2020-01-01",
+        "dateIgnored" -> "2020-01-01T10:00:38Z",
+        "employmentData" -> Json.obj(
+          "submittedOn" -> "2020-01-04T05:01:01Z",
+          "employmentSequenceNumber" -> "1002",
+          "companyDirector" -> false,
+          "closeCompany" -> true,
+          "directorshipCeasedDate" -> "2020-02-12",
+          "occPen" -> false,
+          "disguisedRemuneration" -> false,
+          "pay" -> Json.obj(
+            "taxablePayToDate" -> 34234.15,
+            "totalTaxToDate" -> 6782.92,
+            "tipsAndOtherPayments" -> 67676,
+            "payFrequency" -> "CALENDAR MONTHLY",
+            "paymentDate" -> "2020-04-23",
+            "taxWeekNo" -> 32,
+            "taxMonthNo" -> 2
+          )
+        ),
+        "employmentBenefits" -> Json.obj(
+          "submittedOn" -> "2020-01-04T05:01:01Z",
+          "benefits" -> Json.obj(
+            "accommodation" -> 100,
+            "assets" -> 100,
+            "assetTransfer" -> 100,
+            "beneficialLoan" -> 100,
+            "car" -> 100,
+            "carFuel" -> 100,
+            "educationalServices" -> 100,
+            "entertaining" -> 100,
+            "expenses" -> 100,
+            "medicalInsurance" -> 100,
+            "telephone" -> 100,
+            "service" -> 100,
+            "taxableExpenses" -> 100,
+            "van" -> 100,
+            "vanFuel" -> 100,
+            "mileage" -> 100,
+            "nonQualifyingRelocationExpenses" -> 100,
+            "nurseryPlaces" -> 100,
+            "otherItems" -> 100,
+            "paymentsOnEmployeesBehalf" -> 100,
+            "personalIncidentalExpenses" -> 100,
+            "qualifyingRelocationExpenses" -> 100,
+            "employerProvidedProfessionalSubscriptions" -> 100,
+            "employerProvidedServices" -> 100,
+            "incomeTaxPaidByDirector" -> 100,
+            "travelAndSubsistence" -> 100,
+            "vouchersAndCreditCards" -> 100,
+            "nonCash" -> 100
+          )
+        ),
+        "employmentExpenses" -> Json.obj(
+          "submittedOn" -> "2020-01-04T05:01:01Z",
+          "totalExpenses" -> 800,
+          "expenses" -> Json.obj(
+            "businessTravelCosts" -> 100,
+            "jobExpenses" -> 100,
+            "flatRateJobExpenses" -> 100,
+            "professionalSubscriptions" -> 100,
+            "hotelAndMealExpenses" -> 100,
+            "otherAndCapitalAllowances" -> 100,
+            "vehicleExpenses" -> 100,
+            "mileageAllowanceRelief" -> 100
+          )
+        )
+      )),
+    "customerEmploymentData" -> Json.arr(
+      Json.obj(
+      "employmentId" -> "00000000-0000-0000-2222-000000000000",
+      "employerName" -> "Business",
+      "employerRef" -> "666/66666",
+      "payrollId" -> "1234567890",
+      "startDate" -> "2020-01-01",
+      "cessationDate" -> "2020-01-01",
+      "submittedOn" -> "2020-01-01T10:00:38Z",
+      "employmentData" -> Json.obj(
+        "submittedOn" -> "2020-01-04T05:01:01Z",
+        "employmentSequenceNumber" -> "1002",
+        "companyDirector" -> false,
+        "closeCompany" -> true,
+        "directorshipCeasedDate" -> "2020-02-12",
+        "occPen" -> false,
+        "disguisedRemuneration" -> false,
+        "pay" -> Json.obj(
+          "taxablePayToDate" -> 34234.15,
+          "totalTaxToDate" -> 6782.92,
+          "tipsAndOtherPayments" -> 67676,
+          "payFrequency" -> "CALENDAR MONTHLY",
+          "paymentDate" -> "2020-04-23",
+          "taxWeekNo" -> 32,
+          "taxMonthNo" -> 2
+        )
       ),
-      "landAndBuildings" -> 12345.67,
-      "sharesOrSecurities" -> 12345.67,
-      "investmentsNonUkCharities" -> 12345.67
-    )))
-
-
+      "employmentBenefits" -> Json.obj(
+        "submittedOn" -> "2020-01-04T05:01:01Z",
+        "benefits" -> Json.obj(
+          "accommodation" -> 100,
+          "assets" -> 100,
+          "assetTransfer" -> 100,
+          "beneficialLoan" -> 100,
+          "car" -> 100,
+          "carFuel" -> 100,
+          "educationalServices" -> 100,
+          "entertaining" -> 100,
+          "expenses" -> 100,
+          "medicalInsurance" -> 100,
+          "telephone" -> 100,
+          "service" -> 100,
+          "taxableExpenses" -> 100,
+          "van" -> 100,
+          "vanFuel" -> 100,
+          "mileage" -> 100,
+          "nonQualifyingRelocationExpenses" -> 100,
+          "nurseryPlaces" -> 100,
+          "otherItems" -> 100,
+          "paymentsOnEmployeesBehalf" -> 100,
+          "personalIncidentalExpenses" -> 100,
+          "qualifyingRelocationExpenses" -> 100,
+          "employerProvidedProfessionalSubscriptions" -> 100,
+          "employerProvidedServices" -> 100,
+          "incomeTaxPaidByDirector" -> 100,
+          "travelAndSubsistence" -> 100,
+          "vouchersAndCreditCards" -> 100,
+          "nonCash" -> 100
+        )
+      ),
+      "employmentExpenses" -> Json.obj(
+        "submittedOn" -> "2020-01-04T05:01:01Z",
+        "totalExpenses" -> 800,
+        "expenses" -> Json.obj(
+          "businessTravelCosts" -> 100,
+          "jobExpenses" -> 100,
+          "flatRateJobExpenses" -> 100,
+          "professionalSubscriptions" -> 100,
+          "hotelAndMealExpenses" -> 100,
+          "otherAndCapitalAllowances" -> 100,
+          "vehicleExpenses" -> 100,
+          "mileageAllowanceRelief" -> 100
+        )
+      )
+    ))))
 
   "IncomeSourcesResponseModel" should {
 

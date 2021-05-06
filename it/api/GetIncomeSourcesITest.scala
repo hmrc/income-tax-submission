@@ -16,7 +16,7 @@
 
 package api
 
-import com.github.tomakehurst.wiremock.http.{HttpHeader, HttpHeaders}
+import com.github.tomakehurst.wiremock.http.HttpHeader
 import helpers.WiremockSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
@@ -63,6 +63,13 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
           requestHeaders
         )
 
+        stubGetWithResponseBody(
+          url = s"/income-tax-employment/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = OK,
+          response = """{"hmrcEmploymentData":[{"employmentId":"00000000-0000-0000-1111-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","dateIgnored":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"tipsAndOtherPayments":67676,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}},"employmentExpenses":{"submittedOn":"2020-01-04T05:01:01Z","totalExpenses":800,"expenses":{"businessTravelCosts":100,"jobExpenses":100,"flatRateJobExpenses":100,"professionalSubscriptions":100,"hotelAndMealExpenses":100,"otherAndCapitalAllowances":100,"vehicleExpenses":100,"mileageAllowanceRelief":100}}}],"customerEmploymentData":[{"employmentId":"00000000-0000-0000-2222-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","submittedOn":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"tipsAndOtherPayments":67676,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}},"employmentExpenses":{"submittedOn":"2020-01-04T05:01:01Z","totalExpenses":800,"expenses":{"businessTravelCosts":100,"jobExpenses":100,"flatRateJobExpenses":100,"professionalSubscriptions":100,"hotelAndMealExpenses":100,"otherAndCapitalAllowances":100,"vehicleExpenses":100,"mileageAllowanceRelief":100}}}]}""",
+          requestHeaders
+        )
+
         authorised()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
@@ -72,7 +79,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
           result =>
             result.status mustBe 200
             result.body mustBe
-              """{"dividends":{"ukDividends":29320682007.99,"otherUkDividends":17060389570.99},"interest":[{"accountName":"someName","incomeSourceId":"123","taxedUkInterest":29320682007.99,"untaxedUkInterest":17060389570.99}],"giftAid":{"giftAidPayments":{"nonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"currentYear":6556249600,"oneOffCurrentYear":59537236000,"currentYearTreatedAsPreviousYear":14979438600,"nextYearTreatedAsCurrentYear":55751930000,"nonUkCharities":82514854000},"gifts":{"investmentsNonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"landAndBuildings":89375515000,"sharesOrSecurities":94768726000,"investmentsNonUkCharities":72965235000}}}"""
+              """{"dividends":{"ukDividends":29320682007.99,"otherUkDividends":17060389570.99},"interest":[{"accountName":"someName","incomeSourceId":"123","taxedUkInterest":29320682007.99,"untaxedUkInterest":17060389570.99}],"giftAid":{"giftAidPayments":{"nonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"currentYear":6556249600,"oneOffCurrentYear":59537236000,"currentYearTreatedAsPreviousYear":14979438600,"nextYearTreatedAsCurrentYear":55751930000,"nonUkCharities":82514854000},"gifts":{"investmentsNonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"landAndBuildings":89375515000,"sharesOrSecurities":94768726000,"investmentsNonUkCharities":72965235000}},"employment":{"hmrcEmploymentData":[{"employmentId":"00000000-0000-0000-1111-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","dateIgnored":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"tipsAndOtherPayments":67676,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}},"employmentExpenses":{"submittedOn":"2020-01-04T05:01:01Z","totalExpenses":800,"expenses":{"businessTravelCosts":100,"jobExpenses":100,"flatRateJobExpenses":100,"professionalSubscriptions":100,"hotelAndMealExpenses":100,"otherAndCapitalAllowances":100,"vehicleExpenses":100,"mileageAllowanceRelief":100}}}],"customerEmploymentData":[{"employmentId":"00000000-0000-0000-2222-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","submittedOn":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"tipsAndOtherPayments":67676,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}},"employmentExpenses":{"submittedOn":"2020-01-04T05:01:01Z","totalExpenses":800,"expenses":{"businessTravelCosts":100,"jobExpenses":100,"flatRateJobExpenses":100,"professionalSubscriptions":100,"hotelAndMealExpenses":100,"otherAndCapitalAllowances":100,"vehicleExpenses":100,"mileageAllowanceRelief":100}}}]}}"""
         }
       }
 
@@ -84,8 +91,19 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
           requestHeaders
         )
         stubGetWithoutResponseBody(
-          url = s"/income-tax-interest/income-tax/nino/A123123A/sources\\?taxYear=2019",
+          url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = NOT_FOUND,
+          requestHeaders
+        )
+        stubGetWithoutResponseBody(
+          url = s"/income-tax-gift-aid/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = NOT_FOUND,
+          requestHeaders
+        )
+
+        stubGetWithoutResponseBody(
+          url = s"/income-tax-employment/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = NO_CONTENT,
           requestHeaders
         )
 
@@ -180,6 +198,19 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
           response = """[{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}]""",
           requestHeaders
         )
+        stubGetWithResponseBody(
+          url = s"/income-tax-gift-aid/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = OK,
+          response = """{"giftAidPayments":{"nonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"currentYear":6556249600,"oneOffCurrentYear":59537236000,"currentYearTreatedAsPreviousYear":14979438600,"nextYearTreatedAsCurrentYear":55751930000,"nonUkCharities":82514854000},"gifts":{"investmentsNonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"landAndBuildings":89375515000,"sharesOrSecurities":94768726000,"investmentsNonUkCharities":72965235000}}""",
+          requestHeaders
+        )
+
+        stubGetWithResponseBody(
+          url = s"/income-tax-employment/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = OK,
+          response = """{"hmrcEmploymentData":[{"employmentId":"00000000-0000-0000-1111-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","dateIgnored":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"tipsAndOtherPayments":67676,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}},"employmentExpenses":{"submittedOn":"2020-01-04T05:01:01Z","totalExpenses":800,"expenses":{"businessTravelCosts":100,"jobExpenses":100,"flatRateJobExpenses":100,"professionalSubscriptions":100,"hotelAndMealExpenses":100,"otherAndCapitalAllowances":100,"vehicleExpenses":100,"mileageAllowanceRelief":100}}}],"customerEmploymentData":[{"employmentId":"00000000-0000-0000-2222-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","submittedOn":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"tipsAndOtherPayments":67676,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}},"employmentExpenses":{"submittedOn":"2020-01-04T05:01:01Z","totalExpenses":800,"expenses":{"businessTravelCosts":100,"jobExpenses":100,"flatRateJobExpenses":100,"professionalSubscriptions":100,"hotelAndMealExpenses":100,"otherAndCapitalAllowances":100,"vehicleExpenses":100,"mileageAllowanceRelief":100}}}]}""",
+          requestHeaders
+        )
         agentAuthorised()
 
         whenReady(
@@ -190,7 +221,8 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         ) {
           result =>
             result.status mustBe 200
-            result.body mustBe """{"dividends":{"ukDividends":29320682007.99,"otherUkDividends":17060389570.99},"interest":[{"accountName":"someName","incomeSourceId":"123","taxedUkInterest":29320682007.99,"untaxedUkInterest":17060389570.99}]}"""
+            result.body mustBe
+              """{"dividends":{"ukDividends":29320682007.99,"otherUkDividends":17060389570.99},"interest":[{"accountName":"someName","incomeSourceId":"123","taxedUkInterest":29320682007.99,"untaxedUkInterest":17060389570.99}],"giftAid":{"giftAidPayments":{"nonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"currentYear":6556249600,"oneOffCurrentYear":59537236000,"currentYearTreatedAsPreviousYear":14979438600,"nextYearTreatedAsCurrentYear":55751930000,"nonUkCharities":82514854000},"gifts":{"investmentsNonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"landAndBuildings":89375515000,"sharesOrSecurities":94768726000,"investmentsNonUkCharities":72965235000}},"employment":{"hmrcEmploymentData":[{"employmentId":"00000000-0000-0000-1111-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","dateIgnored":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"tipsAndOtherPayments":67676,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}},"employmentExpenses":{"submittedOn":"2020-01-04T05:01:01Z","totalExpenses":800,"expenses":{"businessTravelCosts":100,"jobExpenses":100,"flatRateJobExpenses":100,"professionalSubscriptions":100,"hotelAndMealExpenses":100,"otherAndCapitalAllowances":100,"vehicleExpenses":100,"mileageAllowanceRelief":100}}}],"customerEmploymentData":[{"employmentId":"00000000-0000-0000-2222-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","submittedOn":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"tipsAndOtherPayments":67676,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}},"employmentExpenses":{"submittedOn":"2020-01-04T05:01:01Z","totalExpenses":800,"expenses":{"businessTravelCosts":100,"jobExpenses":100,"flatRateJobExpenses":100,"professionalSubscriptions":100,"hotelAndMealExpenses":100,"otherAndCapitalAllowances":100,"vehicleExpenses":100,"mileageAllowanceRelief":100}}}]}}"""
         }
       }
 
@@ -203,6 +235,16 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         stubGetWithoutResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = NOT_FOUND,
+          requestHeaders
+        )
+        stubGetWithoutResponseBody(
+          url = s"/income-tax-gift-aid/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = NOT_FOUND,
+          requestHeaders
+        )
+        stubGetWithoutResponseBody(
+          url = s"/income-tax-employment/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = NO_CONTENT,
           requestHeaders
         )
         agentAuthorised()
