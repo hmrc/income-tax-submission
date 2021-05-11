@@ -43,7 +43,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
   def mockGetIncomeSourcesTurnedOff(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _:Seq[String])(_: HeaderCarrier))
       .expects(*, *, *, Seq("dividends","interest","gift-aid","employment"), *)
-      .returning(Future.successful(Right(IncomeSourcesResponseModel(None,None, None))))
+      .returning(Future.successful(Right(IncomeSourcesResponseModel(None,None, None, None))))
   }
 
   val giftAidPayments: GiftAidPaymentsModel = {
@@ -53,7 +53,8 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
 
   def mockGetIncomeSourcesValid(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
     val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(12345.67),Some(12345.67))),
-      Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(SubmittedGiftAidModel(Some(giftAidPayments), Some(gifts))))
+      Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(SubmittedGiftAidModel(Some(giftAidPayments), Some(gifts))),
+      Some(allEmploymentData))
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _:Seq[String])(_: HeaderCarrier))
       .expects(*, *, *, Seq(), *)
       .returning(Future.successful(Right(incomeSources)))

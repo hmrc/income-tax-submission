@@ -27,6 +27,7 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   val dividendsBaseUrl: String = servicesConfig.baseUrl("income-tax-dividends")
   val interestBaseUrl: String = servicesConfig.baseUrl("income-tax-interest")
+  val employmentBaseUrl: String = servicesConfig.baseUrl("income-tax-employment")
   val giftAidBaseUrl: String = servicesConfig.baseUrl("income-tax-gift-aid")
 
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")

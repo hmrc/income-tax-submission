@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package models.giftAid
+package models.employment.shared
 
 import play.api.libs.json.{Json, OFormat}
 
-case class GiftAidPaymentsModel(nonUkCharitiesCharityNames: Option[List[String]],
-                                currentYear: Option[BigDecimal],
-                                oneOffCurrentYear: Option[BigDecimal],
-                                currentYearTreatedAsPreviousYear: Option[BigDecimal],
-                                nextYearTreatedAsCurrentYear: Option[BigDecimal],
-                                nonUkCharities: Option[BigDecimal])
+case class Pay(taxablePayToDate: BigDecimal,
+               totalTaxToDate: BigDecimal,
+               tipsAndOtherPayments: Option[BigDecimal],
+               payFrequency: String,
+               paymentDate: String,
+               taxWeekNo: Option[Int],
+               taxMonthNo: Option[Int])
 
-object GiftAidPaymentsModel {
-  implicit val format: OFormat[GiftAidPaymentsModel] = Json.format[GiftAidPaymentsModel]
+object Pay {
+  implicit val formats: OFormat[Pay] = Json.format[Pay]
 }

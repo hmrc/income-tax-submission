@@ -16,20 +16,23 @@
 
 package services
 
-import connectors.httpParsers.{SubmittedDividendsParser, SubmittedGiftAidParser, SubmittedInterestParser}
-import connectors.{IncomeTaxDividendsConnector, IncomeTaxGiftAidConnector, IncomeTaxInterestConnector}
+import connectors.httpParsers.{SubmittedDividendsParser, SubmittedEmploymentParser, SubmittedGiftAidParser, SubmittedInterestParser}
+import connectors.{IncomeTaxDividendsConnector, IncomeTaxEmploymentConnector, IncomeTaxGiftAidConnector, IncomeTaxInterestConnector}
 import javax.inject.Inject
 import models._
 import models.giftAid.SubmittedGiftAidModel
 import services.util.FutureEitherOps
 import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.{ExecutionContext, Future}
 import common.IncomeSources._
+import models.employment.frontend.AllEmploymentData
 import play.api.Logging
 
 class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsConnector,
                                         interestConnector: IncomeTaxInterestConnector,
                                         giftAidConnector: IncomeTaxGiftAidConnector,
+                                        employmentConnector: IncomeTaxEmploymentConnector,
                                         implicit val ec: ExecutionContext) extends Logging {
 
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSourcesResponseModel]
@@ -40,8 +43,14 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       dividends <- FutureEitherOps[APIErrorModel, Option[SubmittedDividendsModel]](getDividends(nino,taxYear,mtditid,excludedIncomeSources))
       interest <- FutureEitherOps[APIErrorModel, Option[Seq[SubmittedInterestModel]]](getInterest(nino,taxYear,mtditid,excludedIncomeSources))
       giftAid <- FutureEitherOps[APIErrorModel, Option[SubmittedGiftAidModel]](getGiftAid(nino,taxYear,mtditid,excludedIncomeSources))
+      employment <- FutureEitherOps[APIErrorModel, Option[AllEmploymentData]](getEmployment(nino,taxYear,mtditid,excludedIncomeSources))
     } yield {
-      IncomeSourcesResponseModel(dividends.map(res => DividendsResponseModel(res.ukDividends, res.otherUkDividends)), interest, giftAid)
+      IncomeSourcesResponseModel(
+        dividends.map(res => DividendsResponseModel(res.ukDividends, res.otherUkDividends)),
+        interest,
+        giftAid,
+        employment
+      )
     }).value
   }
 
@@ -53,6 +62,17 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       Future(Right(None))
     } else {
       giftAidConnector.getSubmittedGiftAid(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
+    }
+  }
+
+  def getEmployment(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String])
+                   (implicit hc: HeaderCarrier): Future[SubmittedEmploymentParser.IncomeSourcesResponseModel] = {
+
+    if(excludedIncomeSources.contains(EMPLOYMENT)){
+      shutteredIncomeSourceLog(EMPLOYMENT)
+      Future(Right(None))
+    } else {
+      employmentConnector.getSubmittedEmployment(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
     }
   }
 
