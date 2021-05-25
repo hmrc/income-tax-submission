@@ -53,10 +53,10 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
   val mtditid :String = "1234567890"
   val taxYear: Int = 1234
   private val fakeGetRequestWithHeaderAndSession = FakeRequest("GET",
-    "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890")
+    "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
   private val fakeGetRequestWithExcludedHeader = FakeRequest("GET",
     "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890",
-    "excluded-income-sources" -> "dividends,interest,gift-aid,employment")
+    "excluded-income-sources" -> "dividends,interest,gift-aid,employment", "sessionId" -> "sessionId")
   private val fakeGetRequestWithoutHeader = FakeRequest("GET",
     "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022")
 

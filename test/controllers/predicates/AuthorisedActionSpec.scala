@@ -196,7 +196,7 @@ class AuthorisedActionSpec extends TestUtils {
           auth.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
         }
 
-        "returns a forbidden" in {
+        "returns an UNAUTHORIZED" in {
           status(result) mustBe UNAUTHORIZED
         }
       }
@@ -218,6 +218,28 @@ class AuthorisedActionSpec extends TestUtils {
           .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
           .returning(Future.successful(enrolments and ConfidenceLevel.L200))
         auth.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
+      }
+
+      "returns an UNAUTHORIZED status" in {
+        status(result) mustBe UNAUTHORIZED
+      }
+    }
+    "the session id does not exist in the headers" which {
+      val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(user.mtditid))
+      val mtditid = "AAAAAA"
+      val enrolments = Enrolments(Set(Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, mtditid)), "Activated"),
+        Enrolment(
+          EnrolmentKeys.nino,
+          Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, mtditid)), "Activated")))
+
+      val request = FakeRequest("GET",
+        "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890")
+
+      lazy val result: Future[Result] = {
+        (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
+          .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
+          .returning(Future.successful(enrolments and ConfidenceLevel.L200))
+        auth.individualAuthentication(block, mtditid)(request, emptyHeaderCarrier)
       }
 
       "returns an UNAUTHORIZED status" in {
@@ -328,7 +350,31 @@ class AuthorisedActionSpec extends TestUtils {
         status(result) mustBe UNAUTHORIZED
       }
 
+      "the session id does not exist in the headers" which {
+        val enrolments = Enrolments(Set(
+          Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, "1234567890")), "Activated"),
+          Enrolment(EnrolmentKeys.Agent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, "0987654321")), "Activated")
+        ))
+
+        val request = FakeRequest("GET",
+          "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890")
+
+        lazy val result = {
+          (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
+            .expects(*, Retrievals.allEnrolments, *, *)
+            .returning(Future.successful(enrolments))
+
+          auth.agentAuthentication(block, "1234567890")(request, emptyHeaderCarrier)
+        }
+
+        "returns an UNAUTHORIZED status" in {
+          status(result) mustBe UNAUTHORIZED
+        }
+      }
+
     }
+
+
 
     "return an Unauthorised" when {
 

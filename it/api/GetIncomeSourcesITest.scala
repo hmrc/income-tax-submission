@@ -30,6 +30,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
     val successNino: String = "AA123123A"
     val taxYear: String = "2019"
     val mtditidHeader = ("mtditid", "555555555")
+    val sessionIdHeader = ("sessionId", "555555555")
     val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "555555555"))
     auditStubs()
   }
@@ -73,7 +74,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader)
+          .withHttpHeaders(mtditidHeader,sessionIdHeader)
           .get) {
           result =>
             result.status mustBe 200
@@ -110,7 +111,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader)
+          .withHttpHeaders(mtditidHeader,sessionIdHeader)
           .get) {
           result =>
             result.status mustBe 204
@@ -137,7 +138,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader)
+          .withHttpHeaders(mtditidHeader,sessionIdHeader)
           .get) {
           result =>
             result.status mustBe 503
@@ -150,7 +151,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader)
+          .withHttpHeaders(mtditidHeader,sessionIdHeader)
           .get) {
           result =>
             result.status mustBe 401
@@ -213,8 +214,9 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         agentAuthorised()
 
         whenReady(
-          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources", mtditid = Some(mtditidHeader))
+          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
+            .withHttpHeaders(mtditidHeader,sessionIdHeader)
             .get
         ) {
           result =>
@@ -248,7 +250,8 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         agentAuthorised()
 
         whenReady(
-          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources", mtditid = Some(mtditidHeader))
+          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
+            .withHttpHeaders(mtditidHeader,sessionIdHeader)
             .withQueryStringParameters("taxYear" -> "2019")
             .get
         ) {
@@ -275,8 +278,9 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         agentAuthorised()
 
         whenReady(
-          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources", mtditid = Some(mtditidHeader))
+          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
+            .withHttpHeaders(mtditidHeader,sessionIdHeader)
             .get
         ) {
           result =>
@@ -301,7 +305,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
-            .withHttpHeaders(mtditidHeader)
+            .withHttpHeaders(mtditidHeader,sessionIdHeader)
             .get
         ) {
           result =>

@@ -57,7 +57,7 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
   def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, Duration.Inf)
 
   implicit val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("GET",
-    "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890")
+    "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
   implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
