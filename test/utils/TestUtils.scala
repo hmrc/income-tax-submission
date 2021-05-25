@@ -22,8 +22,11 @@ import com.codahale.metrics.SharedMetricRegistries
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
 import controllers.predicates.AuthorisedAction
+import models.{DividendsModel, IncomeSourcesResponseModel, InterestModel}
 import models.employment.frontend._
 import models.employment.shared.{Benefits, Expenses, Pay}
+import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
+import models.mongo.UserData
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.PlaySpec
@@ -53,8 +56,8 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
 
   def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, Duration.Inf)
 
-  implicit val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders("mtditid" -> "1234567890")
-  val fakeRequestWithMtditid: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withSession("MTDITID" -> "1234567890")
+  implicit val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("GET",
+    "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890")
   implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
@@ -218,5 +221,72 @@ trait TestUtils extends PlaySpec with MockFactory with GuiceOneAppPerSuite with 
         )
       )
     )
+
+
+  lazy val dividendsModel:Option[DividendsModel] = Some(DividendsModel(Some(100.00), Some(100.00)))
+  lazy val interestsModel:Option[Seq[InterestModel]] = Some(Seq(InterestModel("TestName", "TestSource", Some(100.00), Some(100.00))))
+  lazy val employmentsModel: AllEmploymentData = AllEmploymentData(
+    hmrcEmploymentData = Seq(
+      EmploymentSource(
+        employmentId = "001",
+        employerName = "maggie",
+        employerRef = Some("223/AB12399"),
+        payrollId = Some("123456789999"),
+        startDate = Some("2019-04-21"),
+        cessationDate = Some("2020-03-11"),
+        dateIgnored = Some("2020-04-04T01:01:01Z"),
+        submittedOn = Some("2020-01-04T05:01:01Z"),
+        employmentData = Some(EmploymentData(
+          submittedOn = ("2020-02-12"),
+          employmentSequenceNumber = Some("123456789999"),
+          companyDirector = Some(true),
+          closeCompany = Some(false),
+          directorshipCeasedDate = Some("2020-02-12"),
+          occPen = Some(false),
+          disguisedRemuneration = Some(false),
+          pay = Pay(34234.15, 6782.92, Some(67676), "CALENDAR MONTHLY", "2020-04-23", Some(32), Some(2))
+        )),
+        None
+      )
+    ),
+    hmrcExpenses = None,
+    customerEmploymentData = Seq(),
+    customerExpenses = None
+  )
+  val giftAidPaymentsModel: Option[GiftAidPaymentsModel] = Some(GiftAidPaymentsModel(
+    nonUkCharitiesCharityNames = Some(List("non uk charity name", "non uk charity name 2")),
+    currentYear = Some(1234.56),
+    oneOffCurrentYear = Some(1234.56),
+    currentYearTreatedAsPreviousYear = Some(1234.56),
+    nextYearTreatedAsCurrentYear = Some(1234.56),
+    nonUkCharities = Some(1234.56),
+  ))
+
+  val giftsModel: Option[GiftsModel] = Some(GiftsModel(
+    investmentsNonUkCharitiesCharityNames = Some(List("charity 1", "charity 2")),
+    landAndBuildings = Some(10.21),
+    sharesOrSecurities = Some(10.21),
+    investmentsNonUkCharities = Some(1234.56)
+  ))
+
+  val giftAidModel: GiftAidModel = GiftAidModel(
+    giftAidPaymentsModel,
+    giftsModel
+  )
+
+  val userData: UserData = UserData(
+    "sessionId-1618a1e8-4979-41d8-a32e-5ffbe69fac81",
+    "1234567890",
+    "AA123456A",
+    2022,
+    dividendsModel,
+    interestsModel,
+    Some(giftAidModel),
+    Some(employmentsModel)
+  )
+
+  val incomeSourcesResponse: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsModel(Some(123456.78), Some(123456.78))),
+    Some(Seq(InterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAidModel(giftAidPaymentsModel, giftsModel)),
+    Some(allEmploymentData))
 }
 

@@ -19,27 +19,44 @@ package controllers
 import com.google.inject.Inject
 import controllers.predicates.AuthorisedAction
 import models.IncomeSourcesResponseModel
+import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import services.GetIncomeSourcesService
+import services.{GetIncomeSourcesService, IncomeTaxUserDataService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-class GetIncomeSourcesController @Inject()(
-                                            getIncomeSourcesService: GetIncomeSourcesService,
-                                            cc: ControllerComponents,
-                                            authorisedAction: AuthorisedAction
-                                          )(implicit ec: ExecutionContext) extends BackendController(cc) {
+class GetIncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSourcesService,
+                                           incomeTaxUserDataService: IncomeTaxUserDataService,
+                                           cc: ControllerComponents,
+                                           authorisedAction: AuthorisedAction
+                                          )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def getIncomeSources(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
 
     val excludedIncomeSources: Seq[String] = user.headers.get("excluded-income-sources").fold[Seq[String]](Seq.empty)(_.split(","))
 
-    getIncomeSourcesService.getAllIncomeSources(nino, taxYear, user.mtditid, excludedIncomeSources).map {
-      case Right(IncomeSourcesResponseModel(None, None, None, None)) => NoContent
-      case Right(responseModel) => Ok(Json.toJson(responseModel))
-      case Left(error) => Status(error.status)(error.toJson)
+    getIncomeSourcesService.getAllIncomeSources(nino, taxYear, user.mtditid, excludedIncomeSources).flatMap {
+      case Right(IncomeSourcesResponseModel(None, None, None, None)) =>
+        incomeTaxUserDataService.saveUserData(taxYear,None)(NoContent)
+      case Right(responseModel) =>
+        incomeTaxUserDataService.saveUserData(taxYear,Some(responseModel))(Ok(Json.toJson(responseModel)))
+      case Left(error) => Future(Status(error.status)(error.toJson))
+    }
+  }
+
+  def getIncomeSourcesFromSession(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
+    lazy val noDataLog = s"[IncomeTaxUserDataService][findUserData] No user data found. SessionId: ${user.sessionId}"
+
+    incomeTaxUserDataService.findUserData(user, taxYear).map {
+      case None =>
+        logger.info(noDataLog)
+        NoContent
+      case Some(IncomeSourcesResponseModel(None, None, None, None)) =>
+        logger.info(noDataLog)
+        NoContent
+      case Some(responseModel) => Ok(Json.toJson(responseModel))
     }
   }
 }

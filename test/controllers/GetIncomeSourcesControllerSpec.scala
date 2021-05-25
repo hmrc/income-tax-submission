@@ -18,27 +18,47 @@ package controllers
 
 
 import models._
-import models.giftAid.{GiftAidPaymentsModel, GiftsModel, SubmittedGiftAidModel}
-import org.scalamock.handlers.CallHandler5
+import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
+import org.scalamock.handlers.{CallHandler3, CallHandler5}
 import play.api.http.Status._
+import play.api.libs.json.Json
+import play.api.mvc.Result
+import play.api.mvc.Results._
 import play.api.test.FakeRequest
-import services.GetIncomeSourcesService
+import services.{GetIncomeSourcesService, IncomeTaxUserDataService}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class GetIncomeSourcesControllerSpec extends TestUtils {
 
+  private val mockIncomeTaxUserDataService = mock[IncomeTaxUserDataService]
+
+  def mockSaveData(data: Option[IncomeSourcesResponseModel],
+                   outcome: Result): CallHandler5[Int, Option[IncomeSourcesResponseModel], Result, User[_], ExecutionContext, Future[Result]] ={
+    (mockIncomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSourcesResponseModel])(_: Result)(_: User[_], _: ExecutionContext))
+      .expects(*, data, *, *, *)
+      .returning(Future.successful(outcome))
+  }
+  def mockFindData(data: Option[IncomeSourcesResponseModel]): CallHandler3[User[_], Int, ExecutionContext, Future[Option[IncomeSourcesResponseModel]]] ={
+    (mockIncomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
+      .expects(*, *, *)
+      .returning(Future.successful(data))
+  }
+
   val getIncomeSourcesService: GetIncomeSourcesService = mock[GetIncomeSourcesService]
-  val controller = new GetIncomeSourcesController(getIncomeSourcesService, mockControllerComponents,authorisedAction)
+  val controller = new GetIncomeSourcesController(getIncomeSourcesService, mockIncomeTaxUserDataService, mockControllerComponents,authorisedAction)
   val nino :String = "123456789"
   val mtditid :String = "1234567890"
   val taxYear: Int = 1234
-  private val fakeGetRequestWithHeader = FakeRequest("GET", "/").withHeaders("mtditid" -> "1234567890").withSession("MTDITID" -> "12234567890")
-  private val fakeGetRequestWithExcludedHeader = FakeRequest("GET", "/").withHeaders("mtditid" -> "1234567890",
-    "excluded-income-sources" -> "dividends,interest,gift-aid,employment").withSession("MTDITID" -> "12234567890")
-  private val fakeGetRequestWithoutHeader = FakeRequest("GET", "/").withSession("MTDITID" -> "12234567890")
+  private val fakeGetRequestWithHeaderAndSession = FakeRequest("GET",
+    "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890")
+  private val fakeGetRequestWithExcludedHeader = FakeRequest("GET",
+    "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890",
+    "excluded-income-sources" -> "dividends,interest,gift-aid,employment")
+  private val fakeGetRequestWithoutHeader = FakeRequest("GET",
+    "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022")
 
   def mockGetIncomeSourcesTurnedOff(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _:Seq[String])(_: HeaderCarrier))
@@ -51,10 +71,11 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
   }
   val gifts: GiftsModel = GiftsModel(Some(List("")), Some(12345.67), Some(12345.67) , Some(12345.67))
 
+  val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsModel(Some(12345.67),Some(12345.67))),
+    Some(Seq(InterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAidModel(Some(giftAidPayments), Some(gifts))),
+    Some(allEmploymentData))
+
   def mockGetIncomeSourcesValid(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
-    val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(12345.67),Some(12345.67))),
-      Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(SubmittedGiftAidModel(Some(giftAidPayments), Some(gifts))),
-      Some(allEmploymentData))
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _:Seq[String])(_: HeaderCarrier))
       .expects(*, *, *, Seq(), *)
       .returning(Future.successful(Right(incomeSources)))
@@ -67,6 +88,39 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       .returning(Future.successful(Left(invalidIncomeSource)))
   }
 
+  "calling .getIncomeSourcesFromSession" should {
+
+    "with data populated" should {
+
+      "return a NO_CONTENT response with no data" in {
+        val result = {
+          mockAuth()
+          mockFindData(None)
+          controller.getIncomeSourcesFromSession(nino, taxYear)(fakeGetRequestWithExcludedHeader)
+        }
+        status(result) mustBe NO_CONTENT
+      }
+
+      "return an OK response with data" in {
+        val result = {
+          mockAuth()
+          mockFindData(Some(incomeSourcesResponse))
+          controller.getIncomeSourcesFromSession(nino, taxYear)(fakeGetRequestWithExcludedHeader)
+        }
+        status(result) mustBe OK
+        Json.parse(bodyOf(result)) mustBe Json.toJson(incomeSourcesResponse)
+      }
+
+      "return a NO_CONTENT response when data is empty" in {
+        val result = {
+          mockAuth()
+          mockFindData(Some(incomeSourcesResponse.copy(dividends = None, interest = None, giftAid = None, employment = None)))
+          controller.getIncomeSourcesFromSession(nino, taxYear)(fakeGetRequestWithExcludedHeader)
+        }
+        status(result) mustBe NO_CONTENT
+      }
+    }
+  }
 
   "calling .getIncomeSources" should {
 
@@ -76,6 +130,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
         val result = {
           mockAuth()
           mockGetIncomeSourcesTurnedOff()
+          mockSaveData(None, NoContent)
           controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithExcludedHeader)
         }
         status(result) mustBe NO_CONTENT
@@ -85,18 +140,22 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
         val result = {
           mockAuth()
           mockGetIncomeSourcesValid()
-          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeader)
+          mockSaveData(Some(incomeSources), Ok(Json.toJson(incomeSources)))
+          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeaderAndSession)
         }
         status(result) mustBe OK
+        Json.parse(bodyOf(result)) mustBe Json.toJson(incomeSources)
       }
 
       "return an OK 200 response when called as an agent" in {
         val result = {
           mockAuthAsAgent()
           mockGetIncomeSourcesValid()
-          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeader)
+          mockSaveData(Some(incomeSources), Ok(Json.toJson(incomeSources)))
+          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeaderAndSession)
         }
         status(result) mustBe OK
+        Json.parse(bodyOf(result)) mustBe Json.toJson(incomeSources)
       }
 
     }
@@ -106,7 +165,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
         val result = {
           mockAuth()
           mockGetIncomeSourcesInvalid()
-          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeader)
+          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeaderAndSession)
         }
         status(result) mustBe INTERNAL_SERVER_ERROR
       }
@@ -115,7 +174,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
         val result = {
           mockAuthAsAgent()
           mockGetIncomeSourcesInvalid()
-          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeader)
+          controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeaderAndSession)
         }
         status(result) mustBe INTERNAL_SERVER_ERROR
       }

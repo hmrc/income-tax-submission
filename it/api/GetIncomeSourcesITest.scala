@@ -29,7 +29,6 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
     implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(5, Seconds))
     val successNino: String = "AA123123A"
     val taxYear: String = "2019"
-    val agentClientCookie: Map[String, String] = Map("MTDITID" -> "555555555")
     val mtditidHeader = ("mtditid", "555555555")
     val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "555555555"))
     auditStubs()
@@ -214,9 +213,8 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         agentAuthorised()
 
         whenReady(
-          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources", additionalCookies = agentClientCookie)
+          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources", mtditid = Some(mtditidHeader))
             .withQueryStringParameters("taxYear" -> "2019")
-            .withHttpHeaders(mtditidHeader)
             .get
         ) {
           result =>
@@ -250,9 +248,8 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         agentAuthorised()
 
         whenReady(
-          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources", additionalCookies = agentClientCookie)
+          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources", mtditid = Some(mtditidHeader))
             .withQueryStringParameters("taxYear" -> "2019")
-            .withHttpHeaders(mtditidHeader)
             .get
         ) {
           result =>
@@ -278,9 +275,8 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         agentAuthorised()
 
         whenReady(
-          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources", additionalCookies = agentClientCookie)
+          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources", mtditid = Some(mtditidHeader))
             .withQueryStringParameters("taxYear" -> "2019")
-            .withHttpHeaders(mtditidHeader)
             .get
         ) {
           result =>
@@ -303,7 +299,7 @@ class GetIncomeSourcesITest extends PlaySpec with WiremockSpec with ScalaFutures
         unauthorisedOtherEnrolment()
 
         whenReady(
-          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources", additionalCookies = agentClientCookie)
+          buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
             .withHttpHeaders(mtditidHeader)
             .get

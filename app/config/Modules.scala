@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package models
+package config
 
-import play.api.libs.json.{Json, OFormat}
+import com.google.inject.AbstractModule
+import repositories.{IncomeTaxUserDataRepository, IncomeTaxUserDataRepositoryImpl}
 
-case class SubmittedDividendsModel(ukDividends: Option[BigDecimal], otherUkDividends: Option[BigDecimal])
+class Modules extends AbstractModule {
 
-object SubmittedDividendsModel {
-  implicit val formats: OFormat[SubmittedDividendsModel] = Json.format[SubmittedDividendsModel]
+  override def configure(): Unit = {
+    bind(classOf[IncomeTaxUserDataRepository]).to(classOf[IncomeTaxUserDataRepositoryImpl]).asEagerSingleton()
+  }
+
 }

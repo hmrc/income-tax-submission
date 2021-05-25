@@ -18,12 +18,12 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class SubmittedInterestModel(accountName: String,
-                                  incomeSourceId: String,
-                                  taxedUkInterest: Option[BigDecimal],
-                                  untaxedUkInterest: Option[BigDecimal])
+case class InterestModel(accountName: String,
+                         incomeSourceId: String,
+                         taxedUkInterest: Option[BigDecimal],
+                         untaxedUkInterest: Option[BigDecimal])
 
 
-object SubmittedInterestModel {
-  implicit val formats: OFormat[SubmittedInterestModel] = Json.format[SubmittedInterestModel]
+object InterestModel {
+  implicit val formats: OFormat[InterestModel] = Json.format[InterestModel]
 }

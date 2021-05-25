@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 
 object SubmittedDividendsParser extends APIParser with Logging {
-  type IncomeSourcesResponseModel = Either[APIErrorModel, Option[SubmittedDividendsModel]]
+  type IncomeSourcesResponseModel = Either[APIErrorModel, Option[DividendsModel]]
 
   override val parserName: String = "SubmittedDividendsParser"
   override val service: String = "income-tax-dividends"
@@ -34,10 +34,10 @@ object SubmittedDividendsParser extends APIParser with Logging {
     override def read(method: String, url: String, response: HttpResponse): IncomeSourcesResponseModel = {
       response.status match {
         case OK =>
-          response.json.validate[SubmittedDividendsModel].fold[IncomeSourcesResponseModel](
+          response.json.validate[DividendsModel].fold[IncomeSourcesResponseModel](
           _ =>  badSuccessJsonFromAPI,
           {
-            case SubmittedDividendsModel(None, None) => Right(None)
+            case DividendsModel(None, None) => Right(None)
             case parsedModel => Right(Some(parsedModel))
           }
         )

@@ -18,7 +18,7 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import helpers.WiremockSpec
-import models.giftAid.{GiftAidPaymentsModel, GiftsModel, SubmittedGiftAidModel}
+import models.giftAid.{GiftAidPaymentsModel, GiftsModel, GiftAidModel}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status._
@@ -41,7 +41,7 @@ class GetGiftAidConnectorISpec extends PlaySpec with WiremockSpec {
   "IncomeTaxGiftAidConnector" should {
     "return a SubmittedGiftAidModel" when {
       "all values are present" in {
-        val expectedResult = Some(SubmittedGiftAidModel(Some(giftAidPayments), Some(gifts)))
+        val expectedResult = Some(GiftAidModel(Some(giftAidPayments), Some(gifts)))
 
         stubGetWithResponseBody(s"/income-tax-gift-aid/income-tax/nino/$nino/sources\\?taxYear=$taxYear",
           OK, Json.toJson(expectedResult).toString(),
@@ -57,7 +57,7 @@ class GetGiftAidConnectorISpec extends PlaySpec with WiremockSpec {
 
     "return a none when no gift aid values found" in {
 
-      val body = SubmittedGiftAidModel(None, None)
+      val body = GiftAidModel(None, None)
       stubGetWithResponseBody(s"/income-tax-gift-aid/income-tax/nino/$nino/sources\\?taxYear=$taxYear",
         OK, Json.toJson(body).toString(),
         requestHeaders)

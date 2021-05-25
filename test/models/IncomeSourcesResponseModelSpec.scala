@@ -17,7 +17,7 @@
 package models
 
 import com.codahale.metrics.SharedMetricRegistries
-import models.giftAid.{GiftAidPaymentsModel, GiftsModel, SubmittedGiftAidModel}
+import models.giftAid.{GiftAidPaymentsModel, GiftsModel, GiftAidModel}
 import play.api.libs.json.{JsObject, Json}
 import utils.TestUtils
 
@@ -27,8 +27,8 @@ class IncomeSourcesResponseModelSpec extends TestUtils {
   val giftAidPayments: GiftAidPaymentsModel = GiftAidPaymentsModel(Some(List("non uk charity name", "non uk charity name 2")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
   val gifts: GiftsModel = GiftsModel(Some(List("charity name")), Some(12345.67), Some(12345.67), Some(12345.67))
 
-  val model: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(123456.78), Some(123456.78))),
-    Some(Seq(SubmittedInterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(SubmittedGiftAidModel(Some(giftAidPayments), Some(gifts))),
+  val model: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsModel(Some(123456.78), Some(123456.78))),
+    Some(Seq(InterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAidModel(Some(giftAidPayments), Some(gifts))),
     Some(allEmploymentData))
 
   val jsonModel: JsObject = Json.obj("dividends" ->

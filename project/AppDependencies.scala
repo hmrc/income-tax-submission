@@ -5,7 +5,8 @@ import sbt._
 object AppDependencies {
 
   val compile = Seq(
-    "uk.gov.hmrc"             %% "bootstrap-backend-play-27"  % "3.4.0"
+    "uk.gov.hmrc"             %% "bootstrap-backend-play-27"  % "3.4.0",
+    "uk.gov.hmrc.mongo"       %% "hmrc-mongo-play-27"         % "0.50.0"
   )
 
   val test = Seq(
@@ -16,7 +17,8 @@ object AppDependencies {
     "com.vladsch.flexmark"    %  "flexmark-all"             % "0.35.10"               % "test, it",
     "org.scalatestplus.play"  %% "scalatestplus-play"       % "4.0.3"                 % "test, it",
     "com.github.tomakehurst"  %  "wiremock-jre8"            % "2.27.2"                % "test, it",
-    "org.scalamock"           %% "scalamock"                % "4.4.0"                 % Test
+    "org.scalamock"           %% "scalamock"                % "4.4.0"                 % Test,
+    "uk.gov.hmrc.mongo"       %% "hmrc-mongo-test-play-27"  % "0.50.0"      % "test, it"
   )
 
 }

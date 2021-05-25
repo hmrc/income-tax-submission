@@ -18,7 +18,7 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import helpers.WiremockSpec
-import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel, SubmittedDividendsModel}
+import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel, DividendsModel}
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -36,9 +36,9 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec {
   val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "123123123"))
 
   "IncomeTaxDividendsConnector" should {
-    "return a SubmittedDividendsModel" when {
+    "return a DividendsModel" when {
       "all values are present" in {
-        val expectedResult = Some(SubmittedDividendsModel(dividendResult, dividendResult))
+        val expectedResult = Some(DividendsModel(dividendResult, dividendResult))
 
         stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=$taxYear",
           OK, Json.toJson(expectedResult).toString(),
@@ -54,7 +54,7 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec {
 
     "return a none when no dividend values found" in {
 
-      val body = SubmittedDividendsModel(None, None)
+      val body = DividendsModel(None, None)
       stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=$taxYear",
         OK, Json.toJson(body).toString(),
         requestHeaders)

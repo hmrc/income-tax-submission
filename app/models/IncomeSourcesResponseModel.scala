@@ -17,12 +17,12 @@
 package models
 
 import models.employment.frontend.AllEmploymentData
-import models.giftAid.SubmittedGiftAidModel
+import models.giftAid.GiftAidModel
 import play.api.libs.json.{Json, OFormat}
 
-case class IncomeSourcesResponseModel(dividends: Option[DividendsResponseModel],
-                                      interest: Option[Seq[SubmittedInterestModel]],
-                                      giftAid: Option[SubmittedGiftAidModel],
+case class IncomeSourcesResponseModel(dividends: Option[DividendsModel],
+                                      interest: Option[Seq[InterestModel]],
+                                      giftAid: Option[GiftAidModel],
                                       employment: Option[AllEmploymentData])
 
 object IncomeSourcesResponseModel {
