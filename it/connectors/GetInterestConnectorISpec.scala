@@ -18,7 +18,7 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import helpers.WiremockSpec
-import models.{APIErrorBodyModel, APIErrorModel, SubmittedInterestModel}
+import models.{APIErrorBodyModel, APIErrorModel, InterestModel}
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -45,7 +45,7 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
 
       "all values are present" in {
 
-        val expectedResult = Some(Seq(SubmittedInterestModel(accountName, incomeSourceId, taxedUkInterest, untaxedUkInterest)))
+        val expectedResult = Some(Seq(InterestModel(accountName, incomeSourceId, taxedUkInterest, untaxedUkInterest)))
 
         stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear",
           OK, Json.toJson(expectedResult).toString(), requestHeaders)
@@ -60,7 +60,7 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
 
     "return a none when no interest values are found" in {
 
-      val body = Seq.empty[SubmittedInterestModel]
+      val body = Seq.empty[InterestModel]
       stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear",
         OK, Json.toJson(body).toString(), requestHeaders)
 

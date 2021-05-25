@@ -14,34 +14,13 @@
  * limitations under the License.
  */
 
-package models
+package models.giftAid
 
-import play.api.mvc.AnyContent
-import play.api.test.FakeRequest
-import utils.TestUtils
+import play.api.libs.json.{Json, OFormat}
 
-class UserSpec extends TestUtils {
+case class GiftAidModel(giftAidPayments: Option[GiftAidPaymentsModel],
+                        gifts: Option[GiftsModel])
 
-  ".asAgent" should {
-
-    "return true" when {
-
-      "the user has an ARN" in {
-
-        User[AnyContent]("12234567890", Some("1234567890"), "AA123456A", "sessionId")(FakeRequest()).isAgent mustBe true
-
-      }
-    }
-
-    "return false" when {
-
-      "the user does not have an ARN" in {
-
-        User[AnyContent]("12234567890", None, "AA123456A", "sessionId")(FakeRequest()).isAgent mustBe false
-
-      }
-    }
-
-  }
-
+object GiftAidModel {
+  implicit val format: OFormat[GiftAidModel] = Json.format[GiftAidModel]
 }

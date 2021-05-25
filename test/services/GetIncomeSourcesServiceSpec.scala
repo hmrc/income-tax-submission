@@ -21,7 +21,7 @@ import connectors.httpParsers.SubmittedDividendsParser.{IncomeSourcesResponseMod
 import connectors.httpParsers.SubmittedInterestParser.{IncomeSourcesResponseModel => IncomeSourceResponseInterest}
 import connectors.{IncomeTaxDividendsConnector, IncomeTaxEmploymentConnector, IncomeTaxGiftAidConnector, IncomeTaxInterestConnector}
 import models._
-import models.giftAid.{GiftAidPaymentsModel, GiftsModel, SubmittedGiftAidModel}
+import models.giftAid.{GiftAidPaymentsModel, GiftsModel, GiftAidModel}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
@@ -54,16 +54,16 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
 
       "return an IncomeSourceResponseModel with existing dividends, interest and giftaid and employment" in {
 
-        val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(SubmittedDividendsModel(Some(12345.67), Some(12345.67))))
+        val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(DividendsModel(Some(12345.67), Some(12345.67))))
         val expectedInterestResult: IncomeSourceResponseInterest = Right(Some(List(
-          SubmittedInterestModel("someName", "123", Some(1234.56), Some(1234.56))
+          InterestModel("someName", "123", Some(1234.56), Some(1234.56))
         )))
 
         val giftAidPayments: GiftAidPaymentsModel = GiftAidPaymentsModel(Some(List("")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
         val gifts: GiftsModel = GiftsModel(Some(List("someName")), Some(12345.67), Some(12345.67) , Some(12345.67))
 
-        val incomeSourcesResult = Right(IncomeSourcesResponseModel(Some(DividendsResponseModel(Some(12345.67), Some(12345.67))),
-          Some(List(SubmittedInterestModel("someName", "123", Some(1234.56), Some(1234.56)))),Some(SubmittedGiftAidModel(Some(giftAidPayments), Some(gifts))),
+        val incomeSourcesResult = Right(IncomeSourcesResponseModel(Some(DividendsModel(Some(12345.67), Some(12345.67))),
+          Some(List(InterestModel("someName", "123", Some(1234.56), Some(1234.56)))),Some(GiftAidModel(Some(giftAidPayments), Some(gifts))),
           Some(allEmploymentData)))
 
 
@@ -81,7 +81,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
 
         (giftsConnector.getSubmittedGiftAid(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", 1234, mockHeaderCarrier)
-          .returning(Future.successful(Right(Some(SubmittedGiftAidModel(Some(giftAidPayments), Some(gifts))))))
+          .returning(Future.successful(Right(Some(GiftAidModel(Some(giftAidPayments), Some(gifts))))))
 
         val result = await(service.getAllIncomeSources("12345678", 1234, "87654321"))
 
@@ -97,7 +97,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
       "return an InternalServerError" in {
 
         val errorModel: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
-        val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(SubmittedDividendsModel(Some(12345.67), Some(12345.67))))
+        val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(DividendsModel(Some(12345.67), Some(12345.67))))
 
         (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
         .expects("12345678", 1234, mockHeaderCarrier)

@@ -29,6 +29,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.matching.Regex
 
 class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
                                    defaultActionBuilder: DefaultActionBuilder,
@@ -64,6 +65,17 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
 
   val minimumConfidenceLevel: Int = ConfidenceLevel.L200.level
 
+  def sessionId(implicit request: Request[_], hc: HeaderCarrier): Option[String] = {
+    lazy val key = "sessionId"
+    if (hc.sessionId.isDefined) {
+      hc.sessionId.map(_.value)
+    } else if (request.headers.get(key).isDefined) {
+      request.headers.get(key)
+    } else {
+      None
+    }
+  }
+
   private[predicates] def individualAuthentication[A](block: User[A] => Future[Result], requestMtdItId: String)
                                                      (implicit request: Request[A], hc: HeaderCarrier): Future[Result] = {
     authorised.retrieve(allEnrolments and confidenceLevel) {
@@ -72,16 +84,18 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
         val optionalNino: Option[String] = enrolmentGetIdentifierValue(EnrolmentKeys.nino, EnrolmentIdentifiers.nino, enrolments)
 
         (optionalMtdItId, optionalNino) match {
-          case (Some(authMTDITID), Some(_)) =>
-            enrolments.enrolments.collectFirst {
-              case Enrolment(EnrolmentKeys.Individual, enrolmentIdentifiers, _, _)
-                if enrolmentIdentifiers.exists(identifier => identifier.key == EnrolmentIdentifiers.individualId && identifier.value == requestMtdItId) =>
-                block(User(requestMtdItId, None))
-            } getOrElse {
-              logger.info(s"[AuthorisedAction][individualAuthentication] Non-agent with an invalid MTDITID. " +
-                s"MTDITID in auth matches MTDITID in request: ${authMTDITID == requestMtdItId}")
+          case (Some(authMTDITID), Some(nino)) if authMTDITID.equals(requestMtdItId) =>
+
+            sessionId.fold {
+              logger.info(s"[AuthorisedAction][individualAuthentication] - No session id in request")
               unauthorized
+            } { sessionId =>
+              block(User(authMTDITID, None, nino, sessionId))
             }
+
+          case (Some(_), Some(_)) =>
+            logger.info(s"[AuthorisedAction][individualAuthentication] - MTDITID in request does not match id in auth")
+            unauthorized
           case (_, None) =>
             logger.info(s"[AuthorisedAction][individualAuthentication] - User has no nino.")
             unauthorized
@@ -95,7 +109,7 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
     }
   }
 
-  private[predicates] def agentAuthentication[A](block: User[A] => Future[Result], mtdItId: String)
+  private[predicates] def agentAuthentication[A](block: User[A] => Future[Result], requestMtdItId: String)
                                                 (implicit request: Request[A], hc: HeaderCarrier): Future[Result] = {
 
     lazy val agentDelegatedAuthRuleKey = "mtd-it-auth"
@@ -105,23 +119,44 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
         .withIdentifier(EnrolmentIdentifiers.individualId, identifierId)
         .withDelegatedAuthRule(agentDelegatedAuthRuleKey)
 
-    authorised(agentAuthPredicate(mtdItId))
-      .retrieve(allEnrolments) { enrolments =>
+    val nino: Regex = ".*/nino/(.*)/sources.*".r
 
-        enrolmentGetIdentifierValue(EnrolmentKeys.Agent, EnrolmentIdentifiers.agentReference, enrolments) match {
-          case Some(arn) =>
-            block(User(mtdItId, Some(arn)))
-          case None =>
-            logger.info("[AuthorisedAction][agentAuthentication] Agent with no HMRC-AS-AGENT enrolment.")
-            unauthorized
+    val optionalNino = request.uri match {
+      case nino(group) => Some(group)
+      case _ => None
+    }
+
+    optionalNino match {
+      case Some(nino) =>
+
+        authorised(agentAuthPredicate(requestMtdItId))
+          .retrieve(allEnrolments) { enrolments =>
+
+            enrolmentGetIdentifierValue(EnrolmentKeys.Agent, EnrolmentIdentifiers.agentReference, enrolments) match {
+              case Some(arn) =>
+
+                sessionId.fold {
+                  logger.info(s"[AuthorisedAction][individualAuthentication] - No session id in request")
+                  unauthorized
+                } { sessionId =>
+                  block(User(requestMtdItId, Some(arn), nino, sessionId))
+                }
+
+              case None =>
+                logger.info("[AuthorisedAction][agentAuthentication] Agent with no HMRC-AS-AGENT enrolment.")
+                unauthorized
+            }
+          } recover {
+          case _: NoActiveSession =>
+            logger.info(s"[AuthorisedAction][agentAuthentication] - No active session.")
+            Unauthorized
+          case _: AuthorisationException =>
+            logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client.")
+            Unauthorized
         }
-      } recover {
-      case _: NoActiveSession =>
-        logger.info(s"[AuthorisedAction][agentAuthentication] - No active session.")
-        Unauthorized
-      case _: AuthorisationException =>
-        logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client.")
-        Unauthorized
+      case _ =>
+        logger.info(s"[AuthorisedAction][agentAuthentication] - Could not parse Nino from uri")
+        Future(Unauthorized)
     }
   }
 

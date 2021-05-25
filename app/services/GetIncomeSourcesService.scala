@@ -20,10 +20,9 @@ import connectors.httpParsers.{SubmittedDividendsParser, SubmittedEmploymentPars
 import connectors.{IncomeTaxDividendsConnector, IncomeTaxEmploymentConnector, IncomeTaxGiftAidConnector, IncomeTaxInterestConnector}
 import javax.inject.Inject
 import models._
-import models.giftAid.SubmittedGiftAidModel
+import models.giftAid.GiftAidModel
 import services.util.FutureEitherOps
 import uk.gov.hmrc.http.HeaderCarrier
-
 import scala.concurrent.{ExecutionContext, Future}
 import common.IncomeSources._
 import models.employment.frontend.AllEmploymentData
@@ -40,13 +39,13 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
   def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                          (implicit hc: HeaderCarrier): Future[IncomeSourceResponse] =  {
     (for {
-      dividends <- FutureEitherOps[APIErrorModel, Option[SubmittedDividendsModel]](getDividends(nino,taxYear,mtditid,excludedIncomeSources))
-      interest <- FutureEitherOps[APIErrorModel, Option[Seq[SubmittedInterestModel]]](getInterest(nino,taxYear,mtditid,excludedIncomeSources))
-      giftAid <- FutureEitherOps[APIErrorModel, Option[SubmittedGiftAidModel]](getGiftAid(nino,taxYear,mtditid,excludedIncomeSources))
+      dividends <- FutureEitherOps[APIErrorModel, Option[DividendsModel]](getDividends(nino,taxYear,mtditid,excludedIncomeSources))
+      interest <- FutureEitherOps[APIErrorModel, Option[Seq[InterestModel]]](getInterest(nino,taxYear,mtditid,excludedIncomeSources))
+      giftAid <- FutureEitherOps[APIErrorModel, Option[GiftAidModel]](getGiftAid(nino,taxYear,mtditid,excludedIncomeSources))
       employment <- FutureEitherOps[APIErrorModel, Option[AllEmploymentData]](getEmployment(nino,taxYear,mtditid,excludedIncomeSources))
     } yield {
       IncomeSourcesResponseModel(
-        dividends.map(res => DividendsResponseModel(res.ukDividends, res.otherUkDividends)),
+        dividends.map(res => DividendsModel(res.ukDividends, res.otherUkDividends)),
         interest,
         giftAid,
         employment

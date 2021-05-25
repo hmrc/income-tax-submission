@@ -18,7 +18,7 @@ package connectors.httpParsers
 
 
 import models._
-import models.giftAid.SubmittedGiftAidModel
+import models.giftAid.GiftAidModel
 import play.api.Logging
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
@@ -27,7 +27,7 @@ import utils.PagerDutyHelper.pagerDutyLog
 
 
 object SubmittedGiftAidParser extends APIParser with Logging {
-  type IncomeSourcesResponseModel = Either[APIErrorModel, Option[SubmittedGiftAidModel]]
+  type IncomeSourcesResponseModel = Either[APIErrorModel, Option[GiftAidModel]]
 
   override val parserName: String = "SubmittedGiftAidParser"
   override val service: String = "income-tax-gift-aid"
@@ -36,10 +36,10 @@ object SubmittedGiftAidParser extends APIParser with Logging {
     override def read(method: String, url: String, response: HttpResponse): IncomeSourcesResponseModel = {
       response.status match {
         case OK =>
-          response.json.validate[SubmittedGiftAidModel].fold[IncomeSourcesResponseModel](
+          response.json.validate[GiftAidModel].fold[IncomeSourcesResponseModel](
             _ =>  badSuccessJsonFromAPI,
             {
-              case SubmittedGiftAidModel(None, None) => Right(None)
+              case GiftAidModel(None, None) => Right(None)
               case parsedModel => Right(Some(parsedModel))
             }
           )

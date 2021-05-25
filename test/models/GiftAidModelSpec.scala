@@ -16,11 +16,11 @@
 
 package models
 
-import models.giftAid.{GiftAidPaymentsModel, GiftsModel, SubmittedGiftAidModel}
+import models.giftAid.{GiftAidPaymentsModel, GiftsModel, GiftAidModel}
 import play.api.libs.json.{JsObject, Json}
 import utils.TestUtils
 
-class SubmittedGiftAidModelSpec extends TestUtils {
+class GiftAidModelSpec extends TestUtils {
 
   val validGiftAidPaymentsModel: GiftAidPaymentsModel = GiftAidPaymentsModel(
     nonUkCharitiesCharityNames = Some(List("non uk charity name","non uk charity name 2")),
@@ -38,7 +38,7 @@ class SubmittedGiftAidModelSpec extends TestUtils {
     investmentsNonUkCharities = Some(12345.67)
   )
 
-  val validGiftAidModel: SubmittedGiftAidModel = SubmittedGiftAidModel(
+  val validGiftAidModel: GiftAidModel = GiftAidModel(
     Some(validGiftAidPaymentsModel),
     Some(validGiftsModel)
   )
@@ -68,7 +68,7 @@ class SubmittedGiftAidModelSpec extends TestUtils {
   "GiftAidSubmission" should {
 
     "parse from json" in {
-      validJson.as[SubmittedGiftAidModel] mustBe validGiftAidModel
+      validJson.as[GiftAidModel] mustBe validGiftAidModel
     }
 
     "parse to json" in {

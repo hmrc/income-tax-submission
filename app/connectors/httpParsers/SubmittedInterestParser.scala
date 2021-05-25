@@ -24,7 +24,7 @@ import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 object SubmittedInterestParser extends APIParser with Logging {
-  type IncomeSourcesResponseModel = Either[APIErrorModel, Option[List[SubmittedInterestModel]]]
+  type IncomeSourcesResponseModel = Either[APIErrorModel, Option[List[InterestModel]]]
 
   override val parserName: String = "SubmittedInterestParser"
   override val service: String = "income-tax-interest"
@@ -33,7 +33,7 @@ object SubmittedInterestParser extends APIParser with Logging {
     override def read(method: String, url: String, response: HttpResponse): IncomeSourcesResponseModel = {
       response.status match {
         case OK =>
-          response.json.validate[List[SubmittedInterestModel]].fold[IncomeSourcesResponseModel](
+          response.json.validate[List[InterestModel]].fold[IncomeSourcesResponseModel](
           _ => badSuccessJsonFromAPI,
           {
             case parsedModel if parsedModel.nonEmpty => Right(Some(parsedModel))

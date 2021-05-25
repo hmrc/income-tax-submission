@@ -19,28 +19,34 @@ package models
 import play.api.libs.json.{JsObject, Json}
 import utils.TestUtils
 
-class DividendsResponseModelSpec extends TestUtils {
+class InterestModelSpec extends TestUtils {
 
   val validJson: JsObject = Json.obj(
-    "ukDividends" -> 10,
-    "otherUkDividends" -> 5
+    "accountName" -> "someName",
+    "incomeSourceId" -> "12345",
+    "taxedUkInterest" -> 50,
+    "untaxedUkInterest" -> 10
   )
 
-  val validModel: DividendsResponseModel = DividendsResponseModel(
-    ukDividends = Some(10),
-    otherUkDividends = Some(5)
+  val validModel: InterestModel = InterestModel(
+    accountName = "someName",
+    incomeSourceId = "12345",
+    taxedUkInterest = Some(50),
+    untaxedUkInterest = Some(10)
   )
 
-  "DividendsResponseModel" should {
-
-    "correctly parse from Json" in {
-      validJson.as[DividendsResponseModel] mustBe validModel
-    }
+  "SubmittedInterestModel" should {
 
     "correctly parse to Json" in {
+
       Json.toJson(validModel) mustBe validJson
     }
 
+    "correctly parse from Json" in {
+
+      validJson.as[InterestModel] mustBe validModel
+
+    }
   }
 
 }

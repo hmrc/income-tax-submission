@@ -71,9 +71,14 @@ trait WiremockSpec extends BeforeAndAfterEach with BeforeAndAfterAll with GuiceO
     reset()
   }
 
-  def buildClient(urlandUri: String, port: Int = port, additionalCookies: Map[String, String] = Map.empty): WSRequest = ws
-    .url(s"http://localhost:$port$urlandUri")
-    .withHttpHeaders(HeaderNames.COOKIE -> SessionCookieBaker.bakeSessionCookie(additionalCookies), "Csrf-Token" -> "nocheck")
-    .withFollowRedirects(false)
+  def buildClient(urlandUri: String,
+                  port: Int = port,
+                  additionalCookies: Map[String, String] = Map.empty): WSRequest = {
+
+    ws
+      .url(s"http://localhost:$port$urlandUri")
+      .withHttpHeaders(HeaderNames.COOKIE -> PlaySessionCookieBaker.bakeSessionCookie(additionalCookies), "Csrf-Token" -> "nocheck")
+      .withFollowRedirects(false)
+  }
 
 }
