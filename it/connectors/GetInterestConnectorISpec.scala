@@ -17,16 +17,23 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
+import config.AppConfig
 import helpers.WiremockSpec
 import models.{APIErrorBodyModel, APIErrorModel, InterestModel}
-import org.scalatestplus.play.PlaySpec
+import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
+class GetInterestConnectorISpec extends WiremockSpec {
 
   lazy val connector: IncomeTaxInterestConnector = app.injector.instanceOf[IncomeTaxInterestConnector]
+
+  lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+  def appConfig(interestHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+    override val interestBaseUrl: String = s"http://$interestHost:$wireMockPort"
+  }
 
   val nino: String = "AA123123A"
   val taxYear: Int = 2020
@@ -41,6 +48,39 @@ class GetInterestConnectorISpec extends PlaySpec with WiremockSpec {
 
 
   "IncomeTaxInterestConnector" should {
+
+    "include internal headers" when {
+      val expectedResult = Some(Seq(InterestModel(accountName, incomeSourceId, taxedUkInterest, untaxedUkInterest)))
+      val responseBody = Json.toJson(expectedResult).toString()
+
+      val headersSentToInterest = Seq(new HttpHeader(HeaderNames.xSessionId, "sessionIdValue"))
+
+      val internalHost = "localhost"
+      val externalHost = "127.0.0.1"
+
+      "the host for Interest is 'Internal'" in {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+        val connector = new IncomeTaxInterestConnector(httpClient, appConfig(internalHost))
+
+        stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear", OK, responseBody, headersSentToInterest)
+
+        val result = await(connector.getSubmittedInterest(nino, taxYear)(hc))
+
+        result mustBe Right(expectedResult)
+      }
+
+      "the host for Interest is 'External'" in {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+        val connector = new IncomeTaxInterestConnector(httpClient, appConfig(externalHost))
+
+        stubGetWithResponseBody(s"/income-tax-interest/income-tax/nino/$nino/sources\\?taxYear=$taxYear", OK, responseBody, headersSentToInterest)
+
+        val result = await(connector.getSubmittedInterest(nino, taxYear)(hc))
+
+        result mustBe Right(expectedResult)
+      }
+    }
+
     "return a SubmittedInterestModel" when {
 
       "all values are present" in {

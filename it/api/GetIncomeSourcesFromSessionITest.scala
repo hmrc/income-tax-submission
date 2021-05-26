@@ -24,11 +24,10 @@ import models.mongo.UserData
 import models.{DividendsModel, InterestModel}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
-import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import repositories.IncomeTaxUserDataRepositoryImpl
 
-class GetIncomeSourcesFromSessionITest extends PlaySpec with WiremockSpec with ScalaFutures {
+class GetIncomeSourcesFromSessionITest extends WiremockSpec with ScalaFutures {
 
   val repo: IncomeTaxUserDataRepositoryImpl = app.injector.instanceOf[IncomeTaxUserDataRepositoryImpl]
 

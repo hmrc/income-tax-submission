@@ -17,14 +17,15 @@
 package services
 
 import config.AppConfig
-import controllers.Assets.{INTERNAL_SERVER_ERROR, Status}
-import javax.inject.{Inject, Singleton}
 import models.mongo.UserData
 import models.{APIErrorBodyModel, APIErrorModel, IncomeSourcesResponseModel, User}
 import play.api.Logging
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.mvc.Result
+import play.api.mvc.Results.Status
 import repositories.IncomeTaxUserDataRepository
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 

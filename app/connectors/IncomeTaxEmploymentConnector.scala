@@ -24,11 +24,14 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class IncomeTaxEmploymentConnector @Inject()(val http: HttpClient,
-                                             val config: AppConfig)(implicit ec: ExecutionContext) {
+                                             val config: AppConfig)(implicit ec: ExecutionContext) extends Connector {
 
   def getSubmittedEmployment(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
     val submittedEmploymentUrl: String = config.employmentBaseUrl + s"/income-tax-employment/income-tax/nino/$nino/sources?taxYear=$taxYear"
-    http.GET[IncomeSourcesResponseModel](submittedEmploymentUrl)
+
+    val updatedHeaderCarrier = addHeadersToHeaderCarrier(submittedEmploymentUrl)
+
+    http.GET[IncomeSourcesResponseModel](submittedEmploymentUrl)(SubmittedEmploymentHttpReads, updatedHeaderCarrier, ec)
   }
 
 }

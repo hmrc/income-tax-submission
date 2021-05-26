@@ -26,13 +26,11 @@ import models.{DividendsModel, InterestModel, User}
 import org.bson.conversions.Bson
 import org.joda.time.DateTime
 import org.scalatest.BeforeAndAfterAll
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 
-class IncomeTaxUserDataRepositoryISpec extends PlaySpec with GuiceOneServerPerSuite with WiremockSpec
+class IncomeTaxUserDataRepositoryISpec extends WiremockSpec
   with BeforeAndAfterAll with FutureAwaits with DefaultAwaitTimeout {
 
   val repo: IncomeTaxUserDataRepositoryImpl = app.injector.instanceOf[IncomeTaxUserDataRepositoryImpl]

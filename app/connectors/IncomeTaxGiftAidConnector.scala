@@ -24,11 +24,14 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class IncomeTaxGiftAidConnector @Inject()(val http: HttpClient,
-                                          val config: AppConfig)(implicit ec: ExecutionContext) {
+                                          val config: AppConfig)(implicit ec: ExecutionContext) extends Connector {
 
   def getSubmittedGiftAid(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
-    val submittedInterestUrl: String = config.giftAidBaseUrl + s"/income-tax-gift-aid/income-tax/nino/$nino/sources?taxYear=$taxYear"
-    http.GET[IncomeSourcesResponseModel](submittedInterestUrl)
+    val giftAidUrl: String = config.giftAidBaseUrl + s"/income-tax-gift-aid/income-tax/nino/$nino/sources?taxYear=$taxYear"
+
+    val updatedHeaderCarrier = addHeadersToHeaderCarrier(giftAidUrl)
+
+    http.GET[IncomeSourcesResponseModel](giftAidUrl)(SubmittedGiftAidHttpReads, updatedHeaderCarrier, ec)
   }
 
 }
