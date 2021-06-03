@@ -17,16 +17,23 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
+import config.AppConfig
 import helpers.WiremockSpec
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel, DividendsModel}
-import org.scalatestplus.play.PlaySpec
+import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec {
+class GetDividendsConnectorISpec extends WiremockSpec {
 
   lazy val connector: IncomeTaxDividendsConnector = app.injector.instanceOf[IncomeTaxDividendsConnector]
+
+  lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+  def appConfig(dividendHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+    override val dividendsBaseUrl: String = s"http://$dividendHost:$wireMockPort"
+  }
 
   val nino: String = "AA123123A"
   val taxYear: Int = 1999
@@ -36,6 +43,39 @@ class GetDividendsConnectorISpec extends PlaySpec with WiremockSpec {
   val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "123123123"))
 
   "IncomeTaxDividendsConnector" should {
+
+    "include internal headers" when {
+      val expectedResult = Some(DividendsModel(dividendResult, dividendResult))
+      val responseBody = Json.toJson(expectedResult).toString()
+
+      val headersSentToDividends = Seq(new HttpHeader(HeaderNames.xSessionId, "sessionIdValue"))
+
+      val internalHost = "localhost"
+      val externalHost = "127.0.0.1"
+
+      "the host for Dividends is 'Internal'" in {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+        val connector = new IncomeTaxDividendsConnector(httpClient, appConfig(internalHost))
+
+        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=$taxYear", OK, responseBody, headersSentToDividends)
+
+        val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
+
+        result mustBe Right(expectedResult)
+      }
+
+      "the host for Dividends is 'External'" in {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+        val connector = new IncomeTaxDividendsConnector(httpClient, appConfig(externalHost))
+
+        stubGetWithResponseBody(s"/income-tax-dividends/income-tax/nino/$nino/sources\\?taxYear=$taxYear", OK, responseBody, headersSentToDividends)
+
+        val result = await(connector.getSubmittedDividends(nino, taxYear)(hc))
+
+        result mustBe Right(expectedResult)
+      }
+    }
+
     "return a DividendsModel" when {
       "all values are present" in {
         val expectedResult = Some(DividendsModel(dividendResult, dividendResult))
