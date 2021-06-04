@@ -68,8 +68,8 @@ class GetEmploymentConnectorISpec extends WiremockSpec {
               taxablePayToDate = 34234.15,
               totalTaxToDate = 6782.92,
               tipsAndOtherPayments = Some(67676),
-              payFrequency = "CALENDAR MONTHLY",
-              paymentDate = "2020-04-23",
+              payFrequency = Some("CALENDAR MONTHLY"),
+              paymentDate = Some("2020-04-23"),
               taxWeekNo = Some(32),
               taxMonthNo = Some(2)
             )
@@ -118,8 +118,8 @@ class GetEmploymentConnectorISpec extends WiremockSpec {
                 taxablePayToDate = 34234.15,
                 totalTaxToDate = 6782.92,
                 tipsAndOtherPayments = Some(67676),
-                payFrequency = "CALENDAR MONTHLY",
-                paymentDate = "2020-04-23",
+                payFrequency = Some("CALENDAR MONTHLY"),
+                paymentDate = Some("2020-04-23"),
                 taxWeekNo = Some(32),
                 taxMonthNo = Some(2)
               )

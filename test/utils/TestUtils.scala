@@ -17,21 +17,19 @@
 package utils
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import com.codahale.metrics.SharedMetricRegistries
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
 import controllers.predicates.AuthorisedAction
-import models.{DividendsModel, IncomeSourcesResponseModel, InterestModel}
 import models.employment.frontend._
 import models.employment.shared.{Benefits, Expenses, Pay}
 import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
 import models.mongo.UserData
+import models.{DividendsModel, IncomeSourcesResponseModel, InterestModel}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, DefaultActionBuilder, Result}
 import play.api.test.{FakeRequest, Helpers}
@@ -54,7 +52,6 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
   }
 
   implicit val actorSystem: ActorSystem = ActorSystem()
-  implicit val materializer: Materializer = ActorMaterializer()
 
   def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, Duration.Inf)
 
@@ -144,8 +141,8 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
               taxablePayToDate = 34234.15,
               totalTaxToDate = 6782.92,
               tipsAndOtherPayments = Some(67676),
-              payFrequency = "CALENDAR MONTHLY",
-              paymentDate = "2020-04-23",
+              payFrequency = Some("CALENDAR MONTHLY"),
+              paymentDate = Some("2020-04-23"),
               taxWeekNo = Some(32),
               taxMonthNo = Some(2)
             )
@@ -194,8 +191,8 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
                 taxablePayToDate = 34234.15,
                 totalTaxToDate = 6782.92,
                 tipsAndOtherPayments = Some(67676),
-                payFrequency = "CALENDAR MONTHLY",
-                paymentDate = "2020-04-23",
+                payFrequency = Some("CALENDAR MONTHLY"),
+                paymentDate = Some("2020-04-23"),
                 taxWeekNo = Some(32),
                 taxMonthNo = Some(2)
               )
@@ -246,7 +243,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
           directorshipCeasedDate = Some("2020-02-12"),
           occPen = Some(false),
           disguisedRemuneration = Some(false),
-          pay = Pay(34234.15, 6782.92, Some(67676), "CALENDAR MONTHLY", "2020-04-23", Some(32), Some(2))
+          pay = Pay(34234.15, 6782.92, Some(67676), Some("CALENDAR MONTHLY"), Some("2020-04-23"), Some(32), Some(2))
         )),
         None
       )
