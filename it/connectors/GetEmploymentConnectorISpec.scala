@@ -20,7 +20,7 @@ import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.AppConfig
 import helpers.WiremockSpec
 import models.employment.frontend._
-import models.employment.shared.{Benefits, Expenses, Pay}
+import models.employment.shared.{Benefits, Deductions, Expenses, Pay, StudentLoans}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
 import play.api.Configuration
 import play.api.http.Status._
@@ -72,6 +72,12 @@ class GetEmploymentConnectorISpec extends WiremockSpec {
               paymentDate = Some("2020-04-23"),
               taxWeekNo = Some(32),
               taxMonthNo = Some(2)
+            )),
+            Some(Deductions(
+              studentLoans = Some(StudentLoans(
+                uglDeductionAmount = Some(100.00),
+                pglDeductionAmount = Some(100.00)
+              ))
             ))
           )),
           employmentBenefits = Some(
@@ -88,6 +94,7 @@ class GetEmploymentConnectorISpec extends WiremockSpec {
       ),
       hmrcExpenses = Some(
         EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
           Some("2020-01-04T05:01:01Z"),
           totalExpenses = Some(800),
           expenses = Some(Expenses(
@@ -122,6 +129,12 @@ class GetEmploymentConnectorISpec extends WiremockSpec {
                 paymentDate = Some("2020-04-23"),
                 taxWeekNo = Some(32),
                 taxMonthNo = Some(2)
+              )),
+              Some(Deductions(
+                studentLoans = Some(StudentLoans(
+                  uglDeductionAmount = Some(100.00),
+                  pglDeductionAmount = Some(100.00)
+                ))
               ))
             )
           ),
@@ -139,6 +152,7 @@ class GetEmploymentConnectorISpec extends WiremockSpec {
       ),
       customerExpenses = Some(
         EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
           Some("2020-01-04T05:01:01Z"),
           totalExpenses = Some(800),
           expenses = Some(Expenses(

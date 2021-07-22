@@ -18,7 +18,7 @@ package api
 
 import helpers.WiremockSpec
 import models.employment.frontend.{AllEmploymentData, EmploymentData, EmploymentSource}
-import models.employment.shared.Pay
+import models.employment.shared.{Deductions, Pay, StudentLoans}
 import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
 import models.mongo.UserData
 import models.{DividendsModel, InterestModel}
@@ -54,7 +54,13 @@ class GetIncomeSourcesFromSessionITest extends WiremockSpec with ScalaFutures {
           directorshipCeasedDate = Some("2020-02-12"),
           occPen = Some(false),
           disguisedRemuneration = Some(false),
-          pay = Some(Pay(Some(34234.15), Some(6782.92), Some(67676), Some("CALENDAR MONTHLY"), Some("2020-04-23"), Some(32), Some(2)))
+          pay = Some(Pay(Some(34234.15), Some(6782.92), Some(67676), Some("CALENDAR MONTHLY"), Some("2020-04-23"), Some(32), Some(2))),
+          Some(Deductions(
+            studentLoans = Some(StudentLoans(
+              uglDeductionAmount = Some(100.00),
+              pglDeductionAmount = Some(100.00)
+            ))
+          ))
         )),
         None
       )
