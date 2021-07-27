@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package models.employment.frontend
+package models.employment.shared
 
-import models.employment.shared.Expenses
 import play.api.libs.json.{Json, OFormat}
 
-case class EmploymentExpenses(submittedOn: Option[String],
-                              dateIgnored: Option[String],
-                              totalExpenses: Option[BigDecimal],
-                              expenses: Option[Expenses])
+case class Deductions(studentLoans: Option[StudentLoans])
 
-object EmploymentExpenses {
-  implicit val format: OFormat[EmploymentExpenses] = Json.format[EmploymentExpenses]
+object Deductions {
+  implicit val formats: OFormat[Deductions] = Json.format[Deductions]
 }

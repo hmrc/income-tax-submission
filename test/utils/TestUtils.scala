@@ -22,7 +22,7 @@ import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
 import controllers.predicates.AuthorisedAction
 import models.employment.frontend._
-import models.employment.shared.{Benefits, Expenses, Pay}
+import models.employment.shared.{Benefits, Deductions, Expenses, Pay, StudentLoans}
 import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
 import models.mongo.UserData
 import models.{DividendsModel, IncomeSourcesResponseModel, InterestModel}
@@ -145,6 +145,12 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
               paymentDate = Some("2020-04-23"),
               taxWeekNo = Some(32),
               taxMonthNo = Some(2)
+            )),
+            Some(Deductions(
+              studentLoans = Some(StudentLoans(
+                uglDeductionAmount = Some(100.00),
+                pglDeductionAmount = Some(100.00)
+              ))
             ))
           )),
           employmentBenefits = Some(
@@ -161,6 +167,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
       ),
       hmrcExpenses = Some(
         EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
           Some("2020-01-04T05:01:01Z"),
           totalExpenses = Some(800),
           expenses = Some(Expenses(
@@ -195,6 +202,12 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
                 paymentDate = Some("2020-04-23"),
                 taxWeekNo = Some(32),
                 taxMonthNo = Some(2)
+              )),
+              Some(Deductions(
+                studentLoans = Some(StudentLoans(
+                  uglDeductionAmount = Some(100.00),
+                  pglDeductionAmount = Some(100.00)
+                ))
               ))
             )
           ),
@@ -212,6 +225,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
       ),
       customerExpenses = Some(
         EmploymentExpenses(
+          Some("2020-01-04T05:01:01Z"),
           Some("2020-01-04T05:01:01Z"),
           totalExpenses = Some(800),
           expenses = Some(Expenses(
@@ -243,7 +257,13 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
           directorshipCeasedDate = Some("2020-02-12"),
           occPen = Some(false),
           disguisedRemuneration = Some(false),
-          pay = Some(Pay(Some(34234.15), Some(6782.92), Some(67676), Some("CALENDAR MONTHLY"), Some("2020-04-23"), Some(32), Some(2)))
+          pay = Some(Pay(Some(34234.15), Some(6782.92), Some(67676), Some("CALENDAR MONTHLY"), Some("2020-04-23"), Some(32), Some(2))),
+          Some(Deductions(
+            studentLoans = Some(StudentLoans(
+              uglDeductionAmount = Some(100.00),
+              pglDeductionAmount = Some(100.00)
+            ))
+          ))
         )),
         None
       )
