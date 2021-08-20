@@ -17,11 +17,19 @@
 package models.employment.shared
 
 import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
 case class StudentLoans(uglDeductionAmount: Option[BigDecimal],
                         pglDeductionAmount: Option[BigDecimal])
 
 object StudentLoans {
   implicit val formats: OFormat[StudentLoans] = Json.format[StudentLoans]
+}
+
+case class EncryptedStudentLoans(uglDeductionAmount: Option[EncryptedValue],
+                                 pglDeductionAmount: Option[EncryptedValue])
+
+object EncryptedStudentLoans {
+  implicit val formats: OFormat[EncryptedStudentLoans] = Json.format[EncryptedStudentLoans]
 }
 

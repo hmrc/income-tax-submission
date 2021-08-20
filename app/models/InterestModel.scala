@@ -17,6 +17,7 @@
 package models
 
 import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
 case class InterestModel(accountName: String,
                          incomeSourceId: String,
@@ -26,4 +27,13 @@ case class InterestModel(accountName: String,
 
 object InterestModel {
   implicit val formats: OFormat[InterestModel] = Json.format[InterestModel]
+}
+
+case class EncryptedInterestModel(accountName: EncryptedValue,
+                                  incomeSourceId: EncryptedValue,
+                                  taxedUkInterest: Option[EncryptedValue],
+                                  untaxedUkInterest: Option[EncryptedValue])
+
+object EncryptedInterestModel {
+  implicit val formats: OFormat[EncryptedInterestModel] = Json.format[EncryptedInterestModel]
 }

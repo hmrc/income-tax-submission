@@ -23,7 +23,7 @@ import com.mongodb.client.model.Updates.set
 import config.AppConfig
 import javax.inject.{Inject, Singleton}
 import models.User
-import models.mongo.UserData
+import models.mongo.{EncryptedUserData, UserData}
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
@@ -33,15 +33,16 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import utils.SecureGCMCipher
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext
-) extends PlayMongoRepository[UserData](
+class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig: AppConfig, crypto: SecureGCMCipher)(implicit ec: ExecutionContext
+) extends PlayMongoRepository[EncryptedUserData](
   mongoComponent = mongo,
   collectionName = "userData",
-  domainFormat   = UserData.formats,
+  domainFormat   = EncryptedUserData.formats,
   indexes        = IncomeTaxUserDataIndexes.indexes(appConfig)
 ) with IncomeTaxUserDataRepository {
 
@@ -53,19 +54,24 @@ class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
   )
 
   def update(userData: UserData): Future[Boolean] = {
+
+    val encryptedData = crypto.encryptUserData(userData)
+
     collection.findOneAndReplace(
       filter = filter(userData.sessionId,userData.mtdItId,userData.nino,userData.taxYear),
-      replacement = userData,
+      replacement = encryptedData,
       options = FindOneAndReplaceOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).toFutureOption().map(_.isDefined)
   }
 
   def find[T](user: User[T], taxYear: Int): Future[Option[UserData]] = {
-    collection.findOneAndUpdate(
+    val encryptedData = collection.findOneAndUpdate(
       filter = filter(user.sessionId,user.mtditid,user.nino,taxYear),
       update = set("lastUpdated", toBson(DateTime.now(DateTimeZone.UTC))(MongoJodaFormats.dateTimeWrites)),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).toFutureOption()
+
+    encryptedData.map(_.map(crypto.decryptUserData))
   }
 }
 

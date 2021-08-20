@@ -16,12 +16,20 @@
 
 package models.employment.frontend
 
-import models.employment.shared.Benefits
+import models.employment.shared.{Benefits, EncryptedBenefits}
 import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
 case class EmploymentBenefits(submittedOn: String,
                               benefits: Option[Benefits])
 
 object EmploymentBenefits {
   implicit val formats: OFormat[EmploymentBenefits] = Json.format[EmploymentBenefits]
+}
+
+case class EncryptedEmploymentBenefits(submittedOn: EncryptedValue,
+                                       benefits: Option[EncryptedBenefits])
+
+object EncryptedEmploymentBenefits {
+  implicit val formats: OFormat[EncryptedEmploymentBenefits] = Json.format[EncryptedEmploymentBenefits]
 }

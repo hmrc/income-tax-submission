@@ -18,6 +18,7 @@ package models.employment.shared
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{OFormat, __}
+import utils.EncryptedValue
 
 case class Benefits(accommodation: Option[BigDecimal] = None,
                     assets: Option[BigDecimal] = None,
@@ -98,6 +99,106 @@ object Benefits {
         vouchersAndCreditCards, nonCash)
         ) =>
         Benefits(
+          accommodation, assets, assetTransfer, beneficialLoan, car, carFuel, educationalServices, entertaining, expenses,
+          medicalInsurance, telephone, service, taxableExpenses, van, vanFuel, mileage, nonQualifyingRelocationExpenses,
+          nurseryPlaces, otherItems, paymentsOnEmployeesBehalf, personalIncidentalExpenses, qualifyingRelocationExpenses,
+          employerProvidedProfessionalSubscriptions, employerProvidedServices, incomeTaxPaidByDirector, travelAndSubsistence,
+          vouchersAndCreditCards, nonCash
+        )
+    }, {
+      benefits =>
+        (
+          (benefits.accommodation, benefits.assets, benefits.assetTransfer, benefits.beneficialLoan, benefits.car, benefits.carFuel,
+            benefits.educationalServices, benefits.entertaining, benefits.expenses, benefits.medicalInsurance, benefits.telephone,
+            benefits.service, benefits.taxableExpenses, benefits.van, benefits.vanFuel, benefits.mileage,
+            benefits.nonQualifyingRelocationExpenses, benefits.nurseryPlaces, benefits.otherItems, benefits.paymentsOnEmployeesBehalf,
+            benefits.personalIncidentalExpenses, benefits.qualifyingRelocationExpenses),
+          (benefits.employerProvidedProfessionalSubscriptions, benefits.employerProvidedServices, benefits.incomeTaxPaidByDirector,
+            benefits.travelAndSubsistence, benefits.vouchersAndCreditCards, benefits.nonCash)
+        )
+    })
+  }
+}
+
+case class EncryptedBenefits(accommodation: Option[EncryptedValue] = None,
+                             assets: Option[EncryptedValue] = None,
+                             assetTransfer: Option[EncryptedValue] = None,
+                             beneficialLoan: Option[EncryptedValue] = None,
+                             car: Option[EncryptedValue] = None,
+                             carFuel: Option[EncryptedValue] = None,
+                             educationalServices: Option[EncryptedValue] = None,
+                             entertaining: Option[EncryptedValue] = None,
+                             expenses: Option[EncryptedValue] = None,
+                             medicalInsurance: Option[EncryptedValue] = None,
+                             telephone: Option[EncryptedValue] = None,
+                             service: Option[EncryptedValue] = None,
+                             taxableExpenses: Option[EncryptedValue] = None,
+                             van: Option[EncryptedValue] = None,
+                             vanFuel: Option[EncryptedValue] = None,
+                             mileage: Option[EncryptedValue] = None,
+                             nonQualifyingRelocationExpenses: Option[EncryptedValue] = None,
+                             nurseryPlaces: Option[EncryptedValue] = None,
+                             otherItems: Option[EncryptedValue] = None,
+                             paymentsOnEmployeesBehalf: Option[EncryptedValue] = None,
+                             personalIncidentalExpenses: Option[EncryptedValue] = None,
+                             qualifyingRelocationExpenses: Option[EncryptedValue] = None,
+                             employerProvidedProfessionalSubscriptions: Option[EncryptedValue] = None,
+                             employerProvidedServices: Option[EncryptedValue] = None,
+                             incomeTaxPaidByDirector: Option[EncryptedValue] = None,
+                             travelAndSubsistence: Option[EncryptedValue] = None,
+                             vouchersAndCreditCards: Option[EncryptedValue] = None,
+                             nonCash: Option[EncryptedValue] = None)
+
+object EncryptedBenefits {
+  val firstSetOfFields: OFormat[(Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+    Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+    Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+    Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+    Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue])] = (
+    (__ \ "accommodation").formatNullable[EncryptedValue] and
+      (__ \ "assets").formatNullable[EncryptedValue] and
+      (__ \ "assetTransfer").formatNullable[EncryptedValue] and
+      (__ \ "beneficialLoan").formatNullable[EncryptedValue] and
+      (__ \ "car").formatNullable[EncryptedValue] and
+      (__ \ "carFuel").formatNullable[EncryptedValue] and
+      (__ \ "educationalServices").formatNullable[EncryptedValue] and
+      (__ \ "entertaining").formatNullable[EncryptedValue] and
+      (__ \ "expenses").formatNullable[EncryptedValue] and
+      (__ \ "medicalInsurance").formatNullable[EncryptedValue] and
+      (__ \ "telephone").formatNullable[EncryptedValue] and
+      (__ \ "service").formatNullable[EncryptedValue] and
+      (__ \ "taxableExpenses").formatNullable[EncryptedValue] and
+      (__ \ "van").formatNullable[EncryptedValue] and
+      (__ \ "vanFuel").formatNullable[EncryptedValue] and
+      (__ \ "mileage").formatNullable[EncryptedValue] and
+      (__ \ "nonQualifyingRelocationExpenses").formatNullable[EncryptedValue] and
+      (__ \ "nurseryPlaces").formatNullable[EncryptedValue] and
+      (__ \ "otherItems").formatNullable[EncryptedValue] and
+      (__ \ "paymentsOnEmployeesBehalf").formatNullable[EncryptedValue] and
+      (__ \ "personalIncidentalExpenses").formatNullable[EncryptedValue] and
+      (__ \ "qualifyingRelocationExpenses").formatNullable[EncryptedValue]
+    ).tupled
+
+  val secondSetOfFields: OFormat[(Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+    Option[EncryptedValue], Option[EncryptedValue])] = (
+    (__ \ "employerProvidedProfessionalSubscriptions").formatNullable[EncryptedValue] and
+      (__ \ "employerProvidedServices").formatNullable[EncryptedValue] and
+      (__ \ "incomeTaxPaidByDirector").formatNullable[EncryptedValue] and
+      (__ \ "travelAndSubsistence").formatNullable[EncryptedValue] and
+      (__ \ "vouchersAndCreditCards").formatNullable[EncryptedValue] and
+      (__ \ "nonCash").formatNullable[EncryptedValue]
+    ).tupled
+
+  implicit val format: OFormat[EncryptedBenefits] = {
+    (firstSetOfFields and secondSetOfFields).apply({
+      case (
+        (accommodation, assets, assetTransfer, beneficialLoan, car, carFuel, educationalServices, entertaining,
+        expenses, medicalInsurance, telephone, service, taxableExpenses, van, vanFuel, mileage, nonQualifyingRelocationExpenses,
+        nurseryPlaces, otherItems, paymentsOnEmployeesBehalf, personalIncidentalExpenses, qualifyingRelocationExpenses),
+        (employerProvidedProfessionalSubscriptions, employerProvidedServices, incomeTaxPaidByDirector, travelAndSubsistence,
+        vouchersAndCreditCards, nonCash)
+        ) =>
+        EncryptedBenefits(
           accommodation, assets, assetTransfer, beneficialLoan, car, carFuel, educationalServices, entertaining, expenses,
           medicalInsurance, telephone, service, taxableExpenses, van, vanFuel, mileage, nonQualifyingRelocationExpenses,
           nurseryPlaces, otherItems, paymentsOnEmployeesBehalf, personalIncidentalExpenses, qualifyingRelocationExpenses,

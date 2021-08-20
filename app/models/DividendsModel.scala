@@ -17,9 +17,16 @@
 package models
 
 import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
 case class DividendsModel(ukDividends: Option[BigDecimal] = None, otherUkDividends: Option[BigDecimal] = None)
 
 object DividendsModel {
   implicit val formats: OFormat[DividendsModel] = Json.format[DividendsModel]
+}
+
+case class EncryptedDividendsModel(ukDividends: Option[EncryptedValue] = None, otherUkDividends: Option[EncryptedValue] = None)
+
+object EncryptedDividendsModel {
+  implicit val formats: OFormat[EncryptedDividendsModel] = Json.format[EncryptedDividendsModel]
 }

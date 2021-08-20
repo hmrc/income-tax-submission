@@ -17,13 +17,22 @@
 package models.giftAid
 
 import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
 case class GiftsModel(investmentsNonUkCharitiesCharityNames: Option[List[String]],
                       landAndBuildings: Option[BigDecimal],
                       sharesOrSecurities: Option[BigDecimal],
-                      investmentsNonUkCharities: Option[BigDecimal]
-                     )
+                      investmentsNonUkCharities: Option[BigDecimal])
 
 object GiftsModel {
   implicit val format: OFormat[GiftsModel] = Json.format[GiftsModel]
+}
+
+case class EncryptedGiftsModel(investmentsNonUkCharitiesCharityNames: Option[List[EncryptedValue]],
+                               landAndBuildings: Option[EncryptedValue],
+                               sharesOrSecurities: Option[EncryptedValue],
+                               investmentsNonUkCharities: Option[EncryptedValue])
+
+object EncryptedGiftsModel {
+  implicit val format: OFormat[EncryptedGiftsModel] = Json.format[EncryptedGiftsModel]
 }

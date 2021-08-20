@@ -16,11 +16,11 @@
 
 package models.mongo
 
-import models.employment.frontend.AllEmploymentData
-import models.giftAid.GiftAidModel
-import models.{DividendsModel, IncomeSourcesResponseModel, InterestModel}
+import models.employment.frontend.{AllEmploymentData, EncryptedAllEmploymentData}
+import models.giftAid.{EncryptedGiftAidModel, GiftAidModel}
+import models.{DividendsModel, EncryptedDividendsModel, EncryptedInterestModel, IncomeSourcesResponseModel, InterestModel}
 import org.joda.time.{DateTime, DateTimeZone}
-import play.api.libs.json.{OFormat, OWrites, Reads, __}
+import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
 case class UserData(sessionId: String,
@@ -31,46 +31,33 @@ case class UserData(sessionId: String,
                     interest: Option[Seq[InterestModel]] = None,
                     giftAid: Option[GiftAidModel] = None,
                     employment: Option[AllEmploymentData] = None,
-                    lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)){
+                    lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)) {
 
-  def toIncomeSourcesResponseModel: IncomeSourcesResponseModel ={
-    IncomeSourcesResponseModel(dividends,interest,giftAid,employment)
+  def toIncomeSourcesResponseModel: IncomeSourcesResponseModel = {
+    IncomeSourcesResponseModel(dividends, interest, giftAid, employment)
   }
 }
 
-object UserData {
+object UserData extends MongoJodaFormats {
 
-  implicit lazy val formats: OFormat[UserData]  = OFormat(reads, writes)
+  implicit val mongoJodaDateTimeFormats: Format[DateTime] = dateTimeFormat
 
-  implicit lazy val reads: Reads[UserData] = {
+  implicit lazy val formats: OFormat[UserData] = Json.format[UserData]
+}
 
-    import play.api.libs.functional.syntax._
-    (
-      (__ \ "sessionId").read[String] and
-        (__ \ "mtdItId").read[String] and
-        (__ \ "nino").read[String] and
-        (__ \ "taxYear").read[Int] and
-        (__ \ "dividends").readNullable[DividendsModel] and
-        (__ \ "interest").readNullable[Seq[InterestModel]] and
-        (__ \ "giftAid").readNullable[GiftAidModel] and
-        (__ \ "employment").readNullable[AllEmploymentData] and
-          (__ \ "lastUpdated").read(MongoJodaFormats.dateTimeReads)
-      ) (UserData.apply _)
-  }
+case class EncryptedUserData(sessionId: String,
+                             mtdItId: String,
+                             nino: String,
+                             taxYear: Int,
+                             dividends: Option[EncryptedDividendsModel] = None,
+                             interest: Option[Seq[EncryptedInterestModel]] = None,
+                             giftAid: Option[EncryptedGiftAidModel] = None,
+                             employment: Option[EncryptedAllEmploymentData] = None,
+                             lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC))
 
-  implicit lazy val writes: OWrites[UserData] = {
+object EncryptedUserData extends MongoJodaFormats {
 
-    import play.api.libs.functional.syntax._
-    (
-      (__ \ "sessionId").write[String] and
-        (__ \ "mtdItId").write[String] and
-        (__ \ "nino").write[String] and
-        (__ \ "taxYear").write[Int] and
-        (__ \ "dividends").writeNullable[DividendsModel] and
-        (__ \ "interest").writeNullable[Seq[InterestModel]] and
-        (__ \ "giftAid").writeNullable[GiftAidModel] and
-        (__ \ "employment").writeNullable[AllEmploymentData] and
-        (__ \ "lastUpdated").write(MongoJodaFormats.dateTimeWrites)
-      ) (unlift(UserData.unapply))
-  }
+  implicit val mongoJodaDateTimeFormats: Format[DateTime] = dateTimeFormat
+
+  implicit lazy val formats: OFormat[EncryptedUserData] = Json.format[EncryptedUserData]
 }

@@ -17,6 +17,7 @@
 package models.employment.frontend
 
 import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
 case class AllEmploymentData(hmrcEmploymentData: Seq[EmploymentSource],
                              hmrcExpenses: Option[EmploymentExpenses],
@@ -25,6 +26,15 @@ case class AllEmploymentData(hmrcEmploymentData: Seq[EmploymentSource],
 
 object AllEmploymentData {
   implicit val format: OFormat[AllEmploymentData] = Json.format[AllEmploymentData]
+}
+
+case class EncryptedAllEmploymentData(hmrcEmploymentData: Seq[EncryptedEmploymentSource],
+                                      hmrcExpenses: Option[EncryptedEmploymentExpenses],
+                                      customerEmploymentData: Seq[EncryptedEmploymentSource],
+                                      customerExpenses: Option[EncryptedEmploymentExpenses])
+
+object EncryptedAllEmploymentData {
+  implicit val format: OFormat[EncryptedAllEmploymentData] = Json.format[EncryptedAllEmploymentData]
 }
 
 case class EmploymentSource(employmentId: String,
@@ -40,4 +50,19 @@ case class EmploymentSource(employmentId: String,
 
 object EmploymentSource {
   implicit val format: OFormat[EmploymentSource] = Json.format[EmploymentSource]
+}
+
+case class EncryptedEmploymentSource(employmentId: EncryptedValue,
+                                     employerName: EncryptedValue,
+                                     employerRef: Option[EncryptedValue],
+                                     payrollId: Option[EncryptedValue],
+                                     startDate: Option[EncryptedValue],
+                                     cessationDate: Option[EncryptedValue],
+                                     dateIgnored: Option[EncryptedValue],
+                                     submittedOn: Option[EncryptedValue],
+                                     employmentData: Option[EncryptedEmploymentData],
+                                     employmentBenefits: Option[EncryptedEmploymentBenefits])
+
+object EncryptedEmploymentSource {
+  implicit val format: OFormat[EncryptedEmploymentSource] = Json.format[EncryptedEmploymentSource]
 }

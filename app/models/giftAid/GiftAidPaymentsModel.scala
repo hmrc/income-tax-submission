@@ -17,6 +17,7 @@
 package models.giftAid
 
 import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
 case class GiftAidPaymentsModel(nonUkCharitiesCharityNames: Option[List[String]],
                                 currentYear: Option[BigDecimal],
@@ -27,4 +28,15 @@ case class GiftAidPaymentsModel(nonUkCharitiesCharityNames: Option[List[String]]
 
 object GiftAidPaymentsModel {
   implicit val format: OFormat[GiftAidPaymentsModel] = Json.format[GiftAidPaymentsModel]
+}
+
+case class EncryptedGiftAidPaymentsModel(nonUkCharitiesCharityNames: Option[List[EncryptedValue]],
+                                         currentYear: Option[EncryptedValue],
+                                         oneOffCurrentYear: Option[EncryptedValue],
+                                         currentYearTreatedAsPreviousYear: Option[EncryptedValue],
+                                         nextYearTreatedAsCurrentYear: Option[EncryptedValue],
+                                         nonUkCharities: Option[EncryptedValue])
+
+object EncryptedGiftAidPaymentsModel {
+  implicit val format: OFormat[EncryptedGiftAidPaymentsModel] = Json.format[EncryptedGiftAidPaymentsModel]
 }
