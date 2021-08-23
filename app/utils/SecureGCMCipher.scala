@@ -55,30 +55,36 @@ class SecureGCMCipher @Inject()(implicit private val appConfig: AppConfig) {
   val METHOD_ENCRYPT = "encrypt"
   val METHOD_DECRYPT = "decrypt"
 
-
-
   private[utils] def getCipherInstance: Cipher = Cipher.getInstance(ALGORITHM_TO_TRANSFORM_STRING)
 
   def encrypt[T](valueToEncrypt: T)(implicit textAndKey: TextAndKey): EncryptedValue = {
-
-    val initialisationVector = generateInitialisationVector
-    val nonce = new String(Base64.getEncoder.encode(initialisationVector))
-    val gcmParameterSpec = new GCMParameterSpec(TAG_BIT_LENGTH, initialisationVector)
-    val secretKey = validateSecretKey(textAndKey.aesKey, METHOD_ENCRYPT)
-    val cipherText = generateCipherText(valueToEncrypt.toString, validateAssociatedText(textAndKey.associatedText, METHOD_ENCRYPT), gcmParameterSpec, secretKey)
-    EncryptedValue(cipherText, nonce)
+    if(appConfig.useEncryption){
+      val initialisationVector = generateInitialisationVector
+      val nonce = new String(Base64.getEncoder.encode(initialisationVector))
+      val gcmParameterSpec = new GCMParameterSpec(TAG_BIT_LENGTH, initialisationVector)
+      val secretKey = validateSecretKey(textAndKey.aesKey, METHOD_ENCRYPT)
+      val cipherText = generateCipherText(valueToEncrypt.toString,
+        validateAssociatedText(textAndKey.associatedText, METHOD_ENCRYPT), gcmParameterSpec, secretKey)
+      EncryptedValue(cipherText, nonce)
+    } else {
+      EncryptedValue(valueToEncrypt.toString, s"${valueToEncrypt.toString}-Nonce")
+    }
   }
 
   def decrypt[T](valueToDecrypt: String, nonce: String)(implicit textAndKey: TextAndKey, converter: Converter[T]): T = {
-    val initialisationVector = Base64.getDecoder.decode(nonce)
-    val gcmParameterSpec = new GCMParameterSpec(TAG_BIT_LENGTH, initialisationVector)
-    val secretKey = validateSecretKey(textAndKey.aesKey, METHOD_DECRYPT)
+    if(appConfig.useEncryption) {
+      val initialisationVector = Base64.getDecoder.decode(nonce)
+      val gcmParameterSpec = new GCMParameterSpec(TAG_BIT_LENGTH, initialisationVector)
+      val secretKey = validateSecretKey(textAndKey.aesKey, METHOD_DECRYPT)
 
-    Try {
-      decryptCipherText(valueToDecrypt, validateAssociatedText(textAndKey.associatedText, METHOD_DECRYPT), gcmParameterSpec, secretKey)
-    }.toEither match {
-      case Left(exception) => throw exception
-      case Right(value) => converter.convert(value)
+      Try {
+        decryptCipherText(valueToDecrypt, validateAssociatedText(textAndKey.associatedText, METHOD_DECRYPT), gcmParameterSpec, secretKey)
+      }.toEither match {
+        case Left(exception) => throw exception
+        case Right(value) => converter.convert(value)
+      }
+    } else {
+      converter.convert(valueToDecrypt)
     }
   }
 

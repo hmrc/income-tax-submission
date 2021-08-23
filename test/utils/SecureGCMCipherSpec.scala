@@ -29,9 +29,10 @@ import utils.TypeCaster.Converter.stringLoader
 class SecureGCMCipherSpec extends TestUtils {
   SharedMetricRegistries.clear()
 
-  implicit lazy val appConfig: AppConfig = mockAppConfig
+  implicit lazy val appConfig: AppConfig = mockAppConfigWithEncryption
 
-  val encrypter = new SecureGCMCipher()
+  val encrypter = new SecureGCMCipher
+
   val secretKey = "VqmXp7yigDFxbCUdDdNZVIvbW6RgPNJsliv6swQNCL8="
   val secretKey2 = "cXo7u0HuJK8B/52xLwW7eQ=="
   val textToEncrypt = "textNotEncrypted"
@@ -42,6 +43,13 @@ class SecureGCMCipherSpec extends TestUtils {
   implicit val textAndKey: TextAndKey = TextAndKey(associatedText,secretKey)
 
   "encrypt" should {
+
+    "return plain text when turned off" in {
+      val encrypterWithNoCrypt = new SecureGCMCipher()(mockAppConfig)
+      val encryptedText = encrypterWithNoCrypt.encrypt(textToEncrypt)
+      encryptedText.value mustBe textToEncrypt
+    }
+
     "return test, test" in {
       val encryptedText = encrypter.encrypt(textToEncrypt)
       encryptedText mustBe an[EncryptedValue]
@@ -167,6 +175,13 @@ class SecureGCMCipherSpec extends TestUtils {
   }
 
   "decrypt" should {
+
+    "return plain text when turned off" in {
+      val encrypterWithNoCrypt = new SecureGCMCipher()(mockAppConfig)
+      val encryptedText = encrypterWithNoCrypt.decrypt(textToEncrypt,"nonce")
+      encryptedText mustBe textToEncrypt
+    }
+
     "decrypt an encrypted value when the encrytedValue, associatedText, nonce, and secretKey are the same used for encryption" in {
       val decryptedText = encrypter.decrypt(encryptedTextTest.value, encryptedTextTest.nonce)
       decryptedText mustBe textToEncrypt

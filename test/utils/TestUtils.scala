@@ -31,6 +31,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Configuration
 import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, DefaultActionBuilder, Result}
 import play.api.test.{FakeRequest, Helpers}
 import services.AuthService
@@ -40,6 +41,7 @@ import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Awaitable, ExecutionContext, Future}
@@ -60,6 +62,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
   implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
 
   lazy val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
+  lazy val mockAppConfigWithEncryption: AppConfig = new MockAppConfig(app.injector.instanceOf[Configuration],app.injector.instanceOf[ServicesConfig]).config
   implicit val mockControllerComponents: ControllerComponents = Helpers.stubControllerComponents()
   implicit val mockExecutionContext: ExecutionContext = ExecutionContext.Implicits.global
   implicit val mockAuthConnector: AuthConnector = mock[AuthConnector]
