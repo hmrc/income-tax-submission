@@ -18,7 +18,7 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.AppConfig
-import helpers.WiremockSpec
+import helpers.IntegrationSpec
 import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
 import play.api.Configuration
@@ -27,7 +27,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class GetGiftAidConnectorISpec extends WiremockSpec {
+class GetGiftAidConnectorISpec extends IntegrationSpec {
 
   lazy val connector: IncomeTaxGiftAidConnector = app.injector.instanceOf[IncomeTaxGiftAidConnector]
 

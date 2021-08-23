@@ -29,16 +29,16 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.Indexes.{ascending, compoundIndex}
 import org.mongodb.scala.model.{FindOneAndReplaceOptions, FindOneAndUpdateOptions, IndexModel, IndexOptions}
+import services.EncryptionService
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
-import utils.SecureGCMCipher
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig: AppConfig, crypto: SecureGCMCipher)(implicit ec: ExecutionContext
+class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig: AppConfig, encryptionService: EncryptionService)(implicit ec: ExecutionContext
 ) extends PlayMongoRepository[EncryptedUserData](
   mongoComponent = mongo,
   collectionName = "userData",
@@ -55,7 +55,7 @@ class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
 
   def update(userData: UserData): Future[Boolean] = {
 
-    val encryptedData = crypto.encryptUserData(userData)
+    val encryptedData = encryptionService.encryptUserData(userData)
 
     collection.findOneAndReplace(
       filter = filter(userData.sessionId,userData.mtdItId,userData.nino,userData.taxYear),
@@ -71,7 +71,8 @@ class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).toFutureOption()
 
-    encryptedData.map(_.map(crypto.decryptUserData))
+
+    encryptedData.map(_.map(encryptionService.decryptUserData))
   }
 }
 

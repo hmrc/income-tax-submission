@@ -18,7 +18,7 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.AppConfig
-import helpers.WiremockSpec
+import helpers.IntegrationSpec
 import models.employment.frontend._
 import models.employment.shared.{Benefits, Deductions, Expenses, Pay, StudentLoans}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
@@ -28,7 +28,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class GetEmploymentConnectorISpec extends WiremockSpec {
+class GetEmploymentConnectorISpec extends IntegrationSpec {
 
   lazy val connector: IncomeTaxEmploymentConnector = app.injector.instanceOf[IncomeTaxEmploymentConnector]
 
@@ -43,124 +43,6 @@ class GetEmploymentConnectorISpec extends WiremockSpec {
 
   val mtditidHeader = ("mtditid", "123123123")
   val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "123123123"))
-
-  val allEmploymentData =
-    AllEmploymentData(
-      Seq(
-        EmploymentSource(
-          employmentId = "00000000-0000-0000-1111-000000000000",
-          employerRef = Some("666/66666"),
-          employerName = "Business",
-          payrollId = Some("1234567890"),
-          startDate = Some("2020-01-01"),
-          cessationDate = Some("2020-01-01"),
-          dateIgnored = Some("2020-01-01T10:00:38Z"),
-          submittedOn = None,
-          employmentData = Some(EmploymentData(
-            "2020-01-04T05:01:01Z",
-            employmentSequenceNumber = Some("1002"),
-            companyDirector = Some(false),
-            closeCompany = Some(true),
-            directorshipCeasedDate = Some("2020-02-12"),
-            occPen = Some(false),
-            disguisedRemuneration = Some(false),
-            pay = Some(Pay(
-              taxablePayToDate = Some(34234.15),
-              totalTaxToDate = Some(6782.92),
-              tipsAndOtherPayments = Some(67676),
-              payFrequency = Some("CALENDAR MONTHLY"),
-              paymentDate = Some("2020-04-23"),
-              taxWeekNo = Some(32),
-              taxMonthNo = Some(2)
-            )),
-            Some(Deductions(
-              studentLoans = Some(StudentLoans(
-                uglDeductionAmount = Some(100.00),
-                pglDeductionAmount = Some(100.00)
-              ))
-            ))
-          )),
-          employmentBenefits = Some(
-            EmploymentBenefits(
-              "2020-01-04T05:01:01Z",
-              benefits = Some(Benefits(
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
-              ))
-            )
-          )
-        )
-      ),
-      hmrcExpenses = Some(
-        EmploymentExpenses(
-          Some("2020-01-04T05:01:01Z"),
-          Some("2020-01-04T05:01:01Z"),
-          totalExpenses = Some(800),
-          expenses = Some(Expenses(
-            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
-          ))
-        )
-      ),
-      Seq(
-        EmploymentSource(
-          employmentId = "00000000-0000-0000-2222-000000000000",
-          employerRef = Some("666/66666"),
-          employerName = "Business",
-          payrollId = Some("1234567890"),
-          startDate = Some("2020-01-01"),
-          cessationDate = Some("2020-01-01"),
-          dateIgnored = None,
-          submittedOn = Some("2020-01-01T10:00:38Z"),
-          employmentData = Some(
-            EmploymentData(
-              "2020-01-04T05:01:01Z",
-              employmentSequenceNumber = Some("1002"),
-              companyDirector = Some(false),
-              closeCompany = Some(true),
-              directorshipCeasedDate = Some("2020-02-12"),
-              occPen = Some(false),
-              disguisedRemuneration = Some(false),
-              pay = Some(Pay(
-                taxablePayToDate = Some(34234.15),
-                totalTaxToDate = Some(6782.92),
-                tipsAndOtherPayments = Some(67676),
-                payFrequency = Some("CALENDAR MONTHLY"),
-                paymentDate = Some("2020-04-23"),
-                taxWeekNo = Some(32),
-                taxMonthNo = Some(2)
-              )),
-              Some(Deductions(
-                studentLoans = Some(StudentLoans(
-                  uglDeductionAmount = Some(100.00),
-                  pglDeductionAmount = Some(100.00)
-                ))
-              ))
-            )
-          ),
-          employmentBenefits = Some(
-            EmploymentBenefits(
-              "2020-01-04T05:01:01Z",
-              benefits = Some(Benefits(
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),
-                Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
-              ))
-            )
-          )
-        )
-      ),
-      customerExpenses = Some(
-        EmploymentExpenses(
-          Some("2020-01-04T05:01:01Z"),
-          Some("2020-01-04T05:01:01Z"),
-          totalExpenses = Some(800),
-          expenses = Some(Expenses(
-            Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100),Some(100)
-          ))
-        )
-      )
-    )
 
   "IncomeTaxEmploymentConnector" should {
 
