@@ -179,7 +179,8 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
 
         val studentLoans = d.studentLoans.map {
           s =>
-            EncryptedStudentLoans(uglDeductionAmount = s.uglDeductionAmount.map(encryptionService.encrypt), pglDeductionAmount = s.pglDeductionAmount.map(encryptionService.encrypt))
+            EncryptedStudentLoans(
+              uglDeductionAmount = s.uglDeductionAmount.map(encryptionService.encrypt), pglDeductionAmount = s.pglDeductionAmount.map(encryptionService.encrypt))
         }
 
         EncryptedDeductions(studentLoans)
@@ -303,7 +304,8 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
           paymentsOnEmployeesBehalf = b.paymentsOnEmployeesBehalf.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
           personalIncidentalExpenses = b.personalIncidentalExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
           qualifyingRelocationExpenses = b.qualifyingRelocationExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          employerProvidedProfessionalSubscriptions = b.employerProvidedProfessionalSubscriptions.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
+          employerProvidedProfessionalSubscriptions = b.employerProvidedProfessionalSubscriptions.map(
+            x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
           employerProvidedServices = b.employerProvidedServices.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
           incomeTaxPaidByDirector = b.incomeTaxPaidByDirector.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
           travelAndSubsistence = b.travelAndSubsistence.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),

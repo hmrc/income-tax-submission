@@ -18,19 +18,20 @@ package repositories
 
 import com.mongodb.client.result.InsertOneResult
 import helpers.IntegrationSpec
-import models.employment.frontend.{AllEmploymentData, EmploymentData, EmploymentSource}
-import models.employment.shared.{Deductions, Pay, StudentLoans}
-import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
-import models.mongo.UserData
-import models.{DividendsModel, InterestModel, User}
+import models.User
+import models.mongo.{DatabaseError, EncryptionDecryptionError, MongoError, UserData}
 import org.bson.conversions.Bson
 import org.joda.time.DateTime
+import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.scalatest.BeforeAndAfterAll
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import services.EncryptionService
+import uk.gov.hmrc.mongo.MongoUtils
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
-import utils.SecureGCMCipher
+
+import scala.concurrent.Future
 
 class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
   with BeforeAndAfterAll with FutureAwaits with DefaultAwaitTimeout {
@@ -39,41 +40,105 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
   val encryption: EncryptionService = app.injector.instanceOf[EncryptionService]
 
   private def count = await(repo.collection.countDocuments().toFuture())
+  private def countFromOtherDatabase = await(repo.collection.countDocuments().toFuture())
+
+  val repoWithInvalidEncryption: IncomeTaxUserDataRepositoryImpl = appWithInvalidEncryptionKey.injector.instanceOf[IncomeTaxUserDataRepositoryImpl]
 
   class EmptyDatabase {
     await(repo.collection.drop().toFuture())
     await(repo.ensureIndexes)
+    await(repoWithInvalidEncryption.collection.drop().toFuture())
+    await(repoWithInvalidEncryption.ensureIndexes)
   }
+
+  val serviceWithInvalidEncryption: EncryptionService = appWithInvalidEncryptionKey.injector.instanceOf[EncryptionService]
 
   implicit val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
 
+  "update with invalid encryption" should {
+    "fail to add data" in new EmptyDatabase {
+      countFromOtherDatabase mustBe 0
+      val res: Either[DatabaseError, Unit] = await(repoWithInvalidEncryption.update(userData))
+      res mustBe Left(EncryptionDecryptionError(
+        "Key being used is not valid. It could be due to invalid encoding, wrong length or uninitialized for encrypt Invalid AES key length: 2 bytes"))
+    }
+  }
+
+  "find with invalid encryption" should {
+    "fail to find data" in new EmptyDatabase {
+      countFromOtherDatabase mustBe 0
+      await(repoWithInvalidEncryption.collection.insertOne(encryption.encryptUserData(userData)).toFuture())
+      countFromOtherDatabase mustBe 1
+      val res = await(repoWithInvalidEncryption.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      res mustBe Left(EncryptionDecryptionError(
+        "Key being used is not valid. It could be due to invalid encoding, wrong length or uninitialized for decrypt Invalid AES key length: 2 bytes"))
+    }
+  }
+
+  "handleEncryptionDecryptionException" should {
+    "handle an exception" in {
+      val res = repoWithInvalidEncryption.handleEncryptionDecryptionException(new Exception("fail"),"")
+      res mustBe Left(EncryptionDecryptionError("fail"))
+    }
+  }
+
   "update" should {
+    "fail to add a document to the collection when a mongo error occurs" in new EmptyDatabase {
+
+      def ensureIndexes: Future[Seq[String]] = {
+        val indexes = Seq(IndexModel(ascending("taxYear"), IndexOptions().unique(true).name("fakeIndex")))
+        MongoUtils.ensureIndexes(repo.collection, indexes, true)
+      }
+
+      ensureIndexes
+      count mustBe 0
+
+      val res = await(repo.update(userData))
+      res mustBe Right()
+      count mustBe 1
+
+      val res2 = await(repo.update(userData.copy(sessionId = "1234567890")))
+      res2 mustBe Left(MongoError("Command failed with error 11000 (DuplicateKey): 'E11000 duplicate key error collection: income-tax-submission.userData index: fakeIndex dup key: { : 2022 }' on server localhost:27017. The full response is {\"ok\": 0.0, \"errmsg\": \"E11000 duplicate key error collection: income-tax-submission.userData index: fakeIndex dup key: { : 2022 }\", \"code\": 11000, \"codeName\": \"DuplicateKey\"}"))
+      count mustBe 1
+
+
+    }
     "add a document to the collection" in new EmptyDatabase {
       count mustBe 0
-      val res: Boolean = await(repo.update(userData))
-      res mustBe true
+      val res = await(repo.update(userData))
+      res mustBe Right()
       count mustBe 1
-      val data: Option[UserData] = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
-      data.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
+      val data = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      data.right.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
+        userData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
+      )
+    }
+    "upsert a document to the collection when already exists" in {
+      count mustBe 1
+      val res = await(repo.update(userData))
+      res mustBe Right()
+      count mustBe 1
+      val data = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      data.right.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
         userData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
       )
     }
     "update a document in the collection" in {
       val newUserData = userData.copy(dividends = dividendsModel.map(_.copy(ukDividends = Some(344565.44))))
       count mustBe 1
-      val res: Boolean = await(repo.update(newUserData))
-      res mustBe true
+      val res = await(repo.update(newUserData))
+      res mustBe Right()
       count mustBe 1
-      val data: Option[UserData] = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
-      data.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
+      val data = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      data.right.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
         newUserData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
       )
     }
     "insert a new document to the collection if the sessionId is different" in {
       val newUserData = userData.copy(sessionId = "sessionId-000001")
       count mustBe 1
-      val res: Boolean = await(repo.update(newUserData))
-      res mustBe true
+      val res = await(repo.update(newUserData))
+      res mustBe Right()
       count mustBe 2
     }
   }
@@ -90,10 +155,10 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
     "get a document and update the TTL" in {
       count mustBe 2
       val dataBefore: UserData = encryption.decryptUserData(await(repo.collection.find(filter(userData.sessionId,userData.mtdItId,userData.nino,userData.taxYear)).toFuture()).head)
-      val dataAfter: Option[UserData] = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      val dataAfter = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
 
-      dataAfter.map(_.copy(lastUpdated = dataBefore.lastUpdated)) mustBe Some(dataBefore)
-      dataAfter.map(_.lastUpdated.isAfter(dataBefore.lastUpdated)) mustBe Some(true)
+      dataAfter.right.get.map(_.copy(lastUpdated = dataBefore.lastUpdated)) mustBe Some(dataBefore)
+      dataAfter.right.get.map(_.lastUpdated.isAfter(dataBefore.lastUpdated)) mustBe Some(true)
     }
   }
 

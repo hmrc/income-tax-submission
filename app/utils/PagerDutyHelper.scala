@@ -27,6 +27,9 @@ object PagerDutyHelper extends Logging {
     val SERVICE_UNAVAILABLE_FROM_API: PagerDutyKeys.Value = Value
     val INTERNAL_SERVER_ERROR_FROM_API: PagerDutyKeys.Value = Value
     val UNEXPECTED_RESPONSE_FROM_API: PagerDutyKeys.Value = Value
+    val ENCRYPTION_DECRYPTION_ERROR: PagerDutyKeys.Value = Value
+    val FAILED_TO_FIND_DATA: PagerDutyKeys.Value = Value
+    val FAILED_TO_UPDATE_DATA: PagerDutyKeys.Value = Value
   }
 
   def pagerDutyLog(pagerDutyKey: PagerDutyKeys.Value, otherDetail: String = ""): Unit = {

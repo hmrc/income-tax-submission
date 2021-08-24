@@ -20,14 +20,11 @@ import java.security.{InvalidAlgorithmParameterException, InvalidKeyException, N
 import java.util.Base64
 
 import config.AppConfig
-import javax.crypto.spec.{GCMParameterSpec, SecretKeySpec}
 import javax.crypto._
+import javax.crypto.spec.{GCMParameterSpec, SecretKeySpec}
 import javax.inject.{Inject, Singleton}
-import models._
-import models.employment.frontend.{AllEmploymentData, EmploymentBenefits, EmploymentData, EmploymentExpenses, EmploymentSource, EncryptedAllEmploymentData, EncryptedEmploymentBenefits, EncryptedEmploymentData, EncryptedEmploymentExpenses, EncryptedEmploymentSource}
-import models.employment.shared.{Benefits, Deductions, EncryptedBenefits, EncryptedDeductions, EncryptedExpenses, EncryptedPay, EncryptedStudentLoans, Expenses, Pay, StudentLoans}
-import models.giftAid.{EncryptedGiftAidModel, EncryptedGiftAidPaymentsModel, EncryptedGiftsModel, GiftAidModel, GiftAidPaymentsModel, GiftsModel}
-import models.mongo.{EncryptedUserData, TextAndKey, UserData}
+import models.mongo.TextAndKey
+import play.api.Logging
 import play.api.libs.json.{Json, OFormat}
 import utils.TypeCaster.Converter
 
@@ -45,7 +42,7 @@ class EncryptionDecryptionException(method: String, reason: String, message: Str
 }
 
 @Singleton
-class SecureGCMCipher @Inject()(implicit private val appConfig: AppConfig) {
+class SecureGCMCipher @Inject()(implicit private val appConfig: AppConfig) extends Logging {
 
   val IV_SIZE = 96
   val TAG_BIT_LENGTH = 128
@@ -67,6 +64,7 @@ class SecureGCMCipher @Inject()(implicit private val appConfig: AppConfig) {
         validateAssociatedText(textAndKey.associatedText, METHOD_ENCRYPT), gcmParameterSpec, secretKey)
       EncryptedValue(cipherText, nonce)
     } else {
+      logger.info("[SecureGCMCipher][encrypt] Encryption is turned off")
       EncryptedValue(valueToEncrypt.toString, s"${valueToEncrypt.toString}-Nonce")
     }
   }
@@ -84,6 +82,7 @@ class SecureGCMCipher @Inject()(implicit private val appConfig: AppConfig) {
         case Right(value) => converter.convert(value)
       }
     } else {
+      logger.info("[SecureGCMCipher][decrypt] Encryption is turned off")
       converter.convert(valueToDecrypt)
     }
   }

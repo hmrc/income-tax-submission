@@ -17,15 +17,15 @@
 package services
 
 import config.AppConfig
-import models.mongo.UserData
+import models.mongo.{DatabaseError, UserData}
 import models.{APIErrorBodyModel, APIErrorModel, IncomeSourcesResponseModel, User}
 import play.api.Logging
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.mvc.Result
 import play.api.mvc.Results.Status
 import repositories.IncomeTaxUserDataRepository
-
 import javax.inject.{Inject, Singleton}
+
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -39,14 +39,10 @@ class IncomeTaxUserDataService @Inject()(incomeTaxUserDataRepository: IncomeTaxU
                   (implicit user: User[_], ec: ExecutionContext): Future[Result] = {
 
     updateUserData(user.sessionId, user.mtditid, user.nino, taxYear, incomeSourcesModel).map {
-      response =>
-        if (response) {
-          result
-        } else {
-          logger.error("[IncomeTaxUserDataService][saveUserData] Failed to save user data")
-          val error = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("FAILED_TO_SAVE_USER_DATA", "Failed to save user data"))
-          Status(error.status)(error.toJson)
-        }
+      case Left(error) =>
+        val errorResponse = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("FAILED_TO_SAVE_USER_DATA", error.message))
+        Status(errorResponse.status)(errorResponse.toJson)
+      case Right(_) => result
     }
   }
 
@@ -54,7 +50,7 @@ class IncomeTaxUserDataService @Inject()(incomeTaxUserDataRepository: IncomeTaxU
                              mtdItId: String,
                              nino: String,
                              taxYear: Int,
-                             incomeSourcesModel: Option[IncomeSourcesResponseModel]): Future[Boolean] = {
+                             incomeSourcesModel: Option[IncomeSourcesResponseModel]): Future[Either[DatabaseError, Unit]] = {
 
     val userData = UserData(
       sessionId, mtdItId, nino, taxYear,
@@ -67,10 +63,11 @@ class IncomeTaxUserDataService @Inject()(incomeTaxUserDataRepository: IncomeTaxU
     incomeTaxUserDataRepository.update(userData)
   }
 
-  def findUserData(user: User[_], taxYear: Int)(implicit ec: ExecutionContext): Future[Option[IncomeSourcesResponseModel]] = {
+  def findUserData(user: User[_], taxYear: Int)(implicit ec: ExecutionContext): Future[Either[APIErrorModel, Option[IncomeSourcesResponseModel]]] = {
     incomeTaxUserDataRepository.find(user, taxYear).map {
-      case Some(userData: UserData) => Some(userData.toIncomeSourcesResponseModel)
-      case _ => None
+      case Right(Some(userData: UserData)) => Right(Some(userData.toIncomeSourcesResponseModel))
+      case Right(None) => Right(None)
+      case Left(error) => Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("FAILED_TO_FIND_USER_DATA", error.message)))
     }
   }
 }

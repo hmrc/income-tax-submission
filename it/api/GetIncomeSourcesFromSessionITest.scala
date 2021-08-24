@@ -62,8 +62,8 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
     "the user is an individual" must {
       "return the income sources for a user" in new Setup {
 
-        val res: Boolean = await(repo.update(userData))
-        res mustBe true
+        val res = await(repo.update(userData))
+        res mustBe Right()
         count mustBe 1
 
         authorised()
@@ -78,8 +78,8 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
       }
       "return the income sources for a user when the backup session header is available" in new Setup {
 
-        val res: Boolean = await(repo.update(userData))
-        res mustBe true
+        val res = await(repo.update(userData))
+        res mustBe Right()
         count mustBe 1
 
         authorised()
@@ -95,8 +95,8 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
 
       "return 204 if a user has no recorded income sources" in new Setup {
 
-        val res: Boolean = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None)))
-        res mustBe true
+        val res = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None)))
+        res mustBe Right()
         count mustBe 1
 
         authorised()
@@ -155,8 +155,8 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
     "the user is an agent" must {
       "return the income sources for a user" in new Setup {
 
-        val res: Boolean = await(repo.update(userData))
-        res mustBe true
+        val res = await(repo.update(userData))
+        res mustBe Right()
         count mustBe 1
 
         agentAuthorised()
@@ -175,8 +175,8 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
 
       "return 204 if a user has no recorded income sources" in new Setup {
 
-        val res: Boolean = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None)))
-        res mustBe true
+        val res = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None)))
+        res mustBe Right()
         count mustBe 1
 
         agentAuthorised()
