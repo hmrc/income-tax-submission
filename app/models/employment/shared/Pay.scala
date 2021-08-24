@@ -21,7 +21,6 @@ import utils.EncryptedValue
 
 case class Pay(taxablePayToDate: Option[BigDecimal],
                totalTaxToDate: Option[BigDecimal],
-               tipsAndOtherPayments: Option[BigDecimal],
                payFrequency: Option[String],
                paymentDate: Option[String],
                taxWeekNo: Option[Int],
@@ -33,7 +32,6 @@ object Pay {
 
 case class EncryptedPay(taxablePayToDate: Option[EncryptedValue],
                         totalTaxToDate: Option[EncryptedValue],
-                        tipsAndOtherPayments: Option[EncryptedValue],
                         payFrequency: Option[EncryptedValue],
                         paymentDate: Option[EncryptedValue],
                         taxWeekNo: Option[EncryptedValue],

@@ -166,7 +166,6 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       EncryptedPay(
         taxablePayToDate = p.taxablePayToDate.map(encryptionService.encrypt),
         totalTaxToDate = p.totalTaxToDate.map(encryptionService.encrypt),
-        tipsAndOtherPayments = p.tipsAndOtherPayments.map(encryptionService.encrypt),
         payFrequency = p.payFrequency.map(encryptionService.encrypt),
         paymentDate = p.paymentDate.map(encryptionService.encrypt),
         taxWeekNo = p.taxWeekNo.map(encryptionService.encrypt),
@@ -180,7 +179,8 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
         val studentLoans = d.studentLoans.map {
           s =>
             EncryptedStudentLoans(
-              uglDeductionAmount = s.uglDeductionAmount.map(encryptionService.encrypt), pglDeductionAmount = s.pglDeductionAmount.map(encryptionService.encrypt))
+              uglDeductionAmount = s.uglDeductionAmount.map(encryptionService.encrypt),
+              pglDeductionAmount = s.pglDeductionAmount.map(encryptionService.encrypt))
         }
 
         EncryptedDeductions(studentLoans)
@@ -205,7 +205,6 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       Pay(
         taxablePayToDate = p.taxablePayToDate.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
         totalTaxToDate = p.totalTaxToDate.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-        tipsAndOtherPayments = p.tipsAndOtherPayments.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
         payFrequency = p.payFrequency.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
         paymentDate = p.paymentDate.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
         taxWeekNo = p.taxWeekNo.map(x => encryptionService.decrypt[Int](x.value,x.nonce)),
