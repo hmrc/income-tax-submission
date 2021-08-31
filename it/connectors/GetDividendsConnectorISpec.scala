@@ -18,7 +18,7 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.AppConfig
-import helpers.WiremockSpec
+import helpers.IntegrationSpec
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel, DividendsModel}
 import play.api.Configuration
 import play.api.http.Status._
@@ -26,7 +26,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class GetDividendsConnectorISpec extends WiremockSpec {
+class GetDividendsConnectorISpec extends IntegrationSpec {
 
   lazy val connector: IncomeTaxDividendsConnector = app.injector.instanceOf[IncomeTaxDividendsConnector]
 

@@ -17,6 +17,7 @@
 package models.employment.shared
 
 import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
 case class Pay(taxablePayToDate: Option[BigDecimal],
                totalTaxToDate: Option[BigDecimal],
@@ -27,4 +28,15 @@ case class Pay(taxablePayToDate: Option[BigDecimal],
 
 object Pay {
   implicit val formats: OFormat[Pay] = Json.format[Pay]
+}
+
+case class EncryptedPay(taxablePayToDate: Option[EncryptedValue],
+                        totalTaxToDate: Option[EncryptedValue],
+                        payFrequency: Option[EncryptedValue],
+                        paymentDate: Option[EncryptedValue],
+                        taxWeekNo: Option[EncryptedValue],
+                        taxMonthNo: Option[EncryptedValue])
+
+object EncryptedPay {
+  implicit val formats: OFormat[EncryptedPay] = Json.format[EncryptedPay]
 }

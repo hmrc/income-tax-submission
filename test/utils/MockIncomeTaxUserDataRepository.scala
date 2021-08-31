@@ -17,7 +17,7 @@
 package utils
 
 import models.User
-import models.mongo.UserData
+import models.mongo.{DatabaseError, UserData}
 import org.scalamock.handlers.{CallHandler1, CallHandler2}
 import org.scalamock.scalatest.MockFactory
 import repositories.IncomeTaxUserDataRepository
@@ -28,14 +28,14 @@ trait MockIncomeTaxUserDataRepository extends MockFactory {
 
   val mockRepository: IncomeTaxUserDataRepository = mock[IncomeTaxUserDataRepository]
 
-  def mockUpdate(response: Boolean = true): CallHandler1[UserData, Future[Boolean]] = {
+  def mockUpdate(response: Either[DatabaseError, Unit] = Right()): CallHandler1[UserData, Future[Either[DatabaseError, Unit]]] = {
     (mockRepository.update(_: UserData))
       .expects(*)
       .returns(Future.successful(response))
       .anyNumberOfTimes()
   }
 
-  def mockFind(data: Option[UserData]): CallHandler2[User[_], Int, Future[Option[UserData]]] = {
+  def mockFind(data: Either[DatabaseError, Option[UserData]]): CallHandler2[User[_], Int, Future[Either[DatabaseError, Option[UserData]]]] = {
     (mockRepository.find(_: User[_], _: Int))
       .expects(*, *)
       .returns(Future.successful(data))

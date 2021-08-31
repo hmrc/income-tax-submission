@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package models.employment.shared
+package utils
 
-import play.api.libs.json.{Json, OFormat}
+object TypeCaster {
 
-case class Deductions(studentLoans: Option[StudentLoans])
+  trait Converter[T] { self =>
+    def convert(v: String): T
+  }
 
-object Deductions {
-  implicit val formats: OFormat[Deductions] = Json.format[Deductions]
-}
-
-case class EncryptedDeductions(studentLoans: Option[EncryptedStudentLoans])
-
-object EncryptedDeductions {
-  implicit val formats: OFormat[EncryptedDeductions] = Json.format[EncryptedDeductions]
+  object Converter {
+    implicit val stringLoader: Converter[String] = (v: String) => v
+    implicit val intLoader: Converter[Int] = (v: String) => v.toInt
+    implicit val booleanLoader: Converter[Boolean] = (v: String) => v.toBoolean
+    implicit val bigDecimalLoader: Converter[BigDecimal] = (v: String) => BigDecimal(v)
+  }
 }

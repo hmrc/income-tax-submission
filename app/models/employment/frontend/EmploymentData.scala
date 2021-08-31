@@ -16,8 +16,9 @@
 
 package models.employment.frontend
 
-import models.employment.shared.{Deductions, Pay}
+import models.employment.shared.{Deductions, EncryptedDeductions, EncryptedPay, Pay}
 import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
 case class EmploymentData(submittedOn: String,
                           employmentSequenceNumber: Option[String],
@@ -31,4 +32,18 @@ case class EmploymentData(submittedOn: String,
 
 object EmploymentData {
   implicit val formats: OFormat[EmploymentData] = Json.format[EmploymentData]
+}
+
+case class EncryptedEmploymentData(submittedOn: EncryptedValue,
+                                   employmentSequenceNumber: Option[EncryptedValue],
+                                   companyDirector: Option[EncryptedValue],
+                                   closeCompany: Option[EncryptedValue],
+                                   directorshipCeasedDate: Option[EncryptedValue],
+                                   occPen: Option[EncryptedValue],
+                                   disguisedRemuneration: Option[EncryptedValue],
+                                   pay: Option[EncryptedPay],
+                                   deductions: Option[EncryptedDeductions])
+
+object EncryptedEmploymentData {
+  implicit val formats: OFormat[EncryptedEmploymentData] = Json.format[EncryptedEmploymentData]
 }

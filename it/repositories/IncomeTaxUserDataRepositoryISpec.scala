@@ -17,128 +17,128 @@
 package repositories
 
 import com.mongodb.client.result.InsertOneResult
-import helpers.WiremockSpec
-import models.employment.frontend.{AllEmploymentData, EmploymentData, EmploymentSource}
-import models.employment.shared.{Deductions, Pay, StudentLoans}
-import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
-import models.mongo.UserData
-import models.{DividendsModel, InterestModel, User}
+import helpers.IntegrationSpec
+import models.User
+import models.mongo.{DatabaseError, EncryptionDecryptionError, MongoError, UserData}
 import org.bson.conversions.Bson
 import org.joda.time.DateTime
+import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.scalatest.BeforeAndAfterAll
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import services.EncryptionService
+import uk.gov.hmrc.mongo.MongoUtils
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 
-class IncomeTaxUserDataRepositoryISpec extends WiremockSpec
+import scala.concurrent.Future
+
+class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
   with BeforeAndAfterAll with FutureAwaits with DefaultAwaitTimeout {
 
   val repo: IncomeTaxUserDataRepositoryImpl = app.injector.instanceOf[IncomeTaxUserDataRepositoryImpl]
+  val encryption: EncryptionService = app.injector.instanceOf[EncryptionService]
 
   private def count = await(repo.collection.countDocuments().toFuture())
+  private def countFromOtherDatabase = await(repo.collection.countDocuments().toFuture())
+
+  val repoWithInvalidEncryption: IncomeTaxUserDataRepositoryImpl = appWithInvalidEncryptionKey.injector.instanceOf[IncomeTaxUserDataRepositoryImpl]
 
   class EmptyDatabase {
     await(repo.collection.drop().toFuture())
     await(repo.ensureIndexes)
+    await(repoWithInvalidEncryption.collection.drop().toFuture())
+    await(repoWithInvalidEncryption.ensureIndexes)
   }
 
-  lazy val dividendsModel:Option[DividendsModel] = Some(DividendsModel(Some(100.00), Some(100.00)))
-  lazy val interestsModel:Option[Seq[InterestModel]] = Some(Seq(InterestModel("TestName", "TestSource", Some(100.00), Some(100.00))))
-  lazy val employmentsModel: AllEmploymentData = AllEmploymentData(
-    hmrcEmploymentData = Seq(
-      EmploymentSource(
-        employmentId = "001",
-        employerName = "maggie",
-        employerRef = Some("223/AB12399"),
-        payrollId = Some("123456789999"),
-        startDate = Some("2019-04-21"),
-        cessationDate = Some("2020-03-11"),
-        dateIgnored = Some("2020-04-04T01:01:01Z"),
-        submittedOn = Some("2020-01-04T05:01:01Z"),
-        employmentData = Some(EmploymentData(
-          submittedOn = "2020-02-12",
-          employmentSequenceNumber = Some("123456789999"),
-          companyDirector = Some(true),
-          closeCompany = Some(false),
-          directorshipCeasedDate = Some("2020-02-12"),
-          occPen = Some(false),
-          disguisedRemuneration = Some(false),
-          pay = Some(Pay(Some(34234.15), Some(6782.92), Some("CALENDAR MONTHLY"), Some("2020-04-23"), Some(32), Some(2))),
-          Some(Deductions(
-            studentLoans = Some(StudentLoans(
-              uglDeductionAmount = Some(100.00),
-              pglDeductionAmount = Some(100.00)
-            ))
-          ))
-        )),
-        None
-      )
-    ),
-    hmrcExpenses = None,
-    customerEmploymentData = Seq(),
-    customerExpenses = None
-  )
-  val giftAidPaymentsModel: Option[GiftAidPaymentsModel] = Some(GiftAidPaymentsModel(
-    nonUkCharitiesCharityNames = Some(List("non uk charity name", "non uk charity name 2")),
-    currentYear = Some(1234.56),
-    oneOffCurrentYear = Some(1234.56),
-    currentYearTreatedAsPreviousYear = Some(1234.56),
-    nextYearTreatedAsCurrentYear = Some(1234.56),
-    nonUkCharities = Some(1234.56),
-  ))
-
-  val giftsModel: Option[GiftsModel] = Some(GiftsModel(
-    investmentsNonUkCharitiesCharityNames = Some(List("charity 1", "charity 2")),
-    landAndBuildings = Some(10.21),
-    sharesOrSecurities = Some(10.21),
-    investmentsNonUkCharities = Some(1234.56)
-  ))
-
-  val giftAidModel: GiftAidModel = GiftAidModel(
-    giftAidPaymentsModel,
-    giftsModel
-  )
-
-  val userData: UserData = UserData(
-    "sessionId-1618a1e8-4979-41d8-a32e-5ffbe69fac81",
-    "1234567890",
-    "AA123456A",
-    2022,
-    dividendsModel,
-    interestsModel,
-    Some(giftAidModel),
-    Some(employmentsModel)
-  )
+  val serviceWithInvalidEncryption: EncryptionService = appWithInvalidEncryptionKey.injector.instanceOf[EncryptionService]
 
   implicit val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
 
+  "update with invalid encryption" should {
+    "fail to add data" in new EmptyDatabase {
+      countFromOtherDatabase mustBe 0
+      val res: Either[DatabaseError, Unit] = await(repoWithInvalidEncryption.update(userData))
+      res mustBe Left(EncryptionDecryptionError(
+        "Key being used is not valid. It could be due to invalid encoding, wrong length or uninitialized for encrypt Invalid AES key length: 2 bytes"))
+    }
+  }
+
+  "find with invalid encryption" should {
+    "fail to find data" in new EmptyDatabase {
+      countFromOtherDatabase mustBe 0
+      await(repoWithInvalidEncryption.collection.insertOne(encryption.encryptUserData(userData)).toFuture())
+      countFromOtherDatabase mustBe 1
+      val res = await(repoWithInvalidEncryption.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      res mustBe Left(EncryptionDecryptionError(
+        "Key being used is not valid. It could be due to invalid encoding, wrong length or uninitialized for decrypt Invalid AES key length: 2 bytes"))
+    }
+  }
+
+  "handleEncryptionDecryptionException" should {
+    "handle an exception" in {
+      val res = repoWithInvalidEncryption.handleEncryptionDecryptionException(new Exception("fail"),"")
+      res mustBe Left(EncryptionDecryptionError("fail"))
+    }
+  }
+
   "update" should {
+    "fail to add a document to the collection when a mongo error occurs" in new EmptyDatabase {
+
+      def ensureIndexes: Future[Seq[String]] = {
+        val indexes = Seq(IndexModel(ascending("taxYear"), IndexOptions().unique(true).name("fakeIndex")))
+        MongoUtils.ensureIndexes(repo.collection, indexes, true)
+      }
+
+      ensureIndexes
+      count mustBe 0
+
+      val res = await(repo.update(userData))
+      res mustBe Right()
+      count mustBe 1
+
+      val res2 = await(repo.update(userData.copy(sessionId = "1234567890")))
+      res2 mustBe Left(MongoError("Command failed with error 11000 (DuplicateKey): 'E11000 duplicate key error collection: income-tax-submission.userData index: fakeIndex dup key: { : 2022 }' on server localhost:27017. The full response is {\"ok\": 0.0, \"errmsg\": \"E11000 duplicate key error collection: income-tax-submission.userData index: fakeIndex dup key: { : 2022 }\", \"code\": 11000, \"codeName\": \"DuplicateKey\"}"))
+      count mustBe 1
+
+
+    }
     "add a document to the collection" in new EmptyDatabase {
       count mustBe 0
-      val res: Boolean = await(repo.update(userData))
-      res mustBe true
+      val res = await(repo.update(userData))
+      res mustBe Right()
       count mustBe 1
-      val data: Option[UserData] = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
-      data.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
+      val data = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      data.right.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
+        userData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
+      )
+    }
+    "upsert a document to the collection when already exists" in {
+      count mustBe 1
+      val res = await(repo.update(userData))
+      res mustBe Right()
+      count mustBe 1
+      val data = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      data.right.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
         userData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
       )
     }
     "update a document in the collection" in {
       val newUserData = userData.copy(dividends = dividendsModel.map(_.copy(ukDividends = Some(344565.44))))
       count mustBe 1
-      val res: Boolean = await(repo.update(newUserData))
-      res mustBe true
+      val res = await(repo.update(newUserData))
+      res mustBe Right()
       count mustBe 1
-      val data: Option[UserData] = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
-      data.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
+      val data = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      data.right.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
         newUserData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
       )
     }
     "insert a new document to the collection if the sessionId is different" in {
       val newUserData = userData.copy(sessionId = "sessionId-000001")
       count mustBe 1
-      val res: Boolean = await(repo.update(newUserData))
-      res mustBe true
+      val res = await(repo.update(newUserData))
+      res mustBe Right()
       count mustBe 2
     }
   }
@@ -154,18 +154,18 @@ class IncomeTaxUserDataRepositoryISpec extends WiremockSpec
 
     "get a document and update the TTL" in {
       count mustBe 2
-      val dataBefore: UserData = await(repo.collection.find(filter(userData.sessionId,userData.mtdItId,userData.nino,userData.taxYear)).toFuture()).head
-      val dataAfter: Option[UserData] = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      val dataBefore: UserData = encryption.decryptUserData(await(repo.collection.find(filter(userData.sessionId,userData.mtdItId,userData.nino,userData.taxYear)).toFuture()).head)
+      val dataAfter = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
 
-      dataAfter.map(_.copy(lastUpdated = dataBefore.lastUpdated)) mustBe Some(dataBefore)
-      dataAfter.map(_.lastUpdated.isAfter(dataBefore.lastUpdated)) mustBe Some(true)
+      dataAfter.right.get.map(_.copy(lastUpdated = dataBefore.lastUpdated)) mustBe Some(dataBefore)
+      dataAfter.right.get.map(_.lastUpdated.isAfter(dataBefore.lastUpdated)) mustBe Some(true)
     }
   }
 
   "the set indexes" should {
     "enforce uniqueness" in {
       val result: Either[Exception,InsertOneResult] = try {
-        Right(await(repo.collection.insertOne(userData).toFuture()))
+        Right(await(repo.collection.insertOne(encryption.encryptUserData(userData)).toFuture()))
       } catch {
         case e: Exception => Left(e)
       }

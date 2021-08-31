@@ -41,7 +41,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       .expects(*, data, *, *, *)
       .returning(Future.successful(outcome))
   }
-  def mockFindData(data: Option[IncomeSourcesResponseModel]): CallHandler3[User[_], Int, ExecutionContext, Future[Option[IncomeSourcesResponseModel]]] ={
+  def mockFindData(data: Either[APIErrorModel, Option[IncomeSourcesResponseModel]]): CallHandler3[User[_], Int, ExecutionContext, Future[Either[APIErrorModel, Option[IncomeSourcesResponseModel]]]] ={
     (mockIncomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
       .expects(*, *, *)
       .returning(Future.successful(data))
@@ -95,7 +95,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       "return a NO_CONTENT response with no data" in {
         val result = {
           mockAuth()
-          mockFindData(None)
+          mockFindData(Right(None))
           controller.getIncomeSourcesFromSession(nino, taxYear)(fakeGetRequestWithExcludedHeader)
         }
         status(result) mustBe NO_CONTENT
@@ -104,7 +104,7 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       "return an OK response with data" in {
         val result = {
           mockAuth()
-          mockFindData(Some(incomeSourcesResponse))
+          mockFindData(Right(Some(incomeSourcesResponse)))
           controller.getIncomeSourcesFromSession(nino, taxYear)(fakeGetRequestWithExcludedHeader)
         }
         status(result) mustBe OK
@@ -114,10 +114,18 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       "return a NO_CONTENT response when data is empty" in {
         val result = {
           mockAuth()
-          mockFindData(Some(incomeSourcesResponse.copy(dividends = None, interest = None, giftAid = None, employment = None)))
+          mockFindData(Right(Some(incomeSourcesResponse.copy(dividends = None, interest = None, giftAid = None, employment = None))))
           controller.getIncomeSourcesFromSession(nino, taxYear)(fakeGetRequestWithExcludedHeader)
         }
         status(result) mustBe NO_CONTENT
+      }
+        "return an INTERNAL SERVER ERROR response when an error occurs" in {
+        val result = {
+          mockAuth()
+          mockFindData(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)))
+          controller.getIncomeSourcesFromSession(nino, taxYear)(fakeGetRequestWithExcludedHeader)
+        }
+        status(result) mustBe INTERNAL_SERVER_ERROR
       }
     }
   }

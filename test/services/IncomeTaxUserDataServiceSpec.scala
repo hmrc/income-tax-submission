@@ -16,11 +16,14 @@
 
 package services
 
+import models.mongo.{DataNotFound, DataNotUpdated, EncryptionDecryptionError, MongoError}
 import models.{IncomeSourcesResponseModel, User, _}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.Json
 import play.api.mvc.Results._
 import utils.{MockIncomeTaxUserDataRepository, TestUtils}
+
+import scala.concurrent.Future
 
 class IncomeTaxUserDataServiceSpec extends TestUtils with MockIncomeTaxUserDataRepository{
 
@@ -32,23 +35,23 @@ class IncomeTaxUserDataServiceSpec extends TestUtils with MockIncomeTaxUserDataR
 
     "return the repo response when there is no data" in {
 
-      mockFind(None)
+      mockFind(Right(None))
 
       val result = await(service.findUserData(
         user, 2022
       ))
 
-      result mustBe None
+      result mustBe Right(None)
     }
     "return the repo response when there is data" in {
 
-      mockFind(Some(userData))
+      mockFind(Right(Some(userData)))
 
       val result = await(service.findUserData(
         user, 2022
       ))
 
-      result mustBe Some(userData.toIncomeSourcesResponseModel)
+      result mustBe Right(Some(userData.toIncomeSourcesResponseModel))
     }
   }
 
@@ -81,18 +84,58 @@ class IncomeTaxUserDataServiceSpec extends TestUtils with MockIncomeTaxUserDataR
     }
     "return the repo response when it fails to save" in {
 
-      mockUpdate(false)
+      mockUpdate(Left(DataNotUpdated))
 
       val result = await(service.saveUserData(
         2022
       )(NoContent))
 
-      val error = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("FAILED_TO_SAVE_USER_DATA", "Failed to save user data"))
-      Status(error.status)(error.toJson)
+      val error = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("FAILED_TO_SAVE_USER_DATA", "User data was not updated due to mongo exception"))
 
-      result mustBe Status(error.status)(error.toJson)
+      result.header.status mustBe INTERNAL_SERVER_ERROR
+      bodyOf(Future.successful(result)) mustBe error.toJson.toString()
     }
+    "return the repo response when it fails to save due to mongo exception" in {
 
+      mockUpdate(Left(MongoError("it failed")))
+
+      val result = await(service.saveUserData(
+        2022
+      )(NoContent))
+
+      val error = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("FAILED_TO_SAVE_USER_DATA", "Mongo exception occurred. Exception: it failed"))
+
+      result.header.status mustBe INTERNAL_SERVER_ERROR
+      bodyOf(Future.successful(result)) mustBe error.toJson.toString()
+    }
+    "return the repo response when it fails to save due to encryption exception" in {
+
+      mockUpdate(Left(EncryptionDecryptionError("it failed")))
+
+      val result = await(service.saveUserData(
+        2022
+      )(NoContent))
+
+      val error = APIErrorModel(INTERNAL_SERVER_ERROR,
+        APIErrorBodyModel("FAILED_TO_SAVE_USER_DATA", "Encryption / Decryption exception occurred. Exception: it failed"))
+
+      result.header.status mustBe INTERNAL_SERVER_ERROR
+      bodyOf(Future.successful(result)) mustBe error.toJson.toString()
+    }
+    "return the repo response when it fails to save due to data not found error" in {
+
+      mockUpdate(Left(DataNotFound))
+
+      val result = await(service.saveUserData(
+        2022
+      )(NoContent))
+
+      val error = APIErrorModel(INTERNAL_SERVER_ERROR,
+        APIErrorBodyModel("FAILED_TO_SAVE_USER_DATA", "User data could not be found due to mongo exception"))
+
+      result.header.status mustBe INTERNAL_SERVER_ERROR
+      bodyOf(Future.successful(result)) mustBe error.toJson.toString()
+    }
   }
 
 }

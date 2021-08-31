@@ -16,7 +16,7 @@
 
 package api
 
-import helpers.WiremockSpec
+import helpers.IntegrationSpec
 import models.employment.frontend.{AllEmploymentData, EmploymentData, EmploymentSource}
 import models.employment.shared.{Deductions, Pay, StudentLoans}
 import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
@@ -27,70 +27,13 @@ import org.scalatest.time.{Seconds, Span}
 import play.api.libs.json.Json
 import repositories.IncomeTaxUserDataRepositoryImpl
 
-class GetIncomeSourcesFromSessionITest extends WiremockSpec with ScalaFutures {
+class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures {
 
   val repo: IncomeTaxUserDataRepositoryImpl = app.injector.instanceOf[IncomeTaxUserDataRepositoryImpl]
 
   private def count = await(repo.collection.countDocuments().toFuture())
 
-  lazy val dividendsModel:Option[DividendsModel] = Some(DividendsModel(Some(100.00), Some(100.00)))
-  lazy val interestsModel:Option[Seq[InterestModel]] = Some(Seq(InterestModel("TestName", "TestSource", Some(100.00), Some(100.00))))
-  lazy val employmentsModel: AllEmploymentData = AllEmploymentData(
-    hmrcEmploymentData = Seq(
-      EmploymentSource(
-        employmentId = "001",
-        employerName = "maggie",
-        employerRef = Some("223/AB12399"),
-        payrollId = Some("123456789999"),
-        startDate = Some("2019-04-21"),
-        cessationDate = Some("2020-03-11"),
-        dateIgnored = Some("2020-04-04T01:01:01Z"),
-        submittedOn = Some("2020-01-04T05:01:01Z"),
-        employmentData = Some(EmploymentData(
-          submittedOn = "2020-02-12",
-          employmentSequenceNumber = Some("123456789999"),
-          companyDirector = Some(true),
-          closeCompany = Some(false),
-          directorshipCeasedDate = Some("2020-02-12"),
-          occPen = Some(false),
-          disguisedRemuneration = Some(false),
-          pay = Some(Pay(Some(34234.15), Some(6782.92), Some("CALENDAR MONTHLY"), Some("2020-04-23"), Some(32), Some(2))),
-          Some(Deductions(
-            studentLoans = Some(StudentLoans(
-              uglDeductionAmount = Some(100.00),
-              pglDeductionAmount = Some(100.00)
-            ))
-          ))
-        )),
-        None
-      )
-    ),
-    hmrcExpenses = None,
-    customerEmploymentData = Seq(),
-    customerExpenses = None
-  )
-  val giftAidPaymentsModel: Option[GiftAidPaymentsModel] = Some(GiftAidPaymentsModel(
-    nonUkCharitiesCharityNames = Some(List("non uk charity name", "non uk charity name 2")),
-    currentYear = Some(1234.56),
-    oneOffCurrentYear = Some(1234.56),
-    currentYearTreatedAsPreviousYear = Some(1234.56),
-    nextYearTreatedAsCurrentYear = Some(1234.56),
-    nonUkCharities = Some(1234.56),
-  ))
-
-  val giftsModel: Option[GiftsModel] = Some(GiftsModel(
-    investmentsNonUkCharitiesCharityNames = Some(List("charity 1", "charity 2")),
-    landAndBuildings = Some(10.21),
-    sharesOrSecurities = Some(10.21),
-    investmentsNonUkCharities = Some(1234.56)
-  ))
-
-  val giftAidModel: GiftAidModel = GiftAidModel(
-    giftAidPaymentsModel,
-    giftsModel
-  )
-
-  val userData: UserData = UserData(
+  override val userData: UserData = UserData(
     "sessionId-1618a1e8-4979-41d8-a32e-5ffbe69fac81",
     "555555555",
     "AA123123A",
@@ -119,8 +62,8 @@ class GetIncomeSourcesFromSessionITest extends WiremockSpec with ScalaFutures {
     "the user is an individual" must {
       "return the income sources for a user" in new Setup {
 
-        val res: Boolean = await(repo.update(userData))
-        res mustBe true
+        val res = await(repo.update(userData))
+        res mustBe Right()
         count mustBe 1
 
         authorised()
@@ -135,8 +78,8 @@ class GetIncomeSourcesFromSessionITest extends WiremockSpec with ScalaFutures {
       }
       "return the income sources for a user when the backup session header is available" in new Setup {
 
-        val res: Boolean = await(repo.update(userData))
-        res mustBe true
+        val res = await(repo.update(userData))
+        res mustBe Right()
         count mustBe 1
 
         authorised()
@@ -152,8 +95,8 @@ class GetIncomeSourcesFromSessionITest extends WiremockSpec with ScalaFutures {
 
       "return 204 if a user has no recorded income sources" in new Setup {
 
-        val res: Boolean = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None)))
-        res mustBe true
+        val res = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None)))
+        res mustBe Right()
         count mustBe 1
 
         authorised()
@@ -212,8 +155,8 @@ class GetIncomeSourcesFromSessionITest extends WiremockSpec with ScalaFutures {
     "the user is an agent" must {
       "return the income sources for a user" in new Setup {
 
-        val res: Boolean = await(repo.update(userData))
-        res mustBe true
+        val res = await(repo.update(userData))
+        res mustBe Right()
         count mustBe 1
 
         agentAuthorised()
@@ -232,8 +175,8 @@ class GetIncomeSourcesFromSessionITest extends WiremockSpec with ScalaFutures {
 
       "return 204 if a user has no recorded income sources" in new Setup {
 
-        val res: Boolean = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None)))
-        res mustBe true
+        val res = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None)))
+        res mustBe Right()
         count mustBe 1
 
         agentAuthorised()

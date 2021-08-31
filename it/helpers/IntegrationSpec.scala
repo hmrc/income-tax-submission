@@ -14,110 +14,78 @@
  * limitations under the License.
  */
 
-package utils
+package helpers
 
-import akka.actor.ActorSystem
 import com.codahale.metrics.SharedMetricRegistries
-import common.{EnrolmentIdentifiers, EnrolmentKeys}
-import config.AppConfig
-import controllers.predicates.AuthorisedAction
-import models.employment.frontend._
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
+import models.{DividendsModel, InterestModel}
+import models.employment.frontend.{AllEmploymentData, EmploymentBenefits, EmploymentData, EmploymentExpenses, EmploymentSource}
 import models.employment.shared.{Benefits, Deductions, Expenses, Pay, StudentLoans}
 import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
 import models.mongo.UserData
-import models.{DividendsModel, IncomeSourcesResponseModel, InterestModel}
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Configuration
-import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, DefaultActionBuilder, Result}
-import play.api.test.{FakeRequest, Helpers}
-import services.AuthService
-import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.Retrieval
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
+import play.api.http.HeaderNames
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.ws.{WSClient, WSRequest}
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Awaitable, ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
-trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOneAppPerSuite with BeforeAndAfterEach {
+trait IntegrationSpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneServerPerSuite
+  with FutureAwaits with DefaultAwaitTimeout with WiremockStubHelpers with AuthStub {
+
+  val wireMockPort = 11111
+
+  lazy val ws: WSClient = app.injector.instanceOf(classOf[WSClient])
+  implicit val ec: ExecutionContext = ExecutionContext.global
+
+  val wireMockServer: WireMockServer = new WireMockServer(wireMockConfig().port(wireMockPort))
+
+  lazy val connectedServices: Seq[String] = Seq("income-tax-dividends", "income-tax-employment", "income-tax-interest", "income-tax-gift-aid", "auth")
+
+  def servicesToUrlConfig: Seq[(String, String)] = connectedServices
+    .flatMap(service => Seq(s"microservice.services.$service.host" -> s"localhost", s"microservice.services.$service.port" -> wireMockPort.toString))
+
+  override implicit lazy val app: Application = GuiceApplicationBuilder()
+    .configure(("useEncryption" -> true) +: ("auditing.consumer.baseUri.port" -> wireMockPort) +: servicesToUrlConfig: _*)
+    .build()
+
+  lazy val appWithInvalidEncryptionKey: Application = GuiceApplicationBuilder()
+    .configure(("useEncryption" -> true) +: ("mongodb.encryption.key" -> "key") +: ("auditing.consumer.baseUri.port" -> wireMockPort) +: servicesToUrlConfig: _*)
+    .build()
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    wireMockServer.start()
+    SharedMetricRegistries.clear()
+    WireMock.configureFor("localhost", wireMockPort)
+  }
+
+  override def afterAll(): Unit = {
+    super.afterAll()
+    wireMockServer.stop()
+  }
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    SharedMetricRegistries.clear()
+    reset()
   }
 
-  implicit val actorSystem: ActorSystem = ActorSystem()
+  def buildClient(urlandUri: String,
+                  port: Int = port,
+                  additionalCookies: Map[String, String] = Map.empty): WSRequest = {
 
-  def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, Duration.Inf)
-
-  implicit val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("GET",
-    "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
-  implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
-
-  lazy val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
-  lazy val mockAppConfigWithEncryption: AppConfig = new MockAppConfig(app.injector.instanceOf[Configuration],app.injector.instanceOf[ServicesConfig]).config
-  implicit val mockControllerComponents: ControllerComponents = Helpers.stubControllerComponents()
-  implicit val mockExecutionContext: ExecutionContext = ExecutionContext.Implicits.global
-  implicit val mockAuthConnector: AuthConnector = mock[AuthConnector]
-  implicit val mockAuthService: AuthService = new AuthService(mockAuthConnector)
-  val defaultActionBuilder: DefaultActionBuilder = DefaultActionBuilder(mockControllerComponents.parsers.default)
-  val authorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, mockControllerComponents)
-
-
-  def status(awaitable: Future[Result]): Int = await(awaitable).header.status
-
-  def bodyOf(awaitable: Future[Result]): String = {
-    val awaited = await(awaitable)
-    await(awaited.body.consumeData.map(_.utf8String))
-  }
-
-  val individualEnrolments: Enrolments = Enrolments(Set(
-    Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, "1234567890")), "Activated"),
-    Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, "1234567890")), "Activated")))
-
-  //noinspection ScalaStyle
-  def mockAuth(enrolments: Enrolments = individualEnrolments) = {
-
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.affinityGroup, *, *)
-      .returning(Future.successful(Some(AffinityGroup.Individual)))
-
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
-      .returning(Future.successful(enrolments and ConfidenceLevel.L200))
-  }
-
-  val agentEnrolments: Enrolments = Enrolments(Set(
-    Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, "1234567890")), "Activated"),
-    Enrolment(EnrolmentKeys.Agent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, "0987654321")), "Activated")
-  ))
-
-  //noinspection ScalaStyle
-  def mockAuthAsAgent(enrolments: Enrolments = agentEnrolments) = {
-
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.affinityGroup, *, *)
-      .returning(Future.successful(Some(AffinityGroup.Agent)))
-
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(Enrolment(EnrolmentKeys.Individual)
-        .withIdentifier(EnrolmentIdentifiers.individualId, "1234567890")
-        .withDelegatedAuthRule("mtd-it-auth"), *, *, *)
-      .returning(Future.successful(enrolments))
-  }
-
-  //noinspection ScalaStyle
-  def mockAuthReturnException(exception: Exception) = {
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *)
-      .returning(Future.failed(exception))
+    ws
+      .url(s"http://localhost:$port$urlandUri")
+      .withHttpHeaders(HeaderNames.COOKIE -> PlaySessionCookieBaker.bakeSessionCookie(additionalCookies), "Csrf-Token" -> "nocheck")
+      .withFollowRedirects(false)
   }
 
   val allEmploymentData =
@@ -304,9 +272,4 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
     Some(giftAidModel),
     Some(employmentsModel)
   )
-
-  val incomeSourcesResponse: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsModel(Some(123456.78), Some(123456.78))),
-    Some(Seq(InterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAidModel(giftAidPaymentsModel, giftsModel)),
-    Some(allEmploymentData))
 }
-

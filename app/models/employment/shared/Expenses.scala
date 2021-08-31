@@ -17,6 +17,7 @@
 package models.employment.shared
 
 import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
 case class Expenses(businessTravelCosts: Option[BigDecimal],
                     jobExpenses: Option[BigDecimal],
@@ -29,4 +30,17 @@ case class Expenses(businessTravelCosts: Option[BigDecimal],
 
 object Expenses {
   implicit val format: OFormat[Expenses] = Json.format[Expenses]
+}
+
+case class EncryptedExpenses(businessTravelCosts: Option[EncryptedValue],
+                             jobExpenses: Option[EncryptedValue],
+                             flatRateJobExpenses: Option[EncryptedValue],
+                             professionalSubscriptions: Option[EncryptedValue],
+                             hotelAndMealExpenses: Option[EncryptedValue],
+                             otherAndCapitalAllowances: Option[EncryptedValue],
+                             vehicleExpenses: Option[EncryptedValue],
+                             mileageAllowanceRelief: Option[EncryptedValue])
+
+object EncryptedExpenses {
+  implicit val format: OFormat[EncryptedExpenses] = Json.format[EncryptedExpenses]
 }

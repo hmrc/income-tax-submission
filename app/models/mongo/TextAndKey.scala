@@ -14,18 +14,6 @@
  * limitations under the License.
  */
 
-package models.employment.shared
+package models.mongo
 
-import play.api.libs.json.{Json, OFormat}
-
-case class Deductions(studentLoans: Option[StudentLoans])
-
-object Deductions {
-  implicit val formats: OFormat[Deductions] = Json.format[Deductions]
-}
-
-case class EncryptedDeductions(studentLoans: Option[EncryptedStudentLoans])
-
-object EncryptedDeductions {
-  implicit val formats: OFormat[EncryptedDeductions] = Json.format[EncryptedDeductions]
-}
+case class TextAndKey(associatedText: String, aesKey: String)

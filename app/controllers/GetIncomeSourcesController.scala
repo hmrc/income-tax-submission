@@ -50,13 +50,14 @@ class GetIncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSou
     lazy val noDataLog = s"[IncomeTaxUserDataService][findUserData] No user data found. SessionId: ${user.sessionId}"
 
     incomeTaxUserDataService.findUserData(user, taxYear).map {
-      case None =>
+      case Right(None) =>
         logger.info(noDataLog)
         NoContent
-      case Some(IncomeSourcesResponseModel(None, None, None, None)) =>
+      case Right(Some(IncomeSourcesResponseModel(None, None, None, None))) =>
         logger.info(noDataLog)
         NoContent
-      case Some(responseModel) => Ok(Json.toJson(responseModel))
+      case Right(Some(responseModel)) => Ok(Json.toJson(responseModel))
+      case Left(error) => Status(error.status)(error.toJson)
     }
   }
 }
