@@ -90,7 +90,7 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
         MongoUtils.ensureIndexes(repo.collection, indexes, true)
       }
 
-      ensureIndexes
+      await(ensureIndexes)
       count mustBe 0
 
       val res = await(repo.update(userData))
@@ -98,7 +98,7 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       count mustBe 1
 
       val res2 = await(repo.update(userData.copy(sessionId = "1234567890")))
-      res2 mustBe Left(MongoError("Command failed with error 11000 (DuplicateKey): 'E11000 duplicate key error collection: income-tax-submission.userData index: fakeIndex dup key: { : 2022 }' on server localhost:27017. The full response is {\"ok\": 0.0, \"errmsg\": \"E11000 duplicate key error collection: income-tax-submission.userData index: fakeIndex dup key: { : 2022 }\", \"code\": 11000, \"codeName\": \"DuplicateKey\"}"))
+      res2.left.get.message must include("Command failed with error 11000 (DuplicateKey)")
       count mustBe 1
 
 
