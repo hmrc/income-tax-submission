@@ -19,7 +19,7 @@ package repositories
 import com.mongodb.client.result.InsertOneResult
 import helpers.IntegrationSpec
 import models.User
-import models.mongo.{DatabaseError, EncryptionDecryptionError, MongoError, UserData}
+import models.mongo.{DatabaseError, EncryptionDecryptionError, UserData}
 import org.bson.conversions.Bson
 import org.joda.time.DateTime
 import org.mongodb.scala.model.Indexes.ascending

@@ -17,14 +17,10 @@
 package utils
 
 import config.AppConfig
-import javax.inject.Inject
 import org.scalamock.scalatest.MockFactory
-import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class MockAppConfig @Inject()(conf: Configuration, servicesConfig: ServicesConfig) extends MockFactory {
+class MockAppConfig(isEncrypted: Boolean) extends AppConfig with MockFactory {
 
-  val config: AppConfig = new AppConfig(conf,servicesConfig) {
     override val authBaseUrl: String = "/auth"
     override val dividendsBaseUrl: String = "/dividends"
     override val interestBaseUrl: String = "/interest"
@@ -34,6 +30,6 @@ class MockAppConfig @Inject()(conf: Configuration, servicesConfig: ServicesConfi
     override val graphiteHost: String = "/graphite"
     override lazy val encryptionKey: String = "encryptionKey12345"
     override lazy val mongoTTL: Int = 1550
-    override lazy val useEncryption: Boolean = true
-  }
+    override lazy val useEncryption: Boolean = isEncrypted
+
 }

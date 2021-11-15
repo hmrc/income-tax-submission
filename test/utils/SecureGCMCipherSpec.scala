@@ -23,7 +23,7 @@ import com.codahale.metrics.SharedMetricRegistries
 import config.AppConfig
 import javax.crypto._
 import javax.crypto.spec.GCMParameterSpec
-import models.mongo.{EncryptedUserData, TextAndKey}
+import models.mongo.TextAndKey
 import utils.TypeCaster.Converter.stringLoader
 
 class SecureGCMCipherSpec extends TestUtils {
