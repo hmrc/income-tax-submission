@@ -16,14 +16,15 @@
 
 package config
 
-import javax.inject.{Inject, Singleton}
+import com.google.inject.ImplementedBy
+
+import javax.inject.Inject
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.duration.Duration
 
-@Singleton
-class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) {
+class BackendAppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) extends AppConfig {
 
   val authBaseUrl: String = servicesConfig.baseUrl("auth")
 
@@ -41,4 +42,23 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   lazy val useEncryption: Boolean = config.get[Boolean]("useEncryption")
 
+}
+
+@ImplementedBy(classOf[BackendAppConfig])
+trait AppConfig{
+  val authBaseUrl: String
+
+  val dividendsBaseUrl: String
+  val interestBaseUrl: String
+  val employmentBaseUrl: String
+  val giftAidBaseUrl: String
+
+  val auditingEnabled: Boolean
+  val graphiteHost: String
+
+  //Mongo config
+  val encryptionKey: String
+  val mongoTTL: Int
+
+  val useEncryption: Boolean
 }

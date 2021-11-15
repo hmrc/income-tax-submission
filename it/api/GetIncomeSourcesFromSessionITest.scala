@@ -17,11 +17,7 @@
 package api
 
 import helpers.IntegrationSpec
-import models.employment.frontend.{AllEmploymentData, EmploymentData, EmploymentSource}
-import models.employment.shared.{Deductions, Pay, StudentLoans}
-import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
 import models.mongo.UserData
-import models.{DividendsModel, InterestModel}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import play.api.libs.json.Json

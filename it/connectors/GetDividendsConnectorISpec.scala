@@ -17,7 +17,7 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.AppConfig
+import config.{AppConfig, BackendAppConfig}
 import helpers.IntegrationSpec
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel, DividendsModel}
 import play.api.Configuration
@@ -31,7 +31,8 @@ class GetDividendsConnectorISpec extends IntegrationSpec {
   lazy val connector: IncomeTaxDividendsConnector = app.injector.instanceOf[IncomeTaxDividendsConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(dividendHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+  def appConfig(dividendHost: String): AppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration],
+    app.injector.instanceOf[ServicesConfig]) {
     override val dividendsBaseUrl: String = s"http://$dividendHost:$wireMockPort"
   }
 

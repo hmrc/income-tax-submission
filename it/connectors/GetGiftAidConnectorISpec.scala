@@ -17,7 +17,7 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.AppConfig
+import config.{AppConfig, BackendAppConfig}
 import helpers.IntegrationSpec
 import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
@@ -32,7 +32,8 @@ class GetGiftAidConnectorISpec extends IntegrationSpec {
   lazy val connector: IncomeTaxGiftAidConnector = app.injector.instanceOf[IncomeTaxGiftAidConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(giftAidHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+  def appConfig(giftAidHost: String): AppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration],
+    app.injector.instanceOf[ServicesConfig]) {
     override val giftAidBaseUrl: String = s"http://$giftAidHost:$wireMockPort"
   }
 

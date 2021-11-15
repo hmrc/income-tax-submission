@@ -17,10 +17,9 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.AppConfig
+import config.{AppConfig, BackendAppConfig}
 import helpers.IntegrationSpec
 import models.employment.frontend._
-import models.employment.shared.{Benefits, Deductions, Expenses, Pay, StudentLoans}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
 import play.api.Configuration
 import play.api.http.Status._
@@ -33,7 +32,8 @@ class GetEmploymentConnectorISpec extends IntegrationSpec {
   lazy val connector: IncomeTaxEmploymentConnector = app.injector.instanceOf[IncomeTaxEmploymentConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(employmentHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+  def appConfig(employmentHost: String): AppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration],
+    app.injector.instanceOf[ServicesConfig]) {
     override val employmentBaseUrl: String = s"http://$employmentHost:$wireMockPort"
   }
 

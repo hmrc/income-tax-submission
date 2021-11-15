@@ -17,7 +17,7 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import config.AppConfig
+import config.{AppConfig, BackendAppConfig}
 import helpers.IntegrationSpec
 import models.{APIErrorBodyModel, APIErrorModel, InterestModel}
 import play.api.Configuration
@@ -31,7 +31,8 @@ class GetInterestConnectorISpec extends IntegrationSpec {
   lazy val connector: IncomeTaxInterestConnector = app.injector.instanceOf[IncomeTaxInterestConnector]
 
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-  def appConfig(interestHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
+  def appConfig(interestHost: String): AppConfig = new BackendAppConfig(app.injector.instanceOf[Configuration],
+    app.injector.instanceOf[ServicesConfig]) {
     override val interestBaseUrl: String = s"http://$interestHost:$wireMockPort"
   }
 
