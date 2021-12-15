@@ -16,7 +16,6 @@
 
 package services
 
-import connectors.httpParsers.{SubmittedDividendsParser, SubmittedEmploymentParser, SubmittedGiftAidParser, SubmittedInterestParser}
 import connectors.{IncomeTaxDividendsConnector, IncomeTaxEmploymentConnector, IncomeTaxGiftAidConnector, IncomeTaxInterestConnector}
 import javax.inject.Inject
 import models._
@@ -53,8 +52,8 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
     }).value
   }
 
-  def getGiftAid(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String])
-                  (implicit hc: HeaderCarrier): Future[SubmittedGiftAidParser.IncomeSourcesResponseModel] = {
+  def getGiftAid(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+                  (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[GiftAidModel]]] = {
 
     if(excludedIncomeSources.contains(GIFT_AID)){
       shutteredIncomeSourceLog(GIFT_AID)
@@ -64,8 +63,8 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
     }
   }
 
-  def getEmployment(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String])
-                   (implicit hc: HeaderCarrier): Future[SubmittedEmploymentParser.IncomeSourcesResponseModel] = {
+  def getEmployment(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+                   (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[AllEmploymentData]]] = {
 
     if(excludedIncomeSources.contains(EMPLOYMENT)){
       shutteredIncomeSourceLog(EMPLOYMENT)
@@ -75,8 +74,8 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
     }
   }
 
-  def getDividends(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String])
-                  (implicit hc: HeaderCarrier): Future[SubmittedDividendsParser.IncomeSourcesResponseModel] = {
+  def getDividends(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+                  (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[DividendsModel]]] = {
 
     if(excludedIncomeSources.contains(DIVIDENDS)){
       shutteredIncomeSourceLog(DIVIDENDS)
@@ -86,8 +85,8 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
     }
   }
 
-  def getInterest(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String])
-                  (implicit hc: HeaderCarrier): Future[SubmittedInterestParser.IncomeSourcesResponseModel] = {
+  def getInterest(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+                  (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[List[InterestModel]]]] = {
 
     if(excludedIncomeSources.contains(INTEREST)){
       shutteredIncomeSourceLog(INTEREST)

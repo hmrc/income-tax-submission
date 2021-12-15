@@ -16,15 +16,10 @@
 
 package models
 
-import models.employment.frontend.AllEmploymentData
-import models.giftAid.GiftAidModel
 import play.api.libs.json.{Json, OFormat}
 
-case class IncomeSourcesResponseModel(dividends: Option[DividendsModel] = None,
-                                      interest: Option[Seq[InterestModel]] = None,
-                                      giftAid: Option[GiftAidModel] = None,
-                                      employment: Option[AllEmploymentData] = None)
+case class RefreshIncomeSource(incomeSource: String)
 
-object IncomeSourcesResponseModel {
-  implicit val format: OFormat[IncomeSourcesResponseModel] = Json.format[IncomeSourcesResponseModel]
+object RefreshIncomeSource {
+  implicit val formats: OFormat[RefreshIncomeSource] = Json.format[RefreshIncomeSource]
 }
