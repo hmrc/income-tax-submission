@@ -17,20 +17,22 @@
 package controllers
 
 import com.google.inject.Inject
+import common.IncomeSources.{DIVIDENDS, EMPLOYMENT, GIFT_AID, INTEREST}
 import controllers.predicates.AuthorisedAction
-import models.IncomeSourcesResponseModel
+import models.{APIErrorBodyModel, IncomeSourcesResponseModel, RefreshIncomeSource}
 import play.api.Logging
-import play.api.libs.json.Json
+import play.api.libs.json.{JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import services.{GetIncomeSourcesService, IncomeTaxUserDataService}
+import services.{GetIncomeSourcesService, IncomeTaxUserDataService, RefreshCacheService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class GetIncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSourcesService,
-                                           incomeTaxUserDataService: IncomeTaxUserDataService,
-                                           cc: ControllerComponents,
-                                           authorisedAction: AuthorisedAction
+class IncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSourcesService,
+                                        incomeTaxUserDataService: IncomeTaxUserDataService,
+                                        refreshCacheService: RefreshCacheService,
+                                        cc: ControllerComponents,
+                                        authorisedAction: AuthorisedAction
                                           )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def getIncomeSources(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
@@ -58,6 +60,21 @@ class GetIncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSou
         NoContent
       case Right(Some(responseModel)) => Ok(Json.toJson(responseModel))
       case Left(error) => Status(error.status)(error.toJson)
+    }
+  }
+
+  def refreshIncomeSource(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
+
+    user.body.asJson.map(_.validate[RefreshIncomeSource]) match {
+      case Some(JsSuccess(RefreshIncomeSource(incomeSource), _)) =>
+
+        incomeSource match {
+          case DIVIDENDS | INTEREST | GIFT_AID | EMPLOYMENT => refreshCacheService.getLatestDataAndRefreshCache(taxYear,incomeSource)
+          case _ => Future.successful(BadRequest(Json.toJson(
+            APIErrorBodyModel("INVALID_INCOME_SOURCE_PARAMETER", "Invalid income source value."))))
+        }
+
+      case _ => Future.successful(BadRequest)
     }
   }
 }

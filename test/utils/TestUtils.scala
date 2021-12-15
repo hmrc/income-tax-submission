@@ -235,7 +235,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
 
 
   lazy val dividendsModel:Option[DividendsModel] = Some(DividendsModel(Some(100.00), Some(100.00)))
-  lazy val interestsModel:Option[Seq[InterestModel]] = Some(Seq(InterestModel("TestName", "TestSource", Some(100.00), Some(100.00))))
+  lazy val interestsModel:Option[List[InterestModel]] = Some(List(InterestModel("TestName", "TestSource", Some(100.00), Some(100.00))))
   lazy val employmentsModel: AllEmploymentData = AllEmploymentData(
     hmrcEmploymentData = Seq(
       EmploymentSource(

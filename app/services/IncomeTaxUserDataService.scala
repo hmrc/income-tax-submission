@@ -42,7 +42,9 @@ class IncomeTaxUserDataService @Inject()(incomeTaxUserDataRepository: IncomeTaxU
       case Left(error) =>
         val errorResponse = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("FAILED_TO_SAVE_USER_DATA", error.message))
         Status(errorResponse.status)(errorResponse.toJson)
-      case Right(_) => result
+      case Right(_) =>
+        logger.info(s"[IncomeTaxUserDataService][saveUserData] Saved new user data. SessionId: ${user.sessionId}")
+        result
     }
   }
 

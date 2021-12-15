@@ -25,15 +25,16 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.mvc.Results._
 import play.api.test.FakeRequest
-import services.{GetIncomeSourcesService, IncomeTaxUserDataService}
+import services.{GetIncomeSourcesService, IncomeTaxUserDataService, RefreshCacheService}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class GetIncomeSourcesControllerSpec extends TestUtils {
+class IncomeSourcesControllerSpec extends TestUtils {
 
   private val mockIncomeTaxUserDataService = mock[IncomeTaxUserDataService]
+  private val mockRefreshCacheService = mock[RefreshCacheService]
 
   def mockSaveData(data: Option[IncomeSourcesResponseModel],
                    outcome: Result): CallHandler5[Int, Option[IncomeSourcesResponseModel], Result, User[_], ExecutionContext, Future[Result]] ={
@@ -41,14 +42,16 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
       .expects(*, data, *, *, *)
       .returning(Future.successful(outcome))
   }
-  def mockFindData(data: Either[APIErrorModel, Option[IncomeSourcesResponseModel]]): CallHandler3[User[_], Int, ExecutionContext, Future[Either[APIErrorModel, Option[IncomeSourcesResponseModel]]]] ={
+  def mockFindData(data: Either[APIErrorModel, Option[IncomeSourcesResponseModel]]
+                  ): CallHandler3[User[_], Int, ExecutionContext, Future[Either[APIErrorModel, Option[IncomeSourcesResponseModel]]]] ={
     (mockIncomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
       .expects(*, *, *)
       .returning(Future.successful(data))
   }
 
   val getIncomeSourcesService: GetIncomeSourcesService = mock[GetIncomeSourcesService]
-  val controller = new GetIncomeSourcesController(getIncomeSourcesService, mockIncomeTaxUserDataService, mockControllerComponents,authorisedAction)
+  val controller = new IncomeSourcesController(getIncomeSourcesService, mockIncomeTaxUserDataService,
+    mockRefreshCacheService, mockControllerComponents,authorisedAction)
   val nino :String = "123456789"
   val mtditid :String = "1234567890"
   val taxYear: Int = 1234
@@ -127,6 +130,28 @@ class GetIncomeSourcesControllerSpec extends TestUtils {
         }
         status(result) mustBe INTERNAL_SERVER_ERROR
       }
+    }
+  }
+
+  "calling .refreshIncomeSource" should {
+    "return a 204 response when it refreshed the cache for dividends" in {
+      val result: Future[Result] = {
+        mockAuth()
+        (mockRefreshCacheService.getLatestDataAndRefreshCache( _: Int,_: String)(_: User[_], _: HeaderCarrier, _: ExecutionContext))
+          .expects(taxYear, "dividends", *, *, *)
+          .returning(Future.successful(NoContent))
+
+        controller.refreshIncomeSource(nino, taxYear)(fakeGetRequestWithHeaderAndSession.withJsonBody(Json.toJson(RefreshIncomeSource("dividends"))))
+      }
+      status(result) mustBe NO_CONTENT
+    }
+    "return a 400 response when no body" in {
+      val result: Future[Result] = {
+        mockAuth()
+
+        controller.refreshIncomeSource(nino, taxYear)(fakeGetRequestWithHeaderAndSession)
+      }
+      status(result) mustBe BAD_REQUEST
     }
   }
 
