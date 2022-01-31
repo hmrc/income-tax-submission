@@ -38,6 +38,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
     interestsModel,
     Some(giftAidModel),
     Some(employmentsModel)
+//    Some(fullPensionsModel)
   )
 
   trait Setup {

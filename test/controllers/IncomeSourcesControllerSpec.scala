@@ -117,7 +117,7 @@ class IncomeSourcesControllerSpec extends TestUtils {
       "return a NO_CONTENT response when data is empty" in {
         val result = {
           mockAuth()
-          mockFindData(Right(Some(incomeSourcesResponse.copy(dividends = None, interest = None, giftAid = None, employment = None))))
+          mockFindData(Right(Some(incomeSourcesResponse.copy(dividends = None, interest = None, giftAid = None, employment = None, pensions = None))))
           controller.getIncomeSourcesFromSession(nino, taxYear)(fakeGetRequestWithExcludedHeader)
         }
         status(result) mustBe NO_CONTENT

@@ -26,6 +26,7 @@ import models.employment.frontend.{AllEmploymentData, EmploymentBenefits, Employ
 import models.employment.shared.{Benefits, Deductions, Expenses, Pay, StudentLoans}
 import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
 import models.mongo.UserData
+import models.pensions.{Charge, LifetimeAllowance, OverseasPensionContributions, OverseasSchemeProvider, PensionCharges, PensionContributions, PensionReliefs, PensionSavingsTaxCharges, PensionSchemeOverseasTransfers, PensionSchemeUnauthorisedPayments, PensionsModel, Reliefs}
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -48,7 +49,7 @@ trait IntegrationSpec extends AnyWordSpec with Matchers with BeforeAndAfterEach 
 
   val wireMockServer: WireMockServer = new WireMockServer(wireMockConfig().port(wireMockPort))
 
-  lazy val connectedServices: Seq[String] = Seq("income-tax-dividends", "income-tax-employment", "income-tax-interest", "income-tax-gift-aid", "auth")
+  lazy val connectedServices: Seq[String] = Seq("income-tax-dividends", "income-tax-employment", "income-tax-interest", "income-tax-gift-aid", "auth", "income-tax-pensions")
 
   def servicesToUrlConfig: Seq[(String, String)] = connectedServices
     .flatMap(service => Seq(s"microservice.services.$service.host" -> s"localhost", s"microservice.services.$service.port" -> wireMockPort.toString))
@@ -261,6 +262,76 @@ trait IntegrationSpec extends AnyWordSpec with Matchers with BeforeAndAfterEach 
     giftAidPaymentsModel,
     giftsModel
   )
+
+  val fullPensionsModel = PensionsModel(
+    taxYear = 2022,
+    pensionReliefs = Some(PensionReliefs(
+      submittedOn = "2020-01-04T05:01:01Z",
+      deletedOn = Some("2020-01-04T05:01:01Z"),
+      pensionReliefs = Reliefs(
+        regularPensionContributions = Some(100.01),
+        oneOffPensionContributionsPaid = Some(100.01),
+        retirementAnnuityPayments = Some(100.01),
+        paymentToEmployersSchemeNoTaxRelief = Some(100.01),
+        overseasPensionSchemeContributions = Some(100.01)))
+    ),
+    pensionCharges = Some(PensionCharges(
+      submittedOn = "2020-07-27T17:00:19Z",
+      pensionSavingsTaxCharges = Some(PensionSavingsTaxCharges(
+        pensionSchemeTaxReference = Seq("00123456RA", "00123456RB"),
+        lumpSumBenefitTakenInExcessOfLifetimeAllowance = Some(LifetimeAllowance(
+          amount = 800.02,
+          taxPaid = 200.02
+        )),
+        benefitInExcessOfLifetimeAllowance = Some(LifetimeAllowance(
+          amount = 800.02,
+          taxPaid = 200.02
+        )),
+        isAnnualAllowanceReduced = false,
+        taperedAnnualAllowance = Some(false),
+        moneyPurchasedAllowance = Some(false)
+      )),
+      pensionSchemeOverseasTransfers = Some(PensionSchemeOverseasTransfers(
+        overseasSchemeProvider = Seq(OverseasSchemeProvider(
+          providerName = "overseas providerName 1 qualifying scheme",
+          providerAddress = "overseas address 1",
+          providerCountryCode = "ESP",
+          qualifyingRecognisedOverseasPensionScheme = Some(Seq("Q100000", "Q100002")),
+          pensionSchemeTaxReference = None
+        )),
+        transferCharge = 22.77,
+        transferChargeTaxPaid = 33.88
+      )),
+      pensionSchemeUnauthorisedPayments = Some(PensionSchemeUnauthorisedPayments(
+        pensionSchemeTaxReference = Seq("00123456RA", "00123456RB"),
+        surcharge = Some(Charge(
+          amount = 124.44,
+          foreignTaxPaid = 123.33
+        )),
+        noSurcharge = Some(Charge(
+          amount = 222.44,
+          foreignTaxPaid = 223.33
+        ))
+      )),
+      pensionContributions = Some(PensionContributions(
+        pensionSchemeTaxReference = Seq("00123456RA", "00123456RB"),
+        inExcessOfTheAnnualAllowance = 150.67,
+        annualAllowanceTaxPaid = 178.65)),
+      overseasPensionContributions = Some(OverseasPensionContributions(
+        overseasSchemeProvider = Seq(OverseasSchemeProvider(
+          providerName = "overseas providerName 1 tax ref",
+          providerAddress = "overseas address 1",
+          providerCountryCode = "ESP",
+          qualifyingRecognisedOverseasPensionScheme = None,
+          pensionSchemeTaxReference = Some(Seq("00123456RA", "00123456RB"))
+        )),
+        shortServiceRefund = 1.11,
+        shortServiceRefundTaxPaid = 2.22
+      )))
+    )
+  )
+
+
 
   val userData: UserData = UserData(
     "sessionId-1618a1e8-4979-41d8-a32e-5ffbe69fac81",

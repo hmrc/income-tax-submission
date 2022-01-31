@@ -19,9 +19,9 @@ package services
 import com.codahale.metrics.SharedMetricRegistries
 import connectors.httpParsers.SubmittedDividendsParser.{IncomeSourcesResponseModel => IncomeSourceResponseDividends}
 import connectors.httpParsers.SubmittedInterestParser.{IncomeSourcesResponseModel => IncomeSourceResponseInterest}
-import connectors.{IncomeTaxDividendsConnector, IncomeTaxEmploymentConnector, IncomeTaxGiftAidConnector, IncomeTaxInterestConnector}
+import connectors.{IncomeTaxDividendsConnector, IncomeTaxEmploymentConnector, IncomeTaxGiftAidConnector, IncomeTaxInterestConnector, IncomeTaxPensionsConnector}
 import models._
-import models.giftAid.{GiftAidPaymentsModel, GiftsModel, GiftAidModel}
+import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
@@ -35,8 +35,9 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
   val interestConnector: IncomeTaxInterestConnector = mock[IncomeTaxInterestConnector]
   val giftsConnector: IncomeTaxGiftAidConnector = mock[IncomeTaxGiftAidConnector]
   val employmentConnector: IncomeTaxEmploymentConnector = mock[IncomeTaxEmploymentConnector]
+  val pensionsConnector: IncomeTaxPensionsConnector = mock[IncomeTaxPensionsConnector]
   val service: GetIncomeSourcesService = new GetIncomeSourcesService(dividendsConnector, interestConnector,
-    giftsConnector, employmentConnector, scala.concurrent.ExecutionContext.global)
+    giftsConnector, employmentConnector, pensionsConnector, scala.concurrent.ExecutionContext.global)
   val mockHeaderCarrier: HeaderCarrier = emptyHeaderCarrier.withExtraHeaders(("mtditid", "87654321"))
 
 
@@ -44,15 +45,15 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
 
     "the income sources are off" should {
       "return an empty response" in {
-        val result = await(service.getAllIncomeSources("12345678", 1234, "87654321", Seq("dividends","interest","gift-aid","employment")))
+        val result = await(service.getAllIncomeSources("12345678", 1234, "87654321", Seq("dividends","interest","gift-aid","employment", "pensions")))
 
-        result mustBe Right(IncomeSourcesResponseModel(None,None,None,None))
+        result mustBe Right(IncomeSourcesResponseModel(None,None,None,None,None))
       }
     }
 
     "there are no errors" should {
 
-      "return an IncomeSourceResponseModel with existing dividends, interest and giftaid and employment" in {
+      "return an IncomeSourceResponseModel with existing dividends, interest and giftaid, employment and pensions" in {
 
         val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(DividendsModel(Some(12345.67), Some(12345.67))))
         val expectedInterestResult: IncomeSourceResponseInterest = Right(Some(List(
@@ -63,8 +64,10 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
         val gifts: GiftsModel = GiftsModel(Some(List("someName")), Some(12345.67), Some(12345.67) , Some(12345.67))
 
         val incomeSourcesResult = Right(IncomeSourcesResponseModel(Some(DividendsModel(Some(12345.67), Some(12345.67))),
-          Some(List(InterestModel("someName", "123", Some(1234.56), Some(1234.56)))),Some(GiftAidModel(Some(giftAidPayments), Some(gifts))),
-          Some(allEmploymentData)))
+          Some(List(InterestModel("someName", "123", Some(1234.56), Some(1234.56)))),
+          Some(GiftAidModel(Some(giftAidPayments), Some(gifts))),
+          Some(allEmploymentData),
+          Some(fullPensionsModel)))
 
 
         (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
@@ -82,6 +85,10 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
         (giftsConnector.getSubmittedGiftAid(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", 1234, mockHeaderCarrier)
           .returning(Future.successful(Right(Some(GiftAidModel(Some(giftAidPayments), Some(gifts))))))
+
+        (pensionsConnector.getSubmittedPensions(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", 1234, mockHeaderCarrier)
+          .returning(Future.successful(Right(Some(fullPensionsModel))))
 
         val result = await(service.getAllIncomeSources("12345678", 1234, "87654321"))
 

@@ -40,7 +40,8 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
     dividendsModel,
     interestsModel,
     Some(giftAidModel),
-    Some(employmentsModel)
+    Some(employmentsModel),
+    Some(fullPensionsModel)
   )
 
   val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "555555555"))
