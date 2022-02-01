@@ -17,6 +17,7 @@
 package models.pensions
 
 import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
 case class StateBenefit(benefitId: String,
                         startDate: String,
@@ -30,17 +31,41 @@ case class StateBenefit(benefitId: String,
 object StateBenefit {
   implicit val format: OFormat[StateBenefit] = Json.format[StateBenefit]
 }
+case class EncryptedStateBenefit(benefitId: EncryptedValue,
+                                 startDate: EncryptedValue,
+                                 dateIgnored: Option[EncryptedValue],
+                                 submittedOn: Option[EncryptedValue],
+                                 endDate: Option[EncryptedValue],
+                                 amount: Option[EncryptedValue],
+                                 taxPaid: Option[EncryptedValue]
+                       )
 
-case class CustomerStateBenefit(benefitId: String,
-                                startDate: String,
-                                submittedOn: Option[String],
-                                endDate: Option[String],
-                                amount: Option[BigDecimal],
-                                taxPaid: Option[BigDecimal]
+object EncryptedStateBenefit {
+  implicit val format: OFormat[EncryptedStateBenefit] = Json.format[EncryptedStateBenefit]
+}
+
+case class CustomerStateBenefit(benefitId: EncryptedValue,
+                                startDate: EncryptedValue,
+                                submittedOn: Option[EncryptedValue],
+                                endDate: Option[EncryptedValue],
+                                amount: Option[EncryptedValue],
+                                taxPaid: Option[EncryptedValue]
                                )
 
 object CustomerStateBenefit {
   implicit val format: OFormat[CustomerStateBenefit] = Json.format[CustomerStateBenefit]
+}
+
+case class EncryptedCustomerStateBenefit(benefitId: EncryptedValue,
+                                startDate: EncryptedValue,
+                                submittedOn: Option[EncryptedValue],
+                                endDate: Option[EncryptedValue],
+                                amount: Option[EncryptedValue],
+                                taxPaid: Option[EncryptedValue]
+                               )
+
+object EncryptedCustomerStateBenefit {
+  implicit val format: OFormat[EncryptedCustomerStateBenefit] = Json.format[EncryptedCustomerStateBenefit]
 }
 
 case class StateBenefits(
@@ -55,6 +80,20 @@ case class StateBenefits(
 
 object StateBenefits {
   implicit val format: OFormat[StateBenefits] = Json.format[StateBenefits]
+}
+
+case class EncryptedStateBenefits(
+                          incapacityBenefit: Option[Seq[EncryptedStateBenefit]],
+                          statePension: Option[EncryptedStateBenefit],
+                          statePensionLumpSum: Option[EncryptedStateBenefit],
+                          employmentSupportAllowance: Option[Seq[EncryptedStateBenefit]],
+                          jobSeekersAllowance: Option[Seq[EncryptedStateBenefit]],
+                          bereavementAllowance: Option[EncryptedStateBenefit],
+                          otherStateBenefits: Option[EncryptedStateBenefit]
+                        )
+
+object EncryptedStateBenefits {
+  implicit val format: OFormat[EncryptedStateBenefits] = Json.format[EncryptedStateBenefits]
 }
 
 case class CustomerStateBenefits(
@@ -72,9 +111,31 @@ object CustomerStateBenefits {
   implicit val format: OFormat[CustomerStateBenefits] = Json.format[CustomerStateBenefits]
 }
 
+case class EncryptedCustomerStateBenefits(
+                                  incapacityBenefit: Option[Seq[EncryptedCustomerStateBenefit]],
+                                  statePension: Option[EncryptedCustomerStateBenefit],
+                                  statePensionLumpSum: Option[EncryptedCustomerStateBenefit],
+                                  employmentSupportAllowance: Option[Seq[EncryptedCustomerStateBenefit]],
+                                  jobSeekersAllowance: Option[Seq[EncryptedCustomerStateBenefit]],
+                                  bereavementAllowance: Option[EncryptedCustomerStateBenefit],
+                                  otherStateBenefits: Option[EncryptedCustomerStateBenefit]
+
+                                )
+
+object EncryptedCustomerStateBenefits {
+  implicit val format: OFormat[EncryptedCustomerStateBenefits] = Json.format[EncryptedCustomerStateBenefits]
+}
+
 case class StateBenefitsModel(stateBenefits: Option[StateBenefits],
                               customerAddedStateBenefits: Option[CustomerStateBenefits])
 
 object StateBenefitsModel {
   implicit val format: OFormat[StateBenefitsModel] = Json.format[StateBenefitsModel]
+}
+
+case class EncryptedStateBenefitsModel(stateBenefits: Option[EncryptedStateBenefits],
+                              customerAddedStateBenefits: Option[EncryptedCustomerStateBenefits])
+
+object EncryptedStateBenefitsModel {
+  implicit val format: OFormat[EncryptedStateBenefitsModel] = Json.format[EncryptedStateBenefitsModel]
 }
