@@ -72,9 +72,9 @@ object CustomerStateBenefits {
   implicit val format: OFormat[CustomerStateBenefits] = Json.format[CustomerStateBenefits]
 }
 
-case class GetStateBenefitsModel(stateBenefits: Option[StateBenefits],
-                                 customerAddedStateBenefits: Option[CustomerStateBenefits])
+case class StateBenefitsModel(stateBenefits: Option[StateBenefits],
+                              customerAddedStateBenefits: Option[CustomerStateBenefits])
 
-object GetStateBenefitsModel {
-  implicit val format: OFormat[GetStateBenefitsModel] = Json.format[GetStateBenefitsModel]
+object StateBenefitsModel {
+  implicit val format: OFormat[StateBenefitsModel] = Json.format[StateBenefitsModel]
 }

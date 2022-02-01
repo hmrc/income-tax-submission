@@ -21,7 +21,8 @@ import utils.EncryptedValue
 
 case class PensionsModel(taxYear: Int,
                          pensionReliefs: Option[PensionReliefs],
-                         pensionCharges: Option[PensionCharges])
+                         pensionCharges: Option[PensionCharges],
+                         stateBenefits: Option[StateBenefitsModel])
 
 object PensionsModel {
   implicit val formats: OFormat[PensionsModel] = Json.format[PensionsModel]

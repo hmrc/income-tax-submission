@@ -37,7 +37,7 @@ object SubmittedPensionsParser extends APIParser with Logging {
           response.json.validate[PensionsModel].fold[IncomeSourcesResponseModel](
             _ => badSuccessJsonFromAPI,
             {
-              case PensionsModel(_, None, None) =>
+              case PensionsModel(_, None, None, None) =>
                 logger.warn("RETURNING NONE NONE")
                 Right(None)
               case parsedModel => Right(Some(parsedModel))
