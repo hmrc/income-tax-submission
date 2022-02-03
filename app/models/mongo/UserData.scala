@@ -18,6 +18,7 @@ package models.mongo
 
 import models.employment.frontend.{AllEmploymentData, EncryptedAllEmploymentData}
 import models.giftAid.{EncryptedGiftAidModel, GiftAidModel}
+import models.pensions.{EncryptedPensionsModel, PensionsModel}
 import models.{DividendsModel, EncryptedDividendsModel, EncryptedInterestModel, IncomeSourcesResponseModel, InterestModel}
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json.{Format, Json, OFormat}
@@ -31,10 +32,11 @@ case class UserData(sessionId: String,
                     interest: Option[Seq[InterestModel]] = None,
                     giftAid: Option[GiftAidModel] = None,
                     employment: Option[AllEmploymentData] = None,
+                    pensions: Option[PensionsModel] = None,
                     lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)) {
 
   def toIncomeSourcesResponseModel: IncomeSourcesResponseModel = {
-    IncomeSourcesResponseModel(dividends, interest, giftAid, employment)
+    IncomeSourcesResponseModel(dividends, interest, giftAid, employment, pensions)
   }
 }
 
@@ -53,6 +55,7 @@ case class EncryptedUserData(sessionId: String,
                              interest: Option[Seq[EncryptedInterestModel]] = None,
                              giftAid: Option[EncryptedGiftAidModel] = None,
                              employment: Option[EncryptedAllEmploymentData] = None,
+                             pensions: Option[EncryptedPensionsModel] = None,
                              lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC))
 
 object EncryptedUserData extends MongoJodaFormats {

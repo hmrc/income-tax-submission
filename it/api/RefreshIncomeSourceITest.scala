@@ -40,7 +40,8 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
     dividendsModel,
     interestsModel,
     Some(giftAidModel),
-    Some(employmentsModel)
+    Some(employmentsModel),
+    Some(fullPensionsModel)
   )
 
   val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "555555555"))
@@ -193,7 +194,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
       }
       "return a not found when the user has no income source data and no dividends retrieved" in new Setup {
 
-        val res: Either[DatabaseError, Unit] = await(repo.update(userData.copy(dividends = None, interest = None, employment = None, giftAid = None)))
+        val res: Either[DatabaseError, Unit] = await(repo.update(userData.copy(dividends = None, interest = None, employment = None, giftAid = None, pensions = None)))
         res mustBe Right()
         count mustBe 1
 

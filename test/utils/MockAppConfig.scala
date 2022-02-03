@@ -26,6 +26,7 @@ class MockAppConfig(isEncrypted: Boolean) extends AppConfig with MockFactory {
     override val interestBaseUrl: String = "/interest"
     override val employmentBaseUrl: String = "/employment"
     override val giftAidBaseUrl: String = "/giftAid"
+    override val pensionsBaseUrl: String = "/pensions"
     override val auditingEnabled: Boolean = true
     override val graphiteHost: String = "/graphite"
     override lazy val encryptionKey: String = "encryptionKey12345"

@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
-package common
+package models.pensions.charges
 
-object IncomeSources {
+import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
-  val DIVIDENDS = "dividends"
-  val INTEREST = "interest"
-  val GIFT_AID = "gift-aid"
-  val EMPLOYMENT = "employment"
-  val PENSIONS = "pensions"
+case class LifetimeAllowance(amount: BigDecimal, taxPaid: BigDecimal)
+
+object LifetimeAllowance {
+  implicit val format: OFormat[LifetimeAllowance] = Json.format[LifetimeAllowance]
 }
+
+case class EncryptedLifetimeAllowance(amount: EncryptedValue, taxPaid: EncryptedValue)
+
+object EncryptedLifetimeAllowance {
+  implicit val format: OFormat[EncryptedLifetimeAllowance] = Json.format[EncryptedLifetimeAllowance]
+}
+

@@ -37,7 +37,8 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
     dividendsModel,
     interestsModel,
     Some(giftAidModel),
-    Some(employmentsModel)
+    Some(employmentsModel),
+    Some(fullPensionsModel)
   )
 
   trait Setup {
@@ -91,7 +92,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
 
       "return 204 if a user has no recorded income sources" in new Setup {
 
-        val res = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None)))
+        val res = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None, pensions = None)))
         res mustBe Right()
         count mustBe 1
 
@@ -171,7 +172,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
 
       "return 204 if a user has no recorded income sources" in new Setup {
 
-        val res = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None)))
+        val res = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None, pensions = None)))
         res mustBe Right()
         count mustBe 1
 

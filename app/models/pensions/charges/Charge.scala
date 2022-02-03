@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-package common
+package models.pensions.charges
 
-object IncomeSources {
+import play.api.libs.json.{Json, OFormat}
+import utils.EncryptedValue
 
-  val DIVIDENDS = "dividends"
-  val INTEREST = "interest"
-  val GIFT_AID = "gift-aid"
-  val EMPLOYMENT = "employment"
-  val PENSIONS = "pensions"
+case class Charge(amount: BigDecimal, foreignTaxPaid: BigDecimal)
+
+object Charge {
+  implicit val format: OFormat[Charge] = Json.format[Charge]
+}
+
+case class EncryptedCharge(amount: EncryptedValue, foreignTaxPaid: EncryptedValue)
+
+object EncryptedCharge {
+  implicit val format: OFormat[EncryptedCharge] = Json.format[EncryptedCharge]
 }
