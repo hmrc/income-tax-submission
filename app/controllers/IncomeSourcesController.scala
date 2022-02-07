@@ -17,7 +17,7 @@
 package controllers
 
 import com.google.inject.Inject
-import common.IncomeSources.{DIVIDENDS, EMPLOYMENT, GIFT_AID, INTEREST}
+import common.IncomeSources._
 import controllers.predicates.AuthorisedAction
 import models.{APIErrorBodyModel, IncomeSourcesResponseModel, RefreshIncomeSource}
 import play.api.Logging
@@ -40,7 +40,7 @@ class IncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSource
     val excludedIncomeSources: Seq[String] = user.headers.get("excluded-income-sources").fold[Seq[String]](Seq.empty)(_.split(","))
 
     getIncomeSourcesService.getAllIncomeSources(nino, taxYear, user.mtditid, excludedIncomeSources).flatMap {
-      case Right(IncomeSourcesResponseModel(None, None, None, None)) =>
+      case Right(IncomeSourcesResponseModel(None, None, None, None, None)) =>
         incomeTaxUserDataService.saveUserData(taxYear,None)(NoContent)
       case Right(responseModel) =>
         incomeTaxUserDataService.saveUserData(taxYear,Some(responseModel))(Ok(Json.toJson(responseModel)))
@@ -55,7 +55,7 @@ class IncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSource
       case Right(None) =>
         logger.info(noDataLog)
         NoContent
-      case Right(Some(IncomeSourcesResponseModel(None, None, None, None))) =>
+      case Right(Some(IncomeSourcesResponseModel(None, None, None, None, None))) =>
         logger.info(noDataLog)
         NoContent
       case Right(Some(responseModel)) => Ok(Json.toJson(responseModel))
@@ -69,7 +69,7 @@ class IncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSource
       case Some(JsSuccess(RefreshIncomeSource(incomeSource), _)) =>
 
         incomeSource match {
-          case DIVIDENDS | INTEREST | GIFT_AID | EMPLOYMENT => refreshCacheService.getLatestDataAndRefreshCache(taxYear,incomeSource)
+          case DIVIDENDS | INTEREST | GIFT_AID | EMPLOYMENT | PENSIONS => refreshCacheService.getLatestDataAndRefreshCache(taxYear,incomeSource)
           case _ => Future.successful(BadRequest(Json.toJson(
             APIErrorBodyModel("INVALID_INCOME_SOURCE_PARAMETER", "Invalid income source value."))))
         }

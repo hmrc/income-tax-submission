@@ -17,15 +17,17 @@
 package services
 
 import config.AppConfig
+
 import javax.inject.Inject
 import models.{DividendsModel, EncryptedDividendsModel, EncryptedInterestModel, InterestModel}
-import models.employment.frontend.{AllEmploymentData, EmploymentBenefits, EmploymentData, EmploymentExpenses,
-  EmploymentSource, EncryptedAllEmploymentData, EncryptedEmploymentBenefits, EncryptedEmploymentData,
-  EncryptedEmploymentExpenses, EncryptedEmploymentSource}
-import models.employment.shared.{Benefits, Deductions, EncryptedBenefits, EncryptedDeductions, EncryptedExpenses,
-  EncryptedPay, EncryptedStudentLoans, Expenses, Pay, StudentLoans}
+import models.employment.frontend._
+import models.employment.shared._
 import models.giftAid.{EncryptedGiftAidModel, EncryptedGiftAidPaymentsModel, EncryptedGiftsModel, GiftAidModel, GiftAidPaymentsModel, GiftsModel}
 import models.mongo.{EncryptedUserData, TextAndKey, UserData}
+import models.pensions._
+import models.pensions.charges._
+import models.pensions.reliefs.{EncryptedPensionReliefs, EncryptedReliefs, PensionReliefs, Reliefs}
+import models.pensions.statebenefits._
 import utils.SecureGCMCipher
 
 class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig: AppConfig) {
@@ -42,6 +44,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       interest = userData.interest.map(encryptInterest),
       giftAid = userData.giftAid.map(encryptGiftAid),
       employment = userData.employment.map(encryptEmployment),
+      pensions = userData.pensions.map(encryptPensions),
       lastUpdated = userData.lastUpdated
     )
   }
@@ -354,6 +357,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       interest = userData.interest.map(decryptInterest),
       giftAid = userData.giftAid.map(decryptGiftAid),
       employment = userData.employment.map(decryptEmployment),
+      pensions = userData.pensions.map(decryptPensions),
       lastUpdated = userData.lastUpdated
     )
   }
@@ -428,7 +432,6 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
           expenses = e.expenses.map(decryptExpenses)
         )
     }
-
     val hmrcEmploymentData = employment.hmrcEmploymentData.map(decryptEmploymentSource)
     val customerEmploymentData = employment.customerEmploymentData.map(decryptEmploymentSource)
 
@@ -437,6 +440,294 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       hmrcExpenses = hmrcExpenses,
       customerEmploymentData = customerEmploymentData,
       customerExpenses = customerExpenses
+    )
+  }
+
+  private def encryptPensions(pensions: PensionsModel)(implicit textAndKey: TextAndKey): EncryptedPensionsModel = {
+    val ePensionReliefs: Option[EncryptedPensionReliefs] = {
+      pensions.pensionReliefs.map {
+        r =>
+          EncryptedPensionReliefs(
+            submittedOn = encryptionService.encrypt(r.submittedOn),
+            deletedOn = r.deletedOn.map(encryptionService.encrypt),
+            pensionReliefs = encryptReliefs(r.pensionReliefs)
+          )
+      }
+    }
+
+    val ePensionCharges: Option[EncryptedPensionCharges] = {
+      pensions.pensionCharges.map {
+        c =>
+          EncryptedPensionCharges(
+            submittedOn = encryptionService.encrypt(c.submittedOn),
+            pensionSavingsTaxCharges = c.pensionSavingsTaxCharges.map(encryptPensionSavingsTaxCharges),
+            pensionSchemeOverseasTransfers = c.pensionSchemeOverseasTransfers.map(encryptPensionSchemeOverseasTransfers),
+            pensionSchemeUnauthorisedPayments = c.pensionSchemeUnauthorisedPayments.map(encryptPensionSchemeUnauthorisedPayments),
+            pensionContributions = c.pensionContributions.map(encryptPensionContributions),
+            overseasPensionContributions = c.overseasPensionContributions.map(encryptOverseasPensionContributions)
+          )
+      }
+    }
+
+    val eStateBenefitsModel: Option[EncryptedStateBenefitsModel] = {
+      pensions.stateBenefits.map {
+        s =>
+          EncryptedStateBenefitsModel(
+            stateBenefits = s.stateBenefits.map(encryptStateBenefits),
+            customerAddedStateBenefits = s.customerAddedStateBenefits.map(encryptStateBenefits)
+          )
+      }
+    }
+
+    EncryptedPensionsModel(
+      pensionReliefs = ePensionReliefs,
+      pensionCharges = ePensionCharges,
+      stateBenefits = eStateBenefitsModel
+    )
+  }
+
+  private def encryptStateBenefits(s: StateBenefits)(implicit textAndKey: TextAndKey): EncryptedStateBenefits = {
+    EncryptedStateBenefits(
+      incapacityBenefit = s.incapacityBenefit.map(_.map(encryptStateBenefit)),
+      statePension = s.statePension.map(encryptStateBenefit),
+      statePensionLumpSum = s.statePensionLumpSum.map(encryptStateBenefit),
+      employmentSupportAllowance = s.employmentSupportAllowance.map(_.map(encryptStateBenefit)),
+      jobSeekersAllowance = s.jobSeekersAllowance.map(_.map(encryptStateBenefit)),
+      bereavementAllowance = s.bereavementAllowance.map(encryptStateBenefit),
+      otherStateBenefits = s.otherStateBenefits.map(encryptStateBenefit)
+
+    )  }
+
+  private def encryptStateBenefit(s: StateBenefit)(implicit textAndKey: TextAndKey): EncryptedStateBenefit = {
+    EncryptedStateBenefit(
+      benefitId = encryptionService.encrypt(s.benefitId),
+      startDate = encryptionService.encrypt(s.startDate),
+      dateIgnored = s.dateIgnored.map(encryptionService.encrypt),
+      submittedOn = s.submittedOn.map(encryptionService.encrypt),
+      endDate = s.endDate.map(encryptionService.encrypt),
+      amount = s.amount.map(encryptionService.encrypt),
+      taxPaid = s.taxPaid.map(encryptionService.encrypt)
+    )
+  }
+
+  private def encryptPensionContributions(p: PensionContributions)(implicit textAndKey: TextAndKey): EncryptedPensionContributions = {
+    EncryptedPensionContributions(
+      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(encryptionService.encrypt),
+      inExcessOfTheAnnualAllowance = encryptionService.encrypt(p.inExcessOfTheAnnualAllowance),
+      annualAllowanceTaxPaid = encryptionService.encrypt(p.annualAllowanceTaxPaid)
+    )
+  }
+
+  private def encryptPensionSchemeUnauthorisedPayments(p: PensionSchemeUnauthorisedPayments)
+                                                      (implicit textAndKey: TextAndKey): EncryptedPensionSchemeUnauthorisedPayments = {
+    EncryptedPensionSchemeUnauthorisedPayments(
+      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(encryptionService.encrypt),
+      surcharge = p.surcharge.map(encryptCharge),
+      noSurcharge = p.noSurcharge.map(encryptCharge)
+    )
+  }
+
+  private def encryptPensionSchemeOverseasTransfers(p: PensionSchemeOverseasTransfers)
+                                                   (implicit textAndKey: TextAndKey): EncryptedPensionSchemeOverseasTransfers = {
+    EncryptedPensionSchemeOverseasTransfers(
+      overseasSchemeProvider = p.overseasSchemeProvider.map(encryptOverseasSchemeProvider),
+      transferCharge = encryptionService.encrypt(p.transferCharge),
+      transferChargeTaxPaid = encryptionService.encrypt(p.transferChargeTaxPaid)
+    )
+  }
+
+  private def encryptPensionSavingsTaxCharges(p:PensionSavingsTaxCharges)(implicit textAndKey: TextAndKey): EncryptedPensionSavingsTaxCharges = {
+    EncryptedPensionSavingsTaxCharges(
+      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(encryptionService.encrypt),
+      lumpSumBenefitTakenInExcessOfLifetimeAllowance = p.lumpSumBenefitTakenInExcessOfLifetimeAllowance.map(encryptLifeTimeAllowance),
+      benefitInExcessOfLifetimeAllowance = p.benefitInExcessOfLifetimeAllowance.map(encryptLifeTimeAllowance),
+      isAnnualAllowanceReduced = encryptionService.encrypt(p.isAnnualAllowanceReduced),
+      taperedAnnualAllowance = p.taperedAnnualAllowance.map(encryptionService.encrypt),
+      moneyPurchasedAllowance = p.moneyPurchasedAllowance.map(encryptionService.encrypt)
+    )
+  }
+  private def encryptOverseasPensionContributions(o: OverseasPensionContributions)(implicit textAndKey: TextAndKey): EncryptedOverseasPensionContributions = {
+    EncryptedOverseasPensionContributions(
+      overseasSchemeProvider = o.overseasSchemeProvider.map(encryptOverseasSchemeProvider),
+      shortServiceRefund = encryptionService.encrypt(o.shortServiceRefund),
+      shortServiceRefundTaxPaid = encryptionService.encrypt(o.shortServiceRefundTaxPaid)
+    )
+  }
+
+  private def encryptCharge(charge: Charge)(implicit textAndKey: TextAndKey): EncryptedCharge = {
+    EncryptedCharge(
+      amount = encryptionService.encrypt(charge.amount),
+      foreignTaxPaid = encryptionService.encrypt(charge.foreignTaxPaid)
+    )
+  }
+
+  private def encryptOverseasSchemeProvider(overseasSchemeProvider: OverseasSchemeProvider)
+                                           (implicit textAndKey: TextAndKey): EncryptedOverseasSchemeProvider = {
+    EncryptedOverseasSchemeProvider(
+      providerName = encryptionService.encrypt(overseasSchemeProvider.providerName),
+      providerAddress = encryptionService.encrypt(overseasSchemeProvider.providerAddress),
+      providerCountryCode = encryptionService.encrypt(overseasSchemeProvider.providerCountryCode),
+      qualifyingRecognisedOverseasPensionScheme = overseasSchemeProvider.qualifyingRecognisedOverseasPensionScheme.map(_.map(
+        x => encryptionService.encrypt(x))),
+      pensionSchemeTaxReference = overseasSchemeProvider.pensionSchemeTaxReference.map(_.map(x => encryptionService.encrypt(x)))
+    )
+  }
+  private def encryptLifeTimeAllowance(lifeTimeAllowance: LifetimeAllowance)(implicit textAndKey: TextAndKey): EncryptedLifetimeAllowance = {
+    EncryptedLifetimeAllowance(
+      amount = encryptionService.encrypt(lifeTimeAllowance.amount),
+      taxPaid = encryptionService.encrypt(lifeTimeAllowance.taxPaid)
+    )
+  }
+
+  private def encryptReliefs(reliefs: Reliefs)(implicit textAndKey: TextAndKey): EncryptedReliefs = {
+    EncryptedReliefs(
+      regularPensionContributions = reliefs.regularPensionContributions.map(encryptionService.encrypt),
+      oneOffPensionContributionsPaid = reliefs.oneOffPensionContributionsPaid.map(encryptionService.encrypt),
+      retirementAnnuityPayments = reliefs.retirementAnnuityPayments.map(encryptionService.encrypt),
+      paymentToEmployersSchemeNoTaxRelief = reliefs.paymentToEmployersSchemeNoTaxRelief.map(encryptionService.encrypt),
+      overseasPensionSchemeContributions = reliefs.overseasPensionSchemeContributions.map(encryptionService.encrypt)
+    )
+  }
+
+  private def decryptReliefs(reliefs: EncryptedReliefs)(implicit textAndKey: TextAndKey): Reliefs = {
+    Reliefs(
+      regularPensionContributions = reliefs.regularPensionContributions.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      oneOffPensionContributionsPaid = reliefs.oneOffPensionContributionsPaid.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      retirementAnnuityPayments = reliefs.retirementAnnuityPayments.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      paymentToEmployersSchemeNoTaxRelief = reliefs.paymentToEmployersSchemeNoTaxRelief.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      overseasPensionSchemeContributions = reliefs.overseasPensionSchemeContributions.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce))
+    )
+  }
+
+  private def decryptPensionSavingsTaxCharges(p:EncryptedPensionSavingsTaxCharges)(implicit textAndKey: TextAndKey): PensionSavingsTaxCharges = {
+    PensionSavingsTaxCharges(
+      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(x=> encryptionService.decrypt[String](x.value, x.nonce)),
+      lumpSumBenefitTakenInExcessOfLifetimeAllowance = p.lumpSumBenefitTakenInExcessOfLifetimeAllowance.map(decryptLifeTimeAllowance),
+      benefitInExcessOfLifetimeAllowance = p.benefitInExcessOfLifetimeAllowance.map(decryptLifeTimeAllowance),
+      isAnnualAllowanceReduced = encryptionService.decrypt[Boolean](p.isAnnualAllowanceReduced.value, p.isAnnualAllowanceReduced.nonce),
+      taperedAnnualAllowance = p.taperedAnnualAllowance.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce)),
+      moneyPurchasedAllowance = p.moneyPurchasedAllowance.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce))
+    )
+  }
+
+  private def decryptLifeTimeAllowance(lifeTimeAllowance: EncryptedLifetimeAllowance)(implicit textAndKey: TextAndKey): LifetimeAllowance = {
+    LifetimeAllowance(
+      amount = encryptionService.decrypt[BigDecimal](lifeTimeAllowance.amount.value, lifeTimeAllowance.amount.nonce),
+      taxPaid = encryptionService.decrypt[BigDecimal](lifeTimeAllowance.taxPaid.value, lifeTimeAllowance.taxPaid.nonce)
+    )
+  }
+
+  private def decryptPensionSchemeOverseasTransfers(p: EncryptedPensionSchemeOverseasTransfers)
+                                                   (implicit textAndKey: TextAndKey): PensionSchemeOverseasTransfers = {
+    PensionSchemeOverseasTransfers(
+      overseasSchemeProvider = p.overseasSchemeProvider.map(decryptOverseasSchemeProvider),
+      transferCharge = encryptionService.decrypt[BigDecimal](p.transferCharge.value, p.transferCharge.nonce),
+      transferChargeTaxPaid = encryptionService.decrypt[BigDecimal](p.transferChargeTaxPaid.value, p.transferChargeTaxPaid.nonce)
+    )
+  }
+
+  private def decryptOverseasSchemeProvider(overseasSchemeProvider: EncryptedOverseasSchemeProvider)
+                                           (implicit textAndKey: TextAndKey): OverseasSchemeProvider = {
+    OverseasSchemeProvider(
+      providerName = encryptionService.decrypt[String](overseasSchemeProvider.providerName.value, overseasSchemeProvider.providerName.nonce),
+      providerAddress = encryptionService.decrypt[String](overseasSchemeProvider.providerAddress.value, overseasSchemeProvider.providerAddress.nonce),
+      providerCountryCode = encryptionService.decrypt[String](
+        overseasSchemeProvider.providerCountryCode.value, overseasSchemeProvider.providerCountryCode.nonce),
+      qualifyingRecognisedOverseasPensionScheme = overseasSchemeProvider.qualifyingRecognisedOverseasPensionScheme.map(_.map(
+        x => encryptionService.decrypt[String](x.value, x.nonce))),
+      pensionSchemeTaxReference = overseasSchemeProvider.pensionSchemeTaxReference.map(_.map(x =>encryptionService.decrypt[String](x.value, x.nonce)))
+    )
+  }
+
+  private def decryptPensionSchemeUnauthorisedPayments(p: EncryptedPensionSchemeUnauthorisedPayments)
+                                                      (implicit textAndKey: TextAndKey): PensionSchemeUnauthorisedPayments = {
+    PensionSchemeUnauthorisedPayments(
+      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      surcharge = p.surcharge.map(decryptCharge),
+      noSurcharge = p.noSurcharge.map(decryptCharge)
+    )
+  }
+
+  private def decryptCharge(charge: EncryptedCharge)(implicit textAndKey: TextAndKey): Charge = {
+    Charge(
+      amount = encryptionService.decrypt[BigDecimal](charge.amount.value, charge.amount.nonce),
+      foreignTaxPaid = encryptionService.decrypt[BigDecimal](charge.foreignTaxPaid.value, charge.foreignTaxPaid.nonce)
+    )
+  }
+
+  private def decryptPensionContributions(p: EncryptedPensionContributions)(implicit textAndKey: TextAndKey): PensionContributions = {
+    PensionContributions(
+      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      inExcessOfTheAnnualAllowance = encryptionService.decrypt[BigDecimal](p.inExcessOfTheAnnualAllowance.value, p.inExcessOfTheAnnualAllowance.nonce),
+      annualAllowanceTaxPaid = encryptionService.decrypt[BigDecimal](p.annualAllowanceTaxPaid.value, p.annualAllowanceTaxPaid.nonce)
+    )
+  }
+
+  private def decryptOverseasPensionContributions(o: EncryptedOverseasPensionContributions)(implicit textAndKey: TextAndKey): OverseasPensionContributions = {
+    OverseasPensionContributions(
+      overseasSchemeProvider = o.overseasSchemeProvider.map(decryptOverseasSchemeProvider),
+      shortServiceRefund = encryptionService.decrypt[BigDecimal](o.shortServiceRefund.value, o.shortServiceRefund.nonce),
+      shortServiceRefundTaxPaid = encryptionService.decrypt[BigDecimal](o.shortServiceRefundTaxPaid.value, o.shortServiceRefundTaxPaid.nonce)
+    )
+  }
+
+  private def decryptStateBenefits(s: EncryptedStateBenefits)(implicit textAndKey: TextAndKey): StateBenefits = {
+    StateBenefits(
+      incapacityBenefit = s.incapacityBenefit.map(_.map(decryptStateBenefit)),
+      statePension = s.statePension.map(decryptStateBenefit),
+      statePensionLumpSum = s.statePensionLumpSum.map(decryptStateBenefit),
+      employmentSupportAllowance = s.employmentSupportAllowance.map(_.map(decryptStateBenefit)),
+      jobSeekersAllowance = s.jobSeekersAllowance.map(_.map(decryptStateBenefit)),
+      bereavementAllowance = s.bereavementAllowance.map(decryptStateBenefit),
+      otherStateBenefits = s.otherStateBenefits.map(decryptStateBenefit)
+    )  }
+
+  private def decryptStateBenefit(s: EncryptedStateBenefit)(implicit textAndKey: TextAndKey): StateBenefit = {
+    StateBenefit(
+      benefitId = encryptionService.decrypt[String](s.benefitId.value, s.benefitId.nonce),
+      startDate = encryptionService.decrypt[String](s.startDate.value, s.startDate.nonce),
+      dateIgnored = s.dateIgnored.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      submittedOn = s.submittedOn.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      endDate = s.endDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      amount = s.amount.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      taxPaid = s.taxPaid.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce))
+    )
+  }
+
+  private def decryptPensions(pensions: EncryptedPensionsModel)(implicit textAndKey: TextAndKey): PensionsModel = {
+    val pensionReliefs: Option[PensionReliefs] = pensions.pensionReliefs.map {
+      r =>
+        PensionReliefs(
+          submittedOn = encryptionService.decrypt[String](r.submittedOn.value, r.submittedOn.nonce),
+          deletedOn = r.deletedOn.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+          pensionReliefs = decryptReliefs(r.pensionReliefs)
+        )
+    }
+
+    val pensionCharges: Option[PensionCharges] = pensions.pensionCharges.map{
+        c =>
+          PensionCharges(
+            submittedOn = encryptionService.decrypt[String](c.submittedOn.value, c.submittedOn.nonce),
+            pensionSavingsTaxCharges = c.pensionSavingsTaxCharges.map(decryptPensionSavingsTaxCharges),
+            pensionSchemeOverseasTransfers = c.pensionSchemeOverseasTransfers.map(decryptPensionSchemeOverseasTransfers),
+            pensionSchemeUnauthorisedPayments = c.pensionSchemeUnauthorisedPayments.map(decryptPensionSchemeUnauthorisedPayments),
+            pensionContributions = c.pensionContributions.map(decryptPensionContributions),
+            overseasPensionContributions = c.overseasPensionContributions.map(decryptOverseasPensionContributions)
+          )
+      }
+
+    val stateBenefitsModel: Option[StateBenefitsModel] = pensions.stateBenefits.map {
+        s =>
+          StateBenefitsModel(
+            stateBenefits = s.stateBenefits.map(decryptStateBenefits),
+            customerAddedStateBenefits = s.customerAddedStateBenefits.map(decryptStateBenefits)
+          )
+      }
+
+    PensionsModel(
+      pensionReliefs = pensionReliefs,
+      pensionCharges = pensionCharges,
+      stateBenefits = stateBenefitsModel
     )
   }
 }

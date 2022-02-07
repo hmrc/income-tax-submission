@@ -16,12 +16,13 @@
 
 package services
 
-import common.IncomeSources.{DIVIDENDS, EMPLOYMENT, GIFT_AID, INTEREST}
+import common.IncomeSources._
 import config.AppConfig
 import javax.inject.{Inject, Singleton}
 import models.employment.frontend.AllEmploymentData
 import models.giftAid.GiftAidModel
 import models._
+import models.pensions.PensionsModel
 import play.api.Logging
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.Json
@@ -41,11 +42,12 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
                                   (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
 
     getLatestDataForIncomeSource(taxYear, incomeSource).flatMap {
-      case Right(None) => updateCacheBasedOnNewData(taxYear,incomeSource,None)
-      case Right(Some(model: DividendsModel)) => updateCacheBasedOnNewData[DividendsModel](taxYear,incomeSource,Some(model))
-      case Right(Some(model: AllEmploymentData)) => updateCacheBasedOnNewData[AllEmploymentData](taxYear,incomeSource,Some(model))
-      case Right(Some(model: GiftAidModel)) => updateCacheBasedOnNewData[GiftAidModel](taxYear,incomeSource,Some(model))
-      case Right(Some(model: List[InterestModel])) => updateCacheBasedOnNewData[List[InterestModel]](taxYear,incomeSource,Some(model))
+      case Right(None) => updateCacheBasedOnNewData(taxYear, incomeSource, None)
+      case Right(Some(model: DividendsModel)) => updateCacheBasedOnNewData[DividendsModel](taxYear, incomeSource, Some(model))
+      case Right(Some(model: AllEmploymentData)) => updateCacheBasedOnNewData[AllEmploymentData](taxYear, incomeSource, Some(model))
+      case Right(Some(model: GiftAidModel)) => updateCacheBasedOnNewData[GiftAidModel](taxYear, incomeSource, Some(model))
+      case Right(Some(model: List[InterestModel])) => updateCacheBasedOnNewData[List[InterestModel]](taxYear, incomeSource, Some(model))
+      case Right(Some(model: PensionsModel)) => updateCacheBasedOnNewData[PensionsModel](taxYear, incomeSource, Some(model))
       case Left(error) => Future.successful(Status(error.status)(error.toJson))
       case _ => Future.successful(Status(INTERNAL_SERVER_ERROR)(Json.toJson(APIErrorBodyModel.parsingError)))
 
@@ -53,41 +55,47 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
   }
 
   private def getLatestDataForIncomeSource[Response](taxYear: Int, incomeSource: String)
-                                            (implicit user: User[_], hc: HeaderCarrier): Future[Either[APIErrorModel, Option[Any]]] = {
+                                                    (implicit user: User[_], hc: HeaderCarrier): Future[Either[APIErrorModel, Option[Any]]] = {
     val nino = user.nino
 
     incomeSource match {
-      case DIVIDENDS => getIncomeSourcesService.getDividends(nino,taxYear,user.mtditid)
-      case INTEREST => getIncomeSourcesService.getInterest(nino,taxYear,user.mtditid)
-      case GIFT_AID  => getIncomeSourcesService.getGiftAid(nino,taxYear,user.mtditid)
-      case EMPLOYMENT => getIncomeSourcesService.getEmployment(nino,taxYear,user.mtditid)
+      case DIVIDENDS => getIncomeSourcesService.getDividends(nino, taxYear, user.mtditid)
+      case INTEREST => getIncomeSourcesService.getInterest(nino, taxYear, user.mtditid)
+      case GIFT_AID => getIncomeSourcesService.getGiftAid(nino, taxYear, user.mtditid)
+      case EMPLOYMENT => getIncomeSourcesService.getEmployment(nino, taxYear, user.mtditid)
+      case PENSIONS => getIncomeSourcesService.getPensions(nino, taxYear, user.mtditid)
     }
   }
 
   private def log(method: String): String = s"[RefreshIncomeSourcesController][$method]"
 
-  private def createModelFromNewData[A](newData: Option[A], currentData: IncomeSourcesResponseModel, incomeSource: String): IncomeSourcesResponseModel ={
+  private def createModelFromNewData[A](newData: Option[A], currentData: IncomeSourcesResponseModel, incomeSource: String): IncomeSourcesResponseModel = {
     newData match {
-      case Some(model: DividendsModel) =>  currentData.copy(dividends = Some(model))
+      case Some(model: DividendsModel) => currentData.copy(dividends = Some(model))
       case Some(model: AllEmploymentData) => currentData.copy(employment = Some(model))
       case Some(model: GiftAidModel) => currentData.copy(giftAid = Some(model))
       case Some(model: List[InterestModel]) => currentData.copy(interest = Some(model))
-      case _ =>
+      case Some(model: PensionsModel) => currentData.copy(pensions = Some(model))
+      case _ => defaultCurrentData(currentData, incomeSource)
 
-        incomeSource match {
-          case DIVIDENDS => currentData.copy(dividends = None)
-          case INTEREST => currentData.copy(interest = None)
-          case GIFT_AID  => currentData.copy(giftAid = None)
-          case EMPLOYMENT => currentData.copy(employment = None)
-        }
+    }
+  }
+
+  private def defaultCurrentData(currentData: IncomeSourcesResponseModel, incomeSource: String): IncomeSourcesResponseModel = {
+    incomeSource match {
+      case DIVIDENDS => currentData.copy(dividends = None)
+      case INTEREST => currentData.copy(interest = None)
+      case GIFT_AID => currentData.copy(giftAid = None)
+      case EMPLOYMENT => currentData.copy(employment = None)
+      case PENSIONS => currentData.copy(pensions = None)
     }
   }
 
   private def updateCacheBasedOnNewData[A](taxYear: Int, incomeSource: String, newData: Option[A])
-                                          (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] ={
+                                          (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
 
     incomeTaxUserDataService.findUserData(user, taxYear).flatMap {
-      case Right(None) | Right(Some(IncomeSourcesResponseModel(None, None, None, None))) =>
+      case Right(None) | Right(Some(IncomeSourcesResponseModel(None, None, None, None, None))) =>
 
         logger.info(s"${log("updateCacheBasedOnNewData")} User doesn't have any cache data or doesn't have any income source data." +
           s" SessionId: ${user.sessionId}")
@@ -106,9 +114,9 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
 
       case Right(Some(currentData: IncomeSourcesResponseModel)) =>
 
-        logIfNoIncomeSourceData(incomeSource,currentData)
+        logIfNoIncomeSourceData(incomeSource, currentData)
 
-        val model = createModelFromNewData(newData,currentData,incomeSource)
+        val model = createModelFromNewData(newData, currentData, incomeSource)
         incomeTaxUserDataService.saveUserData(taxYear, Some(model))(NoContent)
 
       case Left(error) => Future.successful(Status(error.status)(error.toJson))
@@ -116,15 +124,17 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
   }
 
   private def logIfNoIncomeSourceData(incomeSource: String, data: IncomeSourcesResponseModel)
-                                     (implicit user: User[_]): Unit ={
+                                     (implicit user: User[_]): Unit = {
 
-    lazy val noDataLog: Unit = logger.info(s"${log("logIncomeSource")} User doesn't have any cache data for $incomeSource. SessionId: ${user.sessionId}")
+    def noDataLog(isEmpty: Boolean): Unit =
+      if (isEmpty) logger.info(s"${log("logIncomeSource")} User doesn't have any cache data for $incomeSource. SessionId: ${user.sessionId}")
 
     incomeSource match {
-      case DIVIDENDS => if(data.dividends.isEmpty) noDataLog
-      case INTEREST => if(data.interest.isEmpty) noDataLog
-      case GIFT_AID  => if(data.giftAid.isEmpty) noDataLog
-      case EMPLOYMENT => if(data.employment.isEmpty) noDataLog
+      case DIVIDENDS => noDataLog(data.dividends.isEmpty)
+      case INTEREST => noDataLog(data.interest.isEmpty)
+      case GIFT_AID => noDataLog(data.giftAid.isEmpty)
+      case EMPLOYMENT => noDataLog(data.employment.isEmpty)
+      case PENSIONS => noDataLog(data.pensions.isEmpty)
     }
   }
 }

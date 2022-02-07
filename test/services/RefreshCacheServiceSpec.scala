@@ -285,6 +285,64 @@ class RefreshCacheServiceSpec extends TestUtils {
 
       result mustBe NoContent
     }
+
+    "get the latest pensions and update the data" in {
+      (getIncomeSourcesService.getPensions(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+        .expects("AA123456A", taxYear, "1234567890", *, *)
+        .returning(Future.successful(Right(Some(fullPensionsModel.copy(pensionCharges = None)))))
+
+      (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
+        .expects(user, taxYear, *)
+        .returning(Future.successful(Right(Some(incomeSourcesResponse))))
+
+      val expected = Some(incomeSourcesResponse.copy(pensions = Some(fullPensionsModel.copy(pensionCharges = None))))
+
+      (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSourcesResponseModel])(_: Result)(_: User[_], _: ExecutionContext))
+        .expects(taxYear, expected, NoContent, user, *)
+        .returning(Future.successful(NoContent))
+
+      val result = await(service.getLatestDataAndRefreshCache(taxYear,"pensions"))
+
+      result mustBe NoContent
+    }
+    "get the latest pensions and update the data when no pensions data" in {
+      (getIncomeSourcesService.getPensions(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+        .expects("AA123456A", taxYear, "1234567890", *, *)
+        .returning(Future.successful(Right(None)))
+
+      (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
+        .expects(user, taxYear, *)
+        .returning(Future.successful(Right(Some(incomeSourcesResponse))))
+
+      val expected = Some(incomeSourcesResponse.copy(pensions = None))
+
+      (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSourcesResponseModel])(_: Result)(_: User[_], _: ExecutionContext))
+        .expects(taxYear, expected, NoContent, user, *)
+        .returning(Future.successful(NoContent))
+
+      val result = await(service.getLatestDataAndRefreshCache(taxYear,"pensions"))
+
+      result mustBe NoContent
+    }
+    "get the latest pensions and update the data when no pensions data in session or in the get" in {
+      (getIncomeSourcesService.getPensions(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+        .expects("AA123456A", taxYear, "1234567890", *, *)
+        .returning(Future.successful(Right(None)))
+
+      (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
+        .expects(user, taxYear, *)
+        .returning(Future.successful(Right(Some(incomeSourcesResponse.copy(pensions = None)))))
+
+      val expected = Some(incomeSourcesResponse.copy(pensions = None))
+
+      (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSourcesResponseModel])(_: Result)(_: User[_], _: ExecutionContext))
+        .expects(taxYear, expected, NoContent, user, *)
+        .returning(Future.successful(NoContent))
+
+      val result = await(service.getLatestDataAndRefreshCache(taxYear,"pensions"))
+
+      result mustBe NoContent
+    }
   }
 
 }
