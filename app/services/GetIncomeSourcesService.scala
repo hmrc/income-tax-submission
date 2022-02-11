@@ -16,14 +16,16 @@
 
 package services
 
-import connectors.{IncomeTaxDividendsConnector, IncomeTaxEmploymentConnector, IncomeTaxGiftAidConnector, IncomeTaxInterestConnector, IncomeTaxPensionsConnector}
+import connectors.{IncomeTaxCISConnector, IncomeTaxDividendsConnector, IncomeTaxEmploymentConnector, IncomeTaxGiftAidConnector, IncomeTaxInterestConnector, IncomeTaxPensionsConnector}
 import javax.inject.Inject
 import models._
 import models.giftAid.GiftAidModel
 import services.util.FutureEitherOps
 import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.{ExecutionContext, Future}
 import common.IncomeSources._
+import models.cis.AllCISDeductions
 import models.employment.frontend.AllEmploymentData
 import models.pensions.PensionsModel
 import play.api.Logging
@@ -33,6 +35,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
                                         giftAidConnector: IncomeTaxGiftAidConnector,
                                         employmentConnector: IncomeTaxEmploymentConnector,
                                         pensionsConnector: IncomeTaxPensionsConnector,
+                                        cisConnector: IncomeTaxCISConnector,
                                         implicit val ec: ExecutionContext) extends Logging {
 
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSourcesResponseModel]
@@ -45,13 +48,15 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       giftAid <- FutureEitherOps[APIErrorModel, Option[GiftAidModel]](getGiftAid(nino,taxYear,mtditid,excludedIncomeSources))
       employment <- FutureEitherOps[APIErrorModel, Option[AllEmploymentData]](getEmployment(nino,taxYear,mtditid,excludedIncomeSources))
       pensions <- FutureEitherOps[APIErrorModel, Option[PensionsModel]](getPensions(nino,taxYear,mtditid,excludedIncomeSources))
+      cis <- FutureEitherOps[APIErrorModel, Option[AllCISDeductions]](getCIS(nino,taxYear,mtditid,excludedIncomeSources))
     } yield {
       IncomeSourcesResponseModel(
         dividends.map(res => DividendsModel(res.ukDividends, res.otherUkDividends)),
         interest,
         giftAid,
         employment,
-        pensions
+        pensions,
+        cis
       )
     }).value
   }
@@ -108,6 +113,17 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       Future(Right(None))
     } else {
       pensionsConnector.getSubmittedPensions(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
+    }
+  }
+
+  def getCIS(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+            (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[AllCISDeductions]]] = {
+
+    if(excludedIncomeSources.contains(CIS)){
+      shutteredIncomeSourceLog(CIS)
+      Future(Right(None))
+    } else {
+      cisConnector.getSubmittedCIS(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
     }
   }
 

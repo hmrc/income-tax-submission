@@ -16,6 +16,7 @@
 
 package models
 
+import models.cis.AllCISDeductions
 import models.employment.frontend.AllEmploymentData
 import models.giftAid.GiftAidModel
 import models.pensions.PensionsModel
@@ -25,7 +26,8 @@ case class IncomeSourcesResponseModel(dividends: Option[DividendsModel] = None,
                                       interest: Option[Seq[InterestModel]] = None,
                                       giftAid: Option[GiftAidModel] = None,
                                       employment: Option[AllEmploymentData] = None,
-                                      pensions: Option[PensionsModel] = None)
+                                      pensions: Option[PensionsModel] = None,
+                                      cis: Option[AllCISDeductions] = None)
 
 object IncomeSourcesResponseModel {
   implicit val format: OFormat[IncomeSourcesResponseModel] = Json.format[IncomeSourcesResponseModel]

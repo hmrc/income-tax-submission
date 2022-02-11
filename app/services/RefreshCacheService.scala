@@ -22,6 +22,7 @@ import javax.inject.{Inject, Singleton}
 import models.employment.frontend.AllEmploymentData
 import models.giftAid.GiftAidModel
 import models._
+import models.cis.AllCISDeductions
 import models.pensions.PensionsModel
 import play.api.Logging
 import play.api.http.Status.INTERNAL_SERVER_ERROR
@@ -48,6 +49,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case Right(Some(model: GiftAidModel)) => updateCacheBasedOnNewData[GiftAidModel](taxYear, incomeSource, Some(model))
       case Right(Some(model: List[InterestModel])) => updateCacheBasedOnNewData[List[InterestModel]](taxYear, incomeSource, Some(model))
       case Right(Some(model: PensionsModel)) => updateCacheBasedOnNewData[PensionsModel](taxYear, incomeSource, Some(model))
+      case Right(Some(model: AllCISDeductions)) => updateCacheBasedOnNewData[AllCISDeductions](taxYear, incomeSource, Some(model))
       case Left(error) => Future.successful(Status(error.status)(error.toJson))
       case _ => Future.successful(Status(INTERNAL_SERVER_ERROR)(Json.toJson(APIErrorBodyModel.parsingError)))
 
@@ -64,6 +66,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case GIFT_AID => getIncomeSourcesService.getGiftAid(nino, taxYear, user.mtditid)
       case EMPLOYMENT => getIncomeSourcesService.getEmployment(nino, taxYear, user.mtditid)
       case PENSIONS => getIncomeSourcesService.getPensions(nino, taxYear, user.mtditid)
+      case CIS => getIncomeSourcesService.getCIS(nino, taxYear, user.mtditid)
     }
   }
 
@@ -76,6 +79,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case Some(model: GiftAidModel) => currentData.copy(giftAid = Some(model))
       case Some(model: List[InterestModel]) => currentData.copy(interest = Some(model))
       case Some(model: PensionsModel) => currentData.copy(pensions = Some(model))
+      case Some(model: AllCISDeductions) => currentData.copy(cis = Some(model))
       case _ => defaultCurrentData(currentData, incomeSource)
 
     }
@@ -88,6 +92,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case GIFT_AID => currentData.copy(giftAid = None)
       case EMPLOYMENT => currentData.copy(employment = None)
       case PENSIONS => currentData.copy(pensions = None)
+      case CIS => currentData.copy(cis = None)
     }
   }
 
@@ -95,7 +100,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
                                           (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
 
     incomeTaxUserDataService.findUserData(user, taxYear).flatMap {
-      case Right(None) | Right(Some(IncomeSourcesResponseModel(None, None, None, None, None))) =>
+      case Right(None) | Right(Some(IncomeSourcesResponseModel(None, None, None, None, None, None))) =>
 
         logger.info(s"${log("updateCacheBasedOnNewData")} User doesn't have any cache data or doesn't have any income source data." +
           s" SessionId: ${user.sessionId}")
@@ -135,6 +140,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case GIFT_AID => noDataLog(data.giftAid.isEmpty)
       case EMPLOYMENT => noDataLog(data.employment.isEmpty)
       case PENSIONS => noDataLog(data.pensions.isEmpty)
+      case CIS => noDataLog(data.cis.isEmpty)
     }
   }
 }

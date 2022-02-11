@@ -33,6 +33,7 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
   val employmentBaseUrl: String = servicesConfig.baseUrl("income-tax-employment")
   val giftAidBaseUrl: String = servicesConfig.baseUrl("income-tax-gift-aid")
   val pensionsBaseUrl: String = servicesConfig.baseUrl("income-tax-pensions")
+  val cisBaseUrl: String = servicesConfig.baseUrl("income-tax-cis")
 
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
@@ -54,6 +55,7 @@ trait AppConfig{
   val employmentBaseUrl: String
   val giftAidBaseUrl: String
   val pensionsBaseUrl: String
+  val cisBaseUrl: String
 
   val auditingEnabled: Boolean
   val graphiteHost: String

@@ -60,7 +60,8 @@ class IncomeTaxUserDataService @Inject()(incomeTaxUserDataRepository: IncomeTaxU
       interest = incomeSourcesModel.flatMap(_.interest),
       giftAid = incomeSourcesModel.flatMap(_.giftAid),
       employment = incomeSourcesModel.flatMap(_.employment),
-      pensions = incomeSourcesModel.flatMap(_.pensions)
+      pensions = incomeSourcesModel.flatMap(_.pensions),
+      cis = incomeSourcesModel.flatMap(_.cis)
     )
 
     incomeTaxUserDataRepository.update(userData)
