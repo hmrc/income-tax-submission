@@ -19,18 +19,18 @@ package utils
 import config.AppConfig
 import org.scalamock.scalatest.MockFactory
 
-class MockAppConfig(isEncrypted: Boolean) extends AppConfig with MockFactory {
+class MockAppConfig(isEncrypted: Boolean = true) extends AppConfig with MockFactory {
 
-    override val authBaseUrl: String = "/auth"
-    override val dividendsBaseUrl: String = "/dividends"
-    override val interestBaseUrl: String = "/interest"
-    override val employmentBaseUrl: String = "/employment"
-    override val giftAidBaseUrl: String = "/giftAid"
-    override val pensionsBaseUrl: String = "/pensions"
-    override val auditingEnabled: Boolean = true
-    override val graphiteHost: String = "/graphite"
-    override lazy val encryptionKey: String = "encryptionKey12345"
-    override lazy val mongoTTL: Int = 1550
-    override lazy val useEncryption: Boolean = isEncrypted
+  override val authBaseUrl: String = "/auth"
+  override val dividendsBaseUrl: String = "http://localhost:11111"
+  override val interestBaseUrl: String = "http://localhost:11111"
+  override val employmentBaseUrl: String = "http://localhost:11111"
+  override val giftAidBaseUrl: String = "http://localhost:11111"
+  override val pensionsBaseUrl: String = "http://localhost:11111"
+  override val auditingEnabled: Boolean = true
+  override val graphiteHost: String = "/graphite"
+  override lazy val encryptionKey: String = "encryptionKey12345"
+  override lazy val mongoTTL: Int = 1550
+  override lazy val useEncryption: Boolean = isEncrypted
 
 }

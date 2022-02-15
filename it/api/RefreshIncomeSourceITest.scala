@@ -16,13 +16,18 @@
 
 package api
 
+import builders.models.DividendsBuilder.aDividends
+import builders.models.InterestsBuilder.anInterest
+import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
+import builders.models.gifts.GiftAidBuilder.aGiftAid
+import builders.models.pensions.PensionsBuilder.aPensions
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import helpers.IntegrationSpec
-import models.{APIErrorBodyModel, IncomeSourcesResponseModel, RefreshIncomeSource}
 import models.mongo.{DatabaseError, UserData}
+import models.{APIErrorBodyModel, IncomeSourcesResponseModel, RefreshIncomeSource}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
-import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, NO_CONTENT, OK, UNAUTHORIZED}
+import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import repositories.IncomeTaxUserDataRepositoryImpl
 
@@ -32,16 +37,16 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
   private def count = await(repo.collection.countDocuments().toFuture())
 
-  override val userData: UserData = UserData(
+  val userData: UserData = UserData(
     "sessionId-1618a1e8-4979-41d8-a32e-5ffbe69fac81",
     "555555555",
     "AA123123A",
     2022,
-    dividendsModel,
-    interestsModel,
-    Some(giftAidModel),
-    Some(employmentsModel),
-    Some(fullPensionsModel)
+    Some(aDividends),
+    Some(Seq(anInterest)),
+    Some(aGiftAid),
+    Some(anAllEmploymentData),
+    Some(aPensions)
   )
 
   val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "555555555"))

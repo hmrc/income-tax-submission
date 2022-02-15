@@ -16,16 +16,16 @@
 
 package models
 
-import models.employment.frontend.AllEmploymentData
-import models.giftAid.GiftAidModel
-import models.pensions.PensionsModel
+import models.employment.AllEmploymentData
+import models.gifts.GiftAid
+import models.pensions.Pensions
 import play.api.libs.json.{Json, OFormat}
 
-case class IncomeSourcesResponseModel(dividends: Option[DividendsModel] = None,
-                                      interest: Option[Seq[InterestModel]] = None,
-                                      giftAid: Option[GiftAidModel] = None,
+case class IncomeSourcesResponseModel(dividends: Option[Dividends] = None,
+                                      interest: Option[Seq[Interest]] = None,
+                                      giftAid: Option[GiftAid] = None,
                                       employment: Option[AllEmploymentData] = None,
-                                      pensions: Option[PensionsModel] = None)
+                                      pensions: Option[Pensions] = None)
 
 object IncomeSourcesResponseModel {
   implicit val format: OFormat[IncomeSourcesResponseModel] = Json.format[IncomeSourcesResponseModel]

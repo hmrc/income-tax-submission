@@ -18,7 +18,7 @@ package controllers
 
 
 import models._
-import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
+import models.gifts.{GiftAid, GiftAidPayments, Gifts}
 import org.scalamock.handlers.{CallHandler3, CallHandler5}
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -37,13 +37,14 @@ class IncomeSourcesControllerSpec extends TestUtils {
   private val mockRefreshCacheService = mock[RefreshCacheService]
 
   def mockSaveData(data: Option[IncomeSourcesResponseModel],
-                   outcome: Result): CallHandler5[Int, Option[IncomeSourcesResponseModel], Result, User[_], ExecutionContext, Future[Result]] ={
+                   outcome: Result): CallHandler5[Int, Option[IncomeSourcesResponseModel], Result, User[_], ExecutionContext, Future[Result]] = {
     (mockIncomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSourcesResponseModel])(_: Result)(_: User[_], _: ExecutionContext))
       .expects(*, data, *, *, *)
       .returning(Future.successful(outcome))
   }
+
   def mockFindData(data: Either[APIErrorModel, Option[IncomeSourcesResponseModel]]
-                  ): CallHandler3[User[_], Int, ExecutionContext, Future[Either[APIErrorModel, Option[IncomeSourcesResponseModel]]]] ={
+                  ): CallHandler3[User[_], Int, ExecutionContext, Future[Either[APIErrorModel, Option[IncomeSourcesResponseModel]]]] = {
     (mockIncomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
       .expects(*, *, *)
       .returning(Future.successful(data))
@@ -51,9 +52,9 @@ class IncomeSourcesControllerSpec extends TestUtils {
 
   val getIncomeSourcesService: GetIncomeSourcesService = mock[GetIncomeSourcesService]
   val controller = new IncomeSourcesController(getIncomeSourcesService, mockIncomeTaxUserDataService,
-    mockRefreshCacheService, mockControllerComponents,authorisedAction)
-  val nino :String = "123456789"
-  val mtditid :String = "1234567890"
+    mockRefreshCacheService, mockControllerComponents, authorisedAction)
+  val nino: String = "123456789"
+  val mtditid: String = "1234567890"
   val taxYear: Int = 1234
   private val fakeGetRequestWithHeaderAndSession = FakeRequest("GET",
     "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
@@ -64,29 +65,29 @@ class IncomeSourcesControllerSpec extends TestUtils {
     "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022")
 
   def mockGetIncomeSourcesTurnedOff(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
-    (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _:Seq[String])(_: HeaderCarrier))
-      .expects(*, *, *, Seq("dividends","interest","gift-aid","employment"), *)
-      .returning(Future.successful(Right(IncomeSourcesResponseModel(None,None, None, None))))
+    (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+      .expects(*, *, *, Seq("dividends", "interest", "gift-aid", "employment"), *)
+      .returning(Future.successful(Right(IncomeSourcesResponseModel(None, None, None, None))))
   }
 
-  val giftAidPayments: GiftAidPaymentsModel = {
-    GiftAidPaymentsModel(Some(List("")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
+  val giftAidPayments: GiftAidPayments = {
+    GiftAidPayments(Some(List("")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
   }
-  val gifts: GiftsModel = GiftsModel(Some(List("")), Some(12345.67), Some(12345.67) , Some(12345.67))
+  val gifts: Gifts = Gifts(Some(List("")), Some(12345.67), Some(12345.67), Some(12345.67))
 
-  val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsModel(Some(12345.67),Some(12345.67))),
-    Some(Seq(InterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAidModel(Some(giftAidPayments), Some(gifts))),
+  val incomeSources: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(Dividends(Some(12345.67), Some(12345.67))),
+    Some(Seq(Interest("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAid(Some(giftAidPayments), Some(gifts))),
     Some(allEmploymentData))
 
   def mockGetIncomeSourcesValid(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
-    (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _:Seq[String])(_: HeaderCarrier))
+    (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
       .expects(*, *, *, Seq(), *)
       .returning(Future.successful(Right(incomeSources)))
   }
 
   def mockGetIncomeSourcesInvalid(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
     val invalidIncomeSource: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
-      (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _:Seq[String])(_: HeaderCarrier))
+    (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
       .expects(*, *, *, Seq(), *)
       .returning(Future.successful(Left(invalidIncomeSource)))
   }
@@ -122,7 +123,7 @@ class IncomeSourcesControllerSpec extends TestUtils {
         }
         status(result) mustBe NO_CONTENT
       }
-        "return an INTERNAL SERVER ERROR response when an error occurs" in {
+      "return an INTERNAL SERVER ERROR response when an error occurs" in {
         val result = {
           mockAuth()
           mockFindData(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)))
@@ -137,7 +138,7 @@ class IncomeSourcesControllerSpec extends TestUtils {
     "return a 204 response when it refreshed the cache for dividends" in {
       val result: Future[Result] = {
         mockAuth()
-        (mockRefreshCacheService.getLatestDataAndRefreshCache( _: Int,_: String)(_: User[_], _: HeaderCarrier, _: ExecutionContext))
+        (mockRefreshCacheService.getLatestDataAndRefreshCache(_: Int, _: String)(_: User[_], _: HeaderCarrier, _: ExecutionContext))
           .expects(taxYear, "dividends", *, *, *)
           .returning(Future.successful(NoContent))
 

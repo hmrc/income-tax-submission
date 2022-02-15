@@ -17,23 +17,22 @@
 package services
 
 import config.AppConfig
-
-import javax.inject.Inject
-import models.{DividendsModel, EncryptedDividendsModel, EncryptedInterestModel, InterestModel}
-import models.employment.frontend._
-import models.employment.shared._
-import models.giftAid.{EncryptedGiftAidModel, EncryptedGiftAidPaymentsModel, EncryptedGiftsModel, GiftAidModel, GiftAidPaymentsModel, GiftsModel}
+import models.employment._
+import models.gifts._
 import models.mongo.{EncryptedUserData, TextAndKey, UserData}
 import models.pensions._
 import models.pensions.charges._
 import models.pensions.reliefs.{EncryptedPensionReliefs, EncryptedReliefs, PensionReliefs, Reliefs}
 import models.pensions.statebenefits._
+import models.{Dividends, EncryptedDividends, EncryptedInterest, Interest}
 import utils.SecureGCMCipher
+
+import javax.inject.Inject
 
 class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig: AppConfig) {
 
-  def encryptUserData(userData: UserData): EncryptedUserData ={
-    implicit val textAndKey: TextAndKey = TextAndKey(userData.mtdItId,appConfig.encryptionKey)
+  def encryptUserData(userData: UserData): EncryptedUserData = {
+    implicit val textAndKey: TextAndKey = TextAndKey(userData.mtdItId, appConfig.encryptionKey)
 
     EncryptedUserData(
       sessionId = userData.sessionId,
@@ -49,17 +48,17 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def encryptDividends(dividends: DividendsModel)(implicit textAndKey: TextAndKey): EncryptedDividendsModel ={
-    EncryptedDividendsModel(
+  private def encryptDividends(dividends: Dividends)(implicit textAndKey: TextAndKey): EncryptedDividends = {
+    EncryptedDividends(
       ukDividends = dividends.ukDividends.map(encryptionService.encrypt[BigDecimal]),
       otherUkDividends = dividends.otherUkDividends.map(encryptionService.encrypt[BigDecimal])
     )
   }
 
-  private def encryptInterest(interest: Seq[InterestModel])(implicit textAndKey: TextAndKey): Seq[EncryptedInterestModel] ={
-    interest.map{
+  private def encryptInterest(interest: Seq[Interest])(implicit textAndKey: TextAndKey): Seq[EncryptedInterest] = {
+    interest.map {
       interest =>
-        EncryptedInterestModel(
+        EncryptedInterest(
           accountName = encryptionService.encrypt[String](interest.accountName),
           incomeSourceId = encryptionService.encrypt[String](interest.incomeSourceId),
           taxedUkInterest = interest.taxedUkInterest.map(encryptionService.encrypt[BigDecimal]),
@@ -68,12 +67,12 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     }
   }
 
-  private def encryptGiftAid(giftAid: GiftAidModel)(implicit textAndKey: TextAndKey): EncryptedGiftAidModel ={
+  private def encryptGiftAid(giftAid: GiftAid)(implicit textAndKey: TextAndKey): EncryptedGiftAid = {
 
-    val eGiftAidPayments: Option[EncryptedGiftAidPaymentsModel] = {
-      giftAid.giftAidPayments.map{
+    val eGiftAidPayments: Option[EncryptedGiftAidPayments] = {
+      giftAid.giftAidPayments.map {
         g =>
-          EncryptedGiftAidPaymentsModel(
+          EncryptedGiftAidPayments(
             nonUkCharitiesCharityNames = g.nonUkCharitiesCharityNames.map(_.map(encryptionService.encrypt)),
             currentYear = g.currentYear.map(encryptionService.encrypt),
             oneOffCurrentYear = g.oneOffCurrentYear.map(encryptionService.encrypt),
@@ -83,10 +82,10 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
           )
       }
     }
-    val eGifts: Option[EncryptedGiftsModel] = {
+    val eGifts: Option[EncryptedGifts] = {
       giftAid.gifts.map {
         g =>
-          EncryptedGiftsModel(
+          EncryptedGifts(
             investmentsNonUkCharitiesCharityNames = g.investmentsNonUkCharitiesCharityNames.map(_.map(encryptionService.encrypt)),
             landAndBuildings = g.landAndBuildings.map(encryptionService.encrypt),
             sharesOrSecurities = g.sharesOrSecurities.map(encryptionService.encrypt),
@@ -95,12 +94,12 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       }
     }
 
-    EncryptedGiftAidModel(giftAidPayments = eGiftAidPayments, gifts = eGifts)
+    EncryptedGiftAid(giftAidPayments = eGiftAidPayments, gifts = eGifts)
   }
 
-  private def encryptEmployment(employment: AllEmploymentData)(implicit textAndKey: TextAndKey): EncryptedAllEmploymentData ={
+  private def encryptEmployment(employment: AllEmploymentData)(implicit textAndKey: TextAndKey): EncryptedAllEmploymentData = {
 
-    val hmrcExpenses = employment.hmrcExpenses.map{
+    val hmrcExpenses = employment.hmrcExpenses.map {
       e =>
         EncryptedEmploymentExpenses(
           submittedOn = e.submittedOn.map(encryptionService.encrypt),
@@ -110,7 +109,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
         )
     }
 
-    val customerExpenses = employment.customerExpenses.map{
+    val customerExpenses = employment.customerExpenses.map {
       e =>
         EncryptedEmploymentExpenses(
           submittedOn = e.submittedOn.map(encryptionService.encrypt),
@@ -131,7 +130,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def encryptEmploymentSource(e: EmploymentSource)(implicit textAndKey: TextAndKey): EncryptedEmploymentSource ={
+  private def encryptEmploymentSource(e: EmploymentSource)(implicit textAndKey: TextAndKey): EncryptedEmploymentSource = {
 
     EncryptedEmploymentSource(
       employmentId = encryptionService.encrypt(e.employmentId),
@@ -147,23 +146,23 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def decryptEmploymentSource(e: EncryptedEmploymentSource)(implicit textAndKey: TextAndKey): EmploymentSource ={
+  private def decryptEmploymentSource(e: EncryptedEmploymentSource)(implicit textAndKey: TextAndKey): EmploymentSource = {
 
     EmploymentSource(
-      employmentId = encryptionService.decrypt[String](e.employmentId.value,e.employmentId.nonce),
-      employerName = encryptionService.decrypt[String](e.employerName.value,e.employerName.nonce),
-      employerRef = e.employerRef.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      payrollId = e.payrollId.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      startDate = e.startDate.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      cessationDate = e.cessationDate.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      dateIgnored = e.dateIgnored.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      submittedOn = e.submittedOn.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
+      employmentId = encryptionService.decrypt[String](e.employmentId.value, e.employmentId.nonce),
+      employerName = encryptionService.decrypt[String](e.employerName.value, e.employerName.nonce),
+      employerRef = e.employerRef.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      payrollId = e.payrollId.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      startDate = e.startDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      cessationDate = e.cessationDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      dateIgnored = e.dateIgnored.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      submittedOn = e.submittedOn.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
       employmentData = e.employmentData.map(decryptEmploymentData),
       employmentBenefits = e.employmentBenefits.map(decryptEmploymentBenefits)
     )
   }
 
-  private def encryptEmploymentData(e: EmploymentData)(implicit textAndKey: TextAndKey): EncryptedEmploymentData ={
+  private def encryptEmploymentData(e: EmploymentData)(implicit textAndKey: TextAndKey): EncryptedEmploymentData = {
 
     val pay = e.pay.map { p =>
       EncryptedPay(
@@ -176,7 +175,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       )
     }
 
-    val deductions = e.deductions.map{
+    val deductions = e.deductions.map {
       d =>
 
         val studentLoans = d.studentLoans.map {
@@ -202,47 +201,47 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def decryptEmploymentData(e: EncryptedEmploymentData)(implicit textAndKey: TextAndKey): EmploymentData ={
+  private def decryptEmploymentData(e: EncryptedEmploymentData)(implicit textAndKey: TextAndKey): EmploymentData = {
 
     val pay = e.pay.map { p =>
       Pay(
-        taxablePayToDate = p.taxablePayToDate.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-        totalTaxToDate = p.totalTaxToDate.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-        payFrequency = p.payFrequency.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-        paymentDate = p.paymentDate.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-        taxWeekNo = p.taxWeekNo.map(x => encryptionService.decrypt[Int](x.value,x.nonce)),
-        taxMonthNo = p.taxMonthNo.map(x => encryptionService.decrypt[Int](x.value,x.nonce))
+        taxablePayToDate = p.taxablePayToDate.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+        totalTaxToDate = p.totalTaxToDate.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+        payFrequency = p.payFrequency.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+        paymentDate = p.paymentDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+        taxWeekNo = p.taxWeekNo.map(x => encryptionService.decrypt[Int](x.value, x.nonce)),
+        taxMonthNo = p.taxMonthNo.map(x => encryptionService.decrypt[Int](x.value, x.nonce))
       )
     }
 
-    val deductions = e.deductions.map{
+    val deductions = e.deductions.map {
       d =>
 
         val studentLoans = d.studentLoans.map {
           s =>
-            StudentLoans(uglDeductionAmount = s.uglDeductionAmount.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-              pglDeductionAmount = s.pglDeductionAmount.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)))
+            StudentLoans(uglDeductionAmount = s.uglDeductionAmount.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+              pglDeductionAmount = s.pglDeductionAmount.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)))
         }
 
         Deductions(studentLoans)
     }
 
     EmploymentData(
-      submittedOn = encryptionService.decrypt[String](e.submittedOn.value,e.submittedOn.nonce),
-      employmentSequenceNumber = e.employmentSequenceNumber.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      companyDirector = e.companyDirector.map(x => encryptionService.decrypt[Boolean](x.value,x.nonce)),
-      closeCompany = e.closeCompany.map(x => encryptionService.decrypt[Boolean](x.value,x.nonce)),
-      directorshipCeasedDate = e.directorshipCeasedDate.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      occPen = e.occPen.map(x => encryptionService.decrypt[Boolean](x.value,x.nonce)),
-      disguisedRemuneration = e.disguisedRemuneration.map(x => encryptionService.decrypt[Boolean](x.value,x.nonce)),
+      submittedOn = encryptionService.decrypt[String](e.submittedOn.value, e.submittedOn.nonce),
+      employmentSequenceNumber = e.employmentSequenceNumber.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      companyDirector = e.companyDirector.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce)),
+      closeCompany = e.closeCompany.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce)),
+      directorshipCeasedDate = e.directorshipCeasedDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      occPen = e.occPen.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce)),
+      disguisedRemuneration = e.disguisedRemuneration.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce)),
       pay = pay,
       deductions = deductions
     )
   }
 
-  private def encryptEmploymentBenefits(e: EmploymentBenefits)(implicit textAndKey: TextAndKey): EncryptedEmploymentBenefits ={
+  private def encryptEmploymentBenefits(e: EmploymentBenefits)(implicit textAndKey: TextAndKey): EncryptedEmploymentBenefits = {
 
-    val benefits = e.benefits.map{
+    val benefits = e.benefits.map {
       b =>
         EncryptedBenefits(
           accommodation = b.accommodation.map(encryptionService.encrypt),
@@ -279,47 +278,47 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     EncryptedEmploymentBenefits(submittedOn = encryptionService.encrypt(e.submittedOn), benefits = benefits)
   }
 
-  private def decryptEmploymentBenefits(e: EncryptedEmploymentBenefits)(implicit textAndKey: TextAndKey): EmploymentBenefits ={
+  private def decryptEmploymentBenefits(e: EncryptedEmploymentBenefits)(implicit textAndKey: TextAndKey): EmploymentBenefits = {
 
-    val benefits = e.benefits.map{
+    val benefits = e.benefits.map {
       b =>
         Benefits(
-          accommodation = b.accommodation.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          assets = b.assets.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          assetTransfer = b.assetTransfer.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          beneficialLoan = b.beneficialLoan.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          car = b.car.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          carFuel = b.carFuel.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          educationalServices = b.educationalServices.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          entertaining = b.entertaining.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          expenses = b.expenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          medicalInsurance = b.medicalInsurance.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          telephone = b.telephone.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          service = b.service.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          taxableExpenses = b.taxableExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          van = b.van.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          vanFuel = b.vanFuel.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          mileage = b.mileage.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          nonQualifyingRelocationExpenses = b.nonQualifyingRelocationExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          nurseryPlaces = b.nurseryPlaces.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          otherItems = b.otherItems.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          paymentsOnEmployeesBehalf = b.paymentsOnEmployeesBehalf.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          personalIncidentalExpenses = b.personalIncidentalExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          qualifyingRelocationExpenses = b.qualifyingRelocationExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
+          accommodation = b.accommodation.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          assets = b.assets.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          assetTransfer = b.assetTransfer.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          beneficialLoan = b.beneficialLoan.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          car = b.car.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          carFuel = b.carFuel.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          educationalServices = b.educationalServices.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          entertaining = b.entertaining.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          expenses = b.expenses.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          medicalInsurance = b.medicalInsurance.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          telephone = b.telephone.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          service = b.service.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          taxableExpenses = b.taxableExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          van = b.van.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          vanFuel = b.vanFuel.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          mileage = b.mileage.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          nonQualifyingRelocationExpenses = b.nonQualifyingRelocationExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          nurseryPlaces = b.nurseryPlaces.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          otherItems = b.otherItems.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          paymentsOnEmployeesBehalf = b.paymentsOnEmployeesBehalf.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          personalIncidentalExpenses = b.personalIncidentalExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          qualifyingRelocationExpenses = b.qualifyingRelocationExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
           employerProvidedProfessionalSubscriptions = b.employerProvidedProfessionalSubscriptions.map(
-            x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          employerProvidedServices = b.employerProvidedServices.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          incomeTaxPaidByDirector = b.incomeTaxPaidByDirector.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          travelAndSubsistence = b.travelAndSubsistence.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          vouchersAndCreditCards = b.vouchersAndCreditCards.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          nonCash = b.nonCash.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce))
+            x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          employerProvidedServices = b.employerProvidedServices.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          incomeTaxPaidByDirector = b.incomeTaxPaidByDirector.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          travelAndSubsistence = b.travelAndSubsistence.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          vouchersAndCreditCards = b.vouchersAndCreditCards.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          nonCash = b.nonCash.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce))
         )
     }
 
-    EmploymentBenefits(submittedOn = encryptionService.decrypt[String](e.submittedOn.value,e.submittedOn.nonce), benefits = benefits)
+    EmploymentBenefits(submittedOn = encryptionService.decrypt[String](e.submittedOn.value, e.submittedOn.nonce), benefits = benefits)
   }
 
-  private def encryptExpenses(e: Expenses)(implicit textAndKey: TextAndKey): EncryptedExpenses ={
+  private def encryptExpenses(e: Expenses)(implicit textAndKey: TextAndKey): EncryptedExpenses = {
     EncryptedExpenses(
       businessTravelCosts = e.businessTravelCosts.map(encryptionService.encrypt),
       jobExpenses = e.jobExpenses.map(encryptionService.encrypt),
@@ -332,21 +331,21 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def decryptExpenses(e: EncryptedExpenses)(implicit textAndKey: TextAndKey): Expenses ={
+  private def decryptExpenses(e: EncryptedExpenses)(implicit textAndKey: TextAndKey): Expenses = {
     Expenses(
-      businessTravelCosts = e.businessTravelCosts.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-      jobExpenses = e.jobExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-      flatRateJobExpenses = e.flatRateJobExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-      professionalSubscriptions = e.professionalSubscriptions.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-      hotelAndMealExpenses = e.hotelAndMealExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-      otherAndCapitalAllowances = e.otherAndCapitalAllowances.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-      vehicleExpenses = e.vehicleExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-      mileageAllowanceRelief = e.mileageAllowanceRelief.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce))
+      businessTravelCosts = e.businessTravelCosts.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      jobExpenses = e.jobExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      flatRateJobExpenses = e.flatRateJobExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      professionalSubscriptions = e.professionalSubscriptions.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      hotelAndMealExpenses = e.hotelAndMealExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      otherAndCapitalAllowances = e.otherAndCapitalAllowances.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      vehicleExpenses = e.vehicleExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      mileageAllowanceRelief = e.mileageAllowanceRelief.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce))
     )
   }
 
-  def decryptUserData(userData: EncryptedUserData): UserData ={
-    implicit val textAndKey: TextAndKey = TextAndKey(userData.mtdItId,appConfig.encryptionKey)
+  def decryptUserData(userData: EncryptedUserData): UserData = {
+    implicit val textAndKey: TextAndKey = TextAndKey(userData.mtdItId, appConfig.encryptionKey)
 
     UserData(
       sessionId = userData.sessionId,
@@ -362,73 +361,73 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def decryptDividends(dividends: EncryptedDividendsModel)(implicit textAndKey: TextAndKey): DividendsModel ={
-    DividendsModel(
-      dividends.ukDividends.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-      dividends.otherUkDividends.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce))
+  private def decryptDividends(dividends: EncryptedDividends)(implicit textAndKey: TextAndKey): Dividends = {
+    Dividends(
+      dividends.ukDividends.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      dividends.otherUkDividends.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce))
     )
   }
 
-  private def decryptInterest(interest: Seq[EncryptedInterestModel])(implicit textAndKey: TextAndKey): Seq[InterestModel] ={
-    interest.map{
+  private def decryptInterest(interest: Seq[EncryptedInterest])(implicit textAndKey: TextAndKey): Seq[Interest] = {
+    interest.map {
       interest =>
-        InterestModel(
-          accountName = encryptionService.decrypt[String](interest.accountName.value,interest.accountName.nonce),
-          incomeSourceId = encryptionService.decrypt[String](interest.incomeSourceId.value,interest.incomeSourceId.nonce),
-          taxedUkInterest = interest.taxedUkInterest.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-          untaxedUkInterest = interest.untaxedUkInterest.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce))
+        Interest(
+          accountName = encryptionService.decrypt[String](interest.accountName.value, interest.accountName.nonce),
+          incomeSourceId = encryptionService.decrypt[String](interest.incomeSourceId.value, interest.incomeSourceId.nonce),
+          taxedUkInterest = interest.taxedUkInterest.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+          untaxedUkInterest = interest.untaxedUkInterest.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce))
         )
     }
   }
 
-  private def decryptGiftAid(giftAid: EncryptedGiftAidModel)(implicit textAndKey: TextAndKey): GiftAidModel ={
+  private def decryptGiftAid(giftAid: EncryptedGiftAid)(implicit textAndKey: TextAndKey): GiftAid = {
 
-    val dGiftAidPayments: Option[GiftAidPaymentsModel] = {
-      giftAid.giftAidPayments.map{
+    val dGiftAidPayments: Option[GiftAidPayments] = {
+      giftAid.giftAidPayments.map {
         g =>
-          GiftAidPaymentsModel(
-            nonUkCharitiesCharityNames = g.nonUkCharitiesCharityNames.map(_.map(x => encryptionService.decrypt[String](x.value,x.nonce))),
-            currentYear = g.currentYear.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-            oneOffCurrentYear = g.oneOffCurrentYear.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-            currentYearTreatedAsPreviousYear = g.currentYearTreatedAsPreviousYear.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-            nextYearTreatedAsCurrentYear = g.nextYearTreatedAsCurrentYear.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-            nonUkCharities = g.nonUkCharities.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce))
+          GiftAidPayments(
+            nonUkCharitiesCharityNames = g.nonUkCharitiesCharityNames.map(_.map(x => encryptionService.decrypt[String](x.value, x.nonce))),
+            currentYear = g.currentYear.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+            oneOffCurrentYear = g.oneOffCurrentYear.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+            currentYearTreatedAsPreviousYear = g.currentYearTreatedAsPreviousYear.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+            nextYearTreatedAsCurrentYear = g.nextYearTreatedAsCurrentYear.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+            nonUkCharities = g.nonUkCharities.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce))
           )
       }
     }
 
-    val dGifts: Option[GiftsModel] = {
+    val dGifts: Option[Gifts] = {
       giftAid.gifts.map {
         g =>
-          GiftsModel(
-            investmentsNonUkCharitiesCharityNames = g.investmentsNonUkCharitiesCharityNames.map(_.map(x => encryptionService.decrypt[String](x.value,x.nonce))),
-            landAndBuildings = g.landAndBuildings.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-            sharesOrSecurities = g.sharesOrSecurities.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
-            investmentsNonUkCharities = g.investmentsNonUkCharities.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce))
+          Gifts(
+            investmentsNonUkCharitiesCharityNames = g.investmentsNonUkCharitiesCharityNames.map(_.map(x => encryptionService.decrypt[String](x.value, x.nonce))),
+            landAndBuildings = g.landAndBuildings.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+            sharesOrSecurities = g.sharesOrSecurities.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+            investmentsNonUkCharities = g.investmentsNonUkCharities.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce))
           )
       }
     }
 
-    GiftAidModel(giftAidPayments = dGiftAidPayments, gifts = dGifts)
+    GiftAid(giftAidPayments = dGiftAidPayments, gifts = dGifts)
   }
 
-  private def decryptEmployment(employment: EncryptedAllEmploymentData)(implicit textAndKey: TextAndKey): AllEmploymentData={
-    val hmrcExpenses = employment.hmrcExpenses.map{
+  private def decryptEmployment(employment: EncryptedAllEmploymentData)(implicit textAndKey: TextAndKey): AllEmploymentData = {
+    val hmrcExpenses = employment.hmrcExpenses.map {
       e =>
         EmploymentExpenses(
-          submittedOn = e.submittedOn.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-          dateIgnored = e.dateIgnored.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-          totalExpenses = e.totalExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
+          submittedOn = e.submittedOn.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+          dateIgnored = e.dateIgnored.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+          totalExpenses = e.totalExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
           expenses = e.expenses.map(decryptExpenses)
         )
     }
 
-    val customerExpenses = employment.customerExpenses.map{
+    val customerExpenses = employment.customerExpenses.map {
       e =>
         EmploymentExpenses(
-          submittedOn = e.submittedOn.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-          dateIgnored = e.dateIgnored.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-          totalExpenses = e.totalExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value,x.nonce)),
+          submittedOn = e.submittedOn.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+          dateIgnored = e.dateIgnored.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+          totalExpenses = e.totalExpenses.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
           expenses = e.expenses.map(decryptExpenses)
         )
     }
@@ -443,7 +442,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def encryptPensions(pensions: PensionsModel)(implicit textAndKey: TextAndKey): EncryptedPensionsModel = {
+  private def encryptPensions(pensions: Pensions)(implicit textAndKey: TextAndKey): EncryptedPensions = {
     val ePensionReliefs: Option[EncryptedPensionReliefs] = {
       pensions.pensionReliefs.map {
         r =>
@@ -479,7 +478,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       }
     }
 
-    EncryptedPensionsModel(
+    EncryptedPensions(
       pensionReliefs = ePensionReliefs,
       pensionCharges = ePensionCharges,
       stateBenefits = eStateBenefitsModel
@@ -496,7 +495,8 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       bereavementAllowance = s.bereavementAllowance.map(encryptStateBenefit),
       otherStateBenefits = s.otherStateBenefits.map(encryptStateBenefit)
 
-    )  }
+    )
+  }
 
   private def encryptStateBenefit(s: StateBenefit)(implicit textAndKey: TextAndKey): EncryptedStateBenefit = {
     EncryptedStateBenefit(
@@ -536,7 +536,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def encryptPensionSavingsTaxCharges(p:PensionSavingsTaxCharges)(implicit textAndKey: TextAndKey): EncryptedPensionSavingsTaxCharges = {
+  private def encryptPensionSavingsTaxCharges(p: PensionSavingsTaxCharges)(implicit textAndKey: TextAndKey): EncryptedPensionSavingsTaxCharges = {
     EncryptedPensionSavingsTaxCharges(
       pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(encryptionService.encrypt),
       lumpSumBenefitTakenInExcessOfLifetimeAllowance = p.lumpSumBenefitTakenInExcessOfLifetimeAllowance.map(encryptLifeTimeAllowance),
@@ -546,6 +546,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       moneyPurchasedAllowance = p.moneyPurchasedAllowance.map(encryptionService.encrypt)
     )
   }
+
   private def encryptOverseasPensionContributions(o: OverseasPensionContributions)(implicit textAndKey: TextAndKey): EncryptedOverseasPensionContributions = {
     EncryptedOverseasPensionContributions(
       overseasSchemeProvider = o.overseasSchemeProvider.map(encryptOverseasSchemeProvider),
@@ -572,6 +573,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       pensionSchemeTaxReference = overseasSchemeProvider.pensionSchemeTaxReference.map(_.map(x => encryptionService.encrypt(x)))
     )
   }
+
   private def encryptLifeTimeAllowance(lifeTimeAllowance: LifetimeAllowance)(implicit textAndKey: TextAndKey): EncryptedLifetimeAllowance = {
     EncryptedLifetimeAllowance(
       amount = encryptionService.encrypt(lifeTimeAllowance.amount),
@@ -599,9 +601,9 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def decryptPensionSavingsTaxCharges(p:EncryptedPensionSavingsTaxCharges)(implicit textAndKey: TextAndKey): PensionSavingsTaxCharges = {
+  private def decryptPensionSavingsTaxCharges(p: EncryptedPensionSavingsTaxCharges)(implicit textAndKey: TextAndKey): PensionSavingsTaxCharges = {
     PensionSavingsTaxCharges(
-      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(x=> encryptionService.decrypt[String](x.value, x.nonce)),
+      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
       lumpSumBenefitTakenInExcessOfLifetimeAllowance = p.lumpSumBenefitTakenInExcessOfLifetimeAllowance.map(decryptLifeTimeAllowance),
       benefitInExcessOfLifetimeAllowance = p.benefitInExcessOfLifetimeAllowance.map(decryptLifeTimeAllowance),
       isAnnualAllowanceReduced = encryptionService.decrypt[Boolean](p.isAnnualAllowanceReduced.value, p.isAnnualAllowanceReduced.nonce),
@@ -635,7 +637,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
         overseasSchemeProvider.providerCountryCode.value, overseasSchemeProvider.providerCountryCode.nonce),
       qualifyingRecognisedOverseasPensionScheme = overseasSchemeProvider.qualifyingRecognisedOverseasPensionScheme.map(_.map(
         x => encryptionService.decrypt[String](x.value, x.nonce))),
-      pensionSchemeTaxReference = overseasSchemeProvider.pensionSchemeTaxReference.map(_.map(x =>encryptionService.decrypt[String](x.value, x.nonce)))
+      pensionSchemeTaxReference = overseasSchemeProvider.pensionSchemeTaxReference.map(_.map(x => encryptionService.decrypt[String](x.value, x.nonce)))
     )
   }
 
@@ -680,7 +682,8 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       jobSeekersAllowance = s.jobSeekersAllowance.map(_.map(decryptStateBenefit)),
       bereavementAllowance = s.bereavementAllowance.map(decryptStateBenefit),
       otherStateBenefits = s.otherStateBenefits.map(decryptStateBenefit)
-    )  }
+    )
+  }
 
   private def decryptStateBenefit(s: EncryptedStateBenefit)(implicit textAndKey: TextAndKey): StateBenefit = {
     StateBenefit(
@@ -694,7 +697,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def decryptPensions(pensions: EncryptedPensionsModel)(implicit textAndKey: TextAndKey): PensionsModel = {
+  private def decryptPensions(pensions: EncryptedPensions)(implicit textAndKey: TextAndKey): Pensions = {
     val pensionReliefs: Option[PensionReliefs] = pensions.pensionReliefs.map {
       r =>
         PensionReliefs(
@@ -704,27 +707,27 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
         )
     }
 
-    val pensionCharges: Option[PensionCharges] = pensions.pensionCharges.map{
-        c =>
-          PensionCharges(
-            submittedOn = encryptionService.decrypt[String](c.submittedOn.value, c.submittedOn.nonce),
-            pensionSavingsTaxCharges = c.pensionSavingsTaxCharges.map(decryptPensionSavingsTaxCharges),
-            pensionSchemeOverseasTransfers = c.pensionSchemeOverseasTransfers.map(decryptPensionSchemeOverseasTransfers),
-            pensionSchemeUnauthorisedPayments = c.pensionSchemeUnauthorisedPayments.map(decryptPensionSchemeUnauthorisedPayments),
-            pensionContributions = c.pensionContributions.map(decryptPensionContributions),
-            overseasPensionContributions = c.overseasPensionContributions.map(decryptOverseasPensionContributions)
-          )
-      }
+    val pensionCharges: Option[PensionCharges] = pensions.pensionCharges.map {
+      c =>
+        PensionCharges(
+          submittedOn = encryptionService.decrypt[String](c.submittedOn.value, c.submittedOn.nonce),
+          pensionSavingsTaxCharges = c.pensionSavingsTaxCharges.map(decryptPensionSavingsTaxCharges),
+          pensionSchemeOverseasTransfers = c.pensionSchemeOverseasTransfers.map(decryptPensionSchemeOverseasTransfers),
+          pensionSchemeUnauthorisedPayments = c.pensionSchemeUnauthorisedPayments.map(decryptPensionSchemeUnauthorisedPayments),
+          pensionContributions = c.pensionContributions.map(decryptPensionContributions),
+          overseasPensionContributions = c.overseasPensionContributions.map(decryptOverseasPensionContributions)
+        )
+    }
 
     val stateBenefitsModel: Option[StateBenefitsModel] = pensions.stateBenefits.map {
-        s =>
-          StateBenefitsModel(
-            stateBenefits = s.stateBenefits.map(decryptStateBenefits),
-            customerAddedStateBenefits = s.customerAddedStateBenefits.map(decryptStateBenefits)
-          )
-      }
+      s =>
+        StateBenefitsModel(
+          stateBenefits = s.stateBenefits.map(decryptStateBenefits),
+          customerAddedStateBenefits = s.customerAddedStateBenefits.map(decryptStateBenefits)
+        )
+    }
 
-    PensionsModel(
+    Pensions(
       pensionReliefs = pensionReliefs,
       pensionCharges = pensionCharges,
       stateBenefits = stateBenefitsModel

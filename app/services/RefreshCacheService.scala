@@ -18,11 +18,10 @@ package services
 
 import common.IncomeSources._
 import config.AppConfig
-import javax.inject.{Inject, Singleton}
-import models.employment.frontend.AllEmploymentData
-import models.giftAid.GiftAidModel
 import models._
-import models.pensions.PensionsModel
+import models.employment.AllEmploymentData
+import models.gifts.GiftAid
+import models.pensions.Pensions
 import play.api.Logging
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.Json
@@ -30,8 +29,8 @@ import play.api.mvc.Result
 import play.api.mvc.Results.{NoContent, NotFound, Status}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-
 
 @Singleton
 class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesService,
@@ -43,11 +42,11 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
 
     getLatestDataForIncomeSource(taxYear, incomeSource).flatMap {
       case Right(None) => updateCacheBasedOnNewData(taxYear, incomeSource, None)
-      case Right(Some(model: DividendsModel)) => updateCacheBasedOnNewData[DividendsModel](taxYear, incomeSource, Some(model))
+      case Right(Some(model: Dividends)) => updateCacheBasedOnNewData[Dividends](taxYear, incomeSource, Some(model))
       case Right(Some(model: AllEmploymentData)) => updateCacheBasedOnNewData[AllEmploymentData](taxYear, incomeSource, Some(model))
-      case Right(Some(model: GiftAidModel)) => updateCacheBasedOnNewData[GiftAidModel](taxYear, incomeSource, Some(model))
-      case Right(Some(model: List[InterestModel])) => updateCacheBasedOnNewData[List[InterestModel]](taxYear, incomeSource, Some(model))
-      case Right(Some(model: PensionsModel)) => updateCacheBasedOnNewData[PensionsModel](taxYear, incomeSource, Some(model))
+      case Right(Some(model: GiftAid)) => updateCacheBasedOnNewData[GiftAid](taxYear, incomeSource, Some(model))
+      case Right(Some(model: List[Interest])) => updateCacheBasedOnNewData[List[Interest]](taxYear, incomeSource, Some(model))
+      case Right(Some(model: Pensions)) => updateCacheBasedOnNewData[Pensions](taxYear, incomeSource, Some(model))
       case Left(error) => Future.successful(Status(error.status)(error.toJson))
       case _ => Future.successful(Status(INTERNAL_SERVER_ERROR)(Json.toJson(APIErrorBodyModel.parsingError)))
 
@@ -71,11 +70,11 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
 
   private def createModelFromNewData[A](newData: Option[A], currentData: IncomeSourcesResponseModel, incomeSource: String): IncomeSourcesResponseModel = {
     newData match {
-      case Some(model: DividendsModel) => currentData.copy(dividends = Some(model))
+      case Some(model: Dividends) => currentData.copy(dividends = Some(model))
       case Some(model: AllEmploymentData) => currentData.copy(employment = Some(model))
-      case Some(model: GiftAidModel) => currentData.copy(giftAid = Some(model))
-      case Some(model: List[InterestModel]) => currentData.copy(interest = Some(model))
-      case Some(model: PensionsModel) => currentData.copy(pensions = Some(model))
+      case Some(model: GiftAid) => currentData.copy(giftAid = Some(model))
+      case Some(model: List[Interest]) => currentData.copy(interest = Some(model))
+      case Some(model: Pensions) => currentData.copy(pensions = Some(model))
       case _ => defaultCurrentData(currentData, incomeSource)
 
     }

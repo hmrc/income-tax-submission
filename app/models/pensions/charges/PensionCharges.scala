@@ -19,29 +19,23 @@ package models.pensions.charges
 import play.api.libs.json.{Json, OFormat}
 import utils.EncryptedValue
 
-case class PensionCharges(
-                           submittedOn: String,
-                           pensionSavingsTaxCharges: Option[PensionSavingsTaxCharges],
-                           pensionSchemeOverseasTransfers: Option[PensionSchemeOverseasTransfers],
-                           pensionSchemeUnauthorisedPayments: Option[PensionSchemeUnauthorisedPayments],
-                           pensionContributions: Option[PensionContributions],
-                           overseasPensionContributions: Option[OverseasPensionContributions]) {
-
-}
+case class PensionCharges(submittedOn: String,
+                          pensionSavingsTaxCharges: Option[PensionSavingsTaxCharges],
+                          pensionSchemeOverseasTransfers: Option[PensionSchemeOverseasTransfers],
+                          pensionSchemeUnauthorisedPayments: Option[PensionSchemeUnauthorisedPayments],
+                          pensionContributions: Option[PensionContributions],
+                          overseasPensionContributions: Option[OverseasPensionContributions])
 
 object PensionCharges {
   implicit val format: OFormat[PensionCharges] = Json.format[PensionCharges]
 }
 
-case class EncryptedPensionCharges(
-                                    submittedOn: EncryptedValue,
-                                    pensionSavingsTaxCharges: Option[EncryptedPensionSavingsTaxCharges],
-                                    pensionSchemeOverseasTransfers: Option[EncryptedPensionSchemeOverseasTransfers],
-                                    pensionSchemeUnauthorisedPayments: Option[EncryptedPensionSchemeUnauthorisedPayments],
-                                    pensionContributions: Option[EncryptedPensionContributions],
-                                    overseasPensionContributions: Option[EncryptedOverseasPensionContributions]) {
-
-}
+case class EncryptedPensionCharges(submittedOn: EncryptedValue,
+                                   pensionSavingsTaxCharges: Option[EncryptedPensionSavingsTaxCharges],
+                                   pensionSchemeOverseasTransfers: Option[EncryptedPensionSchemeOverseasTransfers],
+                                   pensionSchemeUnauthorisedPayments: Option[EncryptedPensionSchemeUnauthorisedPayments],
+                                   pensionContributions: Option[EncryptedPensionContributions],
+                                   overseasPensionContributions: Option[EncryptedOverseasPensionContributions])
 
 object EncryptedPensionCharges {
   implicit val format: OFormat[EncryptedPensionCharges] = Json.format[EncryptedPensionCharges]

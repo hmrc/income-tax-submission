@@ -16,10 +16,10 @@
 
 package models.mongo
 
-import models.employment.frontend.{AllEmploymentData, EncryptedAllEmploymentData}
-import models.giftAid.{EncryptedGiftAidModel, GiftAidModel}
-import models.pensions.{EncryptedPensionsModel, PensionsModel}
-import models.{DividendsModel, EncryptedDividendsModel, EncryptedInterestModel, IncomeSourcesResponseModel, InterestModel}
+import models._
+import models.employment.{AllEmploymentData, EncryptedAllEmploymentData}
+import models.gifts.{EncryptedGiftAid, GiftAid}
+import models.pensions.{EncryptedPensions, Pensions}
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
@@ -28,11 +28,11 @@ case class UserData(sessionId: String,
                     mtdItId: String,
                     nino: String,
                     taxYear: Int,
-                    dividends: Option[DividendsModel] = None,
-                    interest: Option[Seq[InterestModel]] = None,
-                    giftAid: Option[GiftAidModel] = None,
+                    dividends: Option[Dividends] = None,
+                    interest: Option[Seq[Interest]] = None,
+                    giftAid: Option[GiftAid] = None,
                     employment: Option[AllEmploymentData] = None,
-                    pensions: Option[PensionsModel] = None,
+                    pensions: Option[Pensions] = None,
                     lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)) {
 
   def toIncomeSourcesResponseModel: IncomeSourcesResponseModel = {
@@ -51,11 +51,11 @@ case class EncryptedUserData(sessionId: String,
                              mtdItId: String,
                              nino: String,
                              taxYear: Int,
-                             dividends: Option[EncryptedDividendsModel] = None,
-                             interest: Option[Seq[EncryptedInterestModel]] = None,
-                             giftAid: Option[EncryptedGiftAidModel] = None,
+                             dividends: Option[EncryptedDividends] = None,
+                             interest: Option[Seq[EncryptedInterest]] = None,
+                             giftAid: Option[EncryptedGiftAid] = None,
                              employment: Option[EncryptedAllEmploymentData] = None,
-                             pensions: Option[EncryptedPensionsModel] = None,
+                             pensions: Option[EncryptedPensions] = None,
                              lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC))
 
 object EncryptedUserData extends MongoJodaFormats {

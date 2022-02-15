@@ -21,15 +21,14 @@ import com.codahale.metrics.SharedMetricRegistries
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
 import config.AppConfig
 import controllers.predicates.AuthorisedAction
-import models.employment.frontend._
-import models.employment.shared._
-import models.giftAid.{GiftAidModel, GiftAidPaymentsModel, GiftsModel}
+import models.employment._
+import models.gifts.{GiftAid, GiftAidPayments, Gifts}
 import models.mongo.UserData
 import models.pensions._
 import models.pensions.charges._
 import models.pensions.reliefs.{PensionReliefs, Reliefs}
 import models.pensions.statebenefits.{StateBenefit, StateBenefits, StateBenefitsModel}
-import models.{DividendsModel, IncomeSourcesResponseModel, InterestModel}
+import models.{Dividends, IncomeSourcesResponseModel, Interest}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.must.Matchers
@@ -238,8 +237,8 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
     )
 
 
-  lazy val dividendsModel: Option[DividendsModel] = Some(DividendsModel(Some(100.00), Some(100.00)))
-  lazy val interestsModel: Option[List[InterestModel]] = Some(List(InterestModel("TestName", "TestSource", Some(100.00), Some(100.00))))
+  lazy val dividendsModel: Option[Dividends] = Some(Dividends(Some(100.00), Some(100.00)))
+  lazy val interestsModel: Option[List[Interest]] = Some(List(Interest("TestName", "TestSource", Some(100.00), Some(100.00))))
   lazy val employmentsModel: AllEmploymentData = AllEmploymentData(
     hmrcEmploymentData = Seq(
       EmploymentSource(
@@ -274,7 +273,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
     customerEmploymentData = Seq(),
     customerExpenses = None
   )
-  val giftAidPaymentsModel: Option[GiftAidPaymentsModel] = Some(GiftAidPaymentsModel(
+  val giftAidPaymentsModel: Option[GiftAidPayments] = Some(GiftAidPayments(
     nonUkCharitiesCharityNames = Some(List("non uk charity name", "non uk charity name 2")),
     currentYear = Some(1234.56),
     oneOffCurrentYear = Some(1234.56),
@@ -283,19 +282,19 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
     nonUkCharities = Some(1234.56),
   ))
 
-  val giftsModel: Option[GiftsModel] = Some(GiftsModel(
+  val giftsModel: Option[Gifts] = Some(Gifts(
     investmentsNonUkCharitiesCharityNames = Some(List("charity 1", "charity 2")),
     landAndBuildings = Some(10.21),
     sharesOrSecurities = Some(10.21),
     investmentsNonUkCharities = Some(1234.56)
   ))
 
-  val giftAidModel: GiftAidModel = GiftAidModel(
+  val giftAidModel: GiftAid = GiftAid(
     giftAidPaymentsModel,
     giftsModel
   )
 
-  val fullPensionsModel = PensionsModel(
+  val fullPensionsModel = Pensions(
     pensionReliefs = Some(PensionReliefs(
       submittedOn = "2020-01-04T05:01:01Z",
       deletedOn = Some("2020-01-04T05:01:01Z"),
@@ -398,7 +397,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
           amount = Some(44545.43),
           taxPaid = Some(35343.23)
         ))),
-        jobSeekersAllowance  = Some(List(StateBenefit(
+        jobSeekersAllowance = Some(List(StateBenefit(
           benefitId = "a1e8057e-fbbc-47a8-a8b4-78d9f015c938",
           startDate = "2019-09-19",
           dateIgnored = Some("2019-08-18T13:23:00Z"),
@@ -463,7 +462,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
           taxPaid = Some(23232.34),
           dateIgnored = None
         ))),
-        jobSeekersAllowance  = Some(List(StateBenefit(
+        jobSeekersAllowance = Some(List(StateBenefit(
           benefitId = "a1e8057e-fbbc-47a8-a8b4-78d9f015c990",
           startDate = "2019-07-10",
           submittedOn = Some("2020-05-13T14:23:00Z"),
@@ -505,8 +504,8 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
     Some(employmentsModel)
   )
 
-  val incomeSourcesResponse: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(DividendsModel(Some(123456.78), Some(123456.78))),
-    Some(Seq(InterestModel("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAidModel(giftAidPaymentsModel, giftsModel)),
+  val incomeSourcesResponse: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(Dividends(Some(123456.78), Some(123456.78))),
+    Some(Seq(Interest("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAid(giftAidPaymentsModel, giftsModel)),
     Some(allEmploymentData), Some(fullPensionsModel))
 }
 

@@ -16,6 +16,11 @@
 
 package api
 
+import builders.models.DividendsBuilder.aDividends
+import builders.models.InterestsBuilder.anInterest
+import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
+import builders.models.gifts.GiftAidBuilder.aGiftAid
+import builders.models.pensions.PensionsBuilder.aPensions
 import helpers.IntegrationSpec
 import models.mongo.UserData
 import org.scalatest.concurrent.ScalaFutures
@@ -29,16 +34,16 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
 
   private def count = await(repo.collection.countDocuments().toFuture())
 
-  override val userData: UserData = UserData(
+  private val userData: UserData = UserData(
     "sessionId-1618a1e8-4979-41d8-a32e-5ffbe69fac81",
     "555555555",
     "AA123123A",
     2022,
-    dividendsModel,
-    interestsModel,
-    Some(giftAidModel),
-    Some(employmentsModel),
-    Some(fullPensionsModel)
+    Some(aDividends),
+    Some(Seq(anInterest)),
+    Some(aGiftAid),
+    Some(anAllEmploymentData),
+    Some(aPensions)
   )
 
   trait Setup {

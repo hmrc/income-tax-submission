@@ -26,7 +26,7 @@ class SubmittedDividendsModelSpec extends TestUtils {
     "otherUkDividends" -> 5
   )
 
-  val validModel: DividendsModel = DividendsModel(
+  val validModel: Dividends = Dividends(
     ukDividends = Some(10),
     otherUkDividends = Some(5)
   )
@@ -34,7 +34,7 @@ class SubmittedDividendsModelSpec extends TestUtils {
   "DividendsResponseModel" should {
 
     "correctly parse from Json" in {
-      validJson.as[DividendsModel] mustBe validModel
+      validJson.as[Dividends] mustBe validModel
     }
 
     "correctly parse to Json" in {

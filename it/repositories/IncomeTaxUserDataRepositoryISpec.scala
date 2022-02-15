@@ -16,6 +16,8 @@
 
 package repositories
 
+import builders.models.DividendsBuilder.aDividends
+import builders.models.mongo.UserDataBuilder.aUserData
 import com.mongodb.client.result.InsertOneResult
 import helpers.IntegrationSpec
 import models.User
@@ -40,6 +42,7 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
   val encryption: EncryptionService = app.injector.instanceOf[EncryptionService]
 
   private def count = await(repo.collection.countDocuments().toFuture())
+
   private def countFromOtherDatabase = await(repo.collection.countDocuments().toFuture())
 
   val repoWithInvalidEncryption: IncomeTaxUserDataRepositoryImpl = appWithInvalidEncryptionKey.injector.instanceOf[IncomeTaxUserDataRepositoryImpl]
@@ -58,7 +61,7 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
   "update with invalid encryption" should {
     "fail to add data" in new EmptyDatabase {
       countFromOtherDatabase mustBe 0
-      val res: Either[DatabaseError, Unit] = await(repoWithInvalidEncryption.update(userData))
+      val res: Either[DatabaseError, Unit] = await(repoWithInvalidEncryption.update(aUserData))
       res mustBe Left(EncryptionDecryptionError(
         "Key being used is not valid. It could be due to invalid encoding, wrong length or uninitialized for encrypt Invalid AES key length: 2 bytes"))
     }
@@ -67,9 +70,9 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
   "find with invalid encryption" should {
     "fail to find data" in new EmptyDatabase {
       countFromOtherDatabase mustBe 0
-      await(repoWithInvalidEncryption.collection.insertOne(encryption.encryptUserData(userData)).toFuture())
+      await(repoWithInvalidEncryption.collection.insertOne(encryption.encryptUserData(aUserData)).toFuture())
       countFromOtherDatabase mustBe 1
-      val res = await(repoWithInvalidEncryption.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      val res = await(repoWithInvalidEncryption.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
       res mustBe Left(EncryptionDecryptionError(
         "Key being used is not valid. It could be due to invalid encoding, wrong length or uninitialized for decrypt Invalid AES key length: 2 bytes"))
     }
@@ -77,7 +80,7 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
 
   "handleEncryptionDecryptionException" should {
     "handle an exception" in {
-      val res = repoWithInvalidEncryption.handleEncryptionDecryptionException(new Exception("fail"),"")
+      val res = repoWithInvalidEncryption.handleEncryptionDecryptionException(new Exception("fail"), "")
       res mustBe Left(EncryptionDecryptionError("fail"))
     }
   }
@@ -93,11 +96,11 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       await(ensureIndexes)
       count mustBe 0
 
-      val res = await(repo.update(userData))
+      val res = await(repo.update(aUserData))
       res mustBe Right()
       count mustBe 1
 
-      val res2 = await(repo.update(userData.copy(sessionId = "1234567890")))
+      val res2 = await(repo.update(aUserData.copy(sessionId = "1234567890")))
       res2.left.get.message must include("Command failed with error 11000 (DuplicateKey)")
       count mustBe 1
 
@@ -105,37 +108,37 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
     }
     "add a document to the collection" in new EmptyDatabase {
       count mustBe 0
-      val res = await(repo.update(userData))
+      val res = await(repo.update(aUserData))
       res mustBe Right()
       count mustBe 1
-      val data = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      val data = await(repo.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
       data.right.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
-        userData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
+        aUserData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
       )
     }
     "upsert a document to the collection when already exists" in {
       count mustBe 1
-      val res = await(repo.update(userData))
+      val res = await(repo.update(aUserData))
       res mustBe Right()
       count mustBe 1
-      val data = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      val data = await(repo.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
       data.right.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
-        userData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
+        aUserData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
       )
     }
     "update a document in the collection" in {
-      val newUserData = userData.copy(dividends = dividendsModel.map(_.copy(ukDividends = Some(344565.44))))
+      val newUserData = aUserData.copy(dividends = Some(aDividends.copy(ukDividends = Some(344565.44))))
       count mustBe 1
       val res = await(repo.update(newUserData))
       res mustBe Right()
       count mustBe 1
-      val data = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      val data = await(repo.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
       data.right.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
         newUserData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
       )
     }
     "insert a new document to the collection if the sessionId is different" in {
-      val newUserData = userData.copy(sessionId = "sessionId-000001")
+      val newUserData = aUserData.copy(sessionId = "sessionId-000001")
       count mustBe 1
       val res = await(repo.update(newUserData))
       res mustBe Right()
@@ -154,8 +157,8 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
 
     "get a document and update the TTL" in {
       count mustBe 2
-      val dataBefore: UserData = encryption.decryptUserData(await(repo.collection.find(filter(userData.sessionId,userData.mtdItId,userData.nino,userData.taxYear)).toFuture()).head)
-      val dataAfter = await(repo.find(User(userData.mtdItId,None,userData.nino,userData.sessionId),userData.taxYear))
+      val dataBefore: UserData = encryption.decryptUserData(await(repo.collection.find(filter(aUserData.sessionId, aUserData.mtdItId, aUserData.nino, aUserData.taxYear)).toFuture()).head)
+      val dataAfter = await(repo.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
 
       dataAfter.right.get.map(_.copy(lastUpdated = dataBefore.lastUpdated)) mustBe Some(dataBefore)
       dataAfter.right.get.map(_.lastUpdated.isAfter(dataBefore.lastUpdated)) mustBe Some(true)
@@ -164,8 +167,8 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
 
   "the set indexes" should {
     "enforce uniqueness" in {
-      val result: Either[Exception,InsertOneResult] = try {
-        Right(await(repo.collection.insertOne(encryption.encryptUserData(userData)).toFuture()))
+      val result: Either[Exception, InsertOneResult] = try {
+        Right(await(repo.collection.insertOne(encryption.encryptUserData(aUserData)).toFuture()))
       } catch {
         case e: Exception => Left(e)
       }

@@ -17,21 +17,18 @@
 package connectors
 
 import config.AppConfig
-import connectors.httpParsers.SubmittedGiftAidParser.{IncomeSourcesResponseModel, SubmittedGiftAidHttpReads}
+import connectors.parsers.SubmittedGiftAidParser.{IncomeSourcesResponseModel, SubmittedGiftAidHttpReads}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class IncomeTaxGiftAidConnector @Inject()(val http: HttpClient,
-                                          val config: AppConfig)(implicit ec: ExecutionContext) extends Connector {
+class IncomeTaxGiftAidConnector @Inject()(val http: HttpClient, val config: AppConfig)
+                                         (implicit ec: ExecutionContext) extends Connector {
 
   def getSubmittedGiftAid(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
     val giftAidUrl: String = config.giftAidBaseUrl + s"/income-tax-gift-aid/income-tax/nino/$nino/sources?taxYear=$taxYear"
 
-    val updatedHeaderCarrier = addHeadersToHeaderCarrier(giftAidUrl)
-
-    http.GET[IncomeSourcesResponseModel](giftAidUrl)(SubmittedGiftAidHttpReads, updatedHeaderCarrier, ec)
+    http.GET[IncomeSourcesResponseModel](giftAidUrl)(SubmittedGiftAidHttpReads, addHeadersToHeaderCarrier(giftAidUrl), ec)
   }
-
 }
