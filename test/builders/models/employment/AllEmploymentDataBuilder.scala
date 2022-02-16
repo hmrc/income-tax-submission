@@ -25,7 +25,7 @@ object AllEmploymentDataBuilder {
   val anAllEmploymentData: AllEmploymentData = AllEmploymentData(
     hmrcEmploymentData = Seq(anEmploymentSource),
     hmrcExpenses = Some(anEmploymentExpenses),
-    customerEmploymentData = Seq(),
-    customerExpenses = None
+    customerEmploymentData = Seq(anEmploymentSource),
+    customerExpenses = Some(anEmploymentExpenses)
   )
 }

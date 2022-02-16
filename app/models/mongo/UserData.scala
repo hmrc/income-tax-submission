@@ -17,6 +17,7 @@
 package models.mongo
 
 import models._
+import models.cis.{AllCISDeductions, EncryptedAllCISDeductions}
 import models.employment.{AllEmploymentData, EncryptedAllEmploymentData}
 import models.gifts.{EncryptedGiftAid, GiftAid}
 import models.pensions.{EncryptedPensions, Pensions}
@@ -33,10 +34,11 @@ case class UserData(sessionId: String,
                     giftAid: Option[GiftAid] = None,
                     employment: Option[AllEmploymentData] = None,
                     pensions: Option[Pensions] = None,
+                    cis: Option[AllCISDeductions] = None,
                     lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)) {
 
-  def toIncomeSourcesResponseModel: IncomeSourcesResponseModel = {
-    IncomeSourcesResponseModel(dividends, interest, giftAid, employment, pensions)
+  def toIncomeSourcesResponseModel: IncomeSources = {
+    IncomeSources(dividends, interest, giftAid, employment, pensions, cis)
   }
 }
 
@@ -56,6 +58,7 @@ case class EncryptedUserData(sessionId: String,
                              giftAid: Option[EncryptedGiftAid] = None,
                              employment: Option[EncryptedAllEmploymentData] = None,
                              pensions: Option[EncryptedPensions] = None,
+                             cis: Option[EncryptedAllCISDeductions] = None,
                              lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC))
 
 object EncryptedUserData extends MongoJodaFormats {

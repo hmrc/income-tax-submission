@@ -18,23 +18,22 @@ package services
 
 import config.AppConfig
 import models.mongo.{DatabaseError, UserData}
-import models.{APIErrorBodyModel, APIErrorModel, IncomeSourcesResponseModel, User}
+import models.{APIErrorBodyModel, APIErrorModel, IncomeSources, User}
 import play.api.Logging
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.mvc.Result
 import play.api.mvc.Results.Status
 import repositories.IncomeTaxUserDataRepository
+
 import javax.inject.{Inject, Singleton}
-
 import scala.concurrent.{ExecutionContext, Future}
-
 
 @Singleton
 class IncomeTaxUserDataService @Inject()(incomeTaxUserDataRepository: IncomeTaxUserDataRepository,
                                          implicit private val appConfig: AppConfig) extends Logging {
 
   def saveUserData(taxYear: Int,
-                   incomeSourcesModel: Option[IncomeSourcesResponseModel] = None)
+                   incomeSourcesModel: Option[IncomeSources] = None)
                   (result: Result)
                   (implicit user: User[_], ec: ExecutionContext): Future[Result] = {
 
@@ -52,7 +51,7 @@ class IncomeTaxUserDataService @Inject()(incomeTaxUserDataRepository: IncomeTaxU
                              mtdItId: String,
                              nino: String,
                              taxYear: Int,
-                             incomeSourcesModel: Option[IncomeSourcesResponseModel]): Future[Either[DatabaseError, Unit]] = {
+                             incomeSourcesModel: Option[IncomeSources]): Future[Either[DatabaseError, Unit]] = {
 
     val userData = UserData(
       sessionId, mtdItId, nino, taxYear,
@@ -60,13 +59,14 @@ class IncomeTaxUserDataService @Inject()(incomeTaxUserDataRepository: IncomeTaxU
       interest = incomeSourcesModel.flatMap(_.interest),
       giftAid = incomeSourcesModel.flatMap(_.giftAid),
       employment = incomeSourcesModel.flatMap(_.employment),
-      pensions = incomeSourcesModel.flatMap(_.pensions)
+      pensions = incomeSourcesModel.flatMap(_.pensions),
+      cis = incomeSourcesModel.flatMap(_.cis)
     )
 
     incomeTaxUserDataRepository.update(userData)
   }
 
-  def findUserData(user: User[_], taxYear: Int)(implicit ec: ExecutionContext): Future[Either[APIErrorModel, Option[IncomeSourcesResponseModel]]] = {
+  def findUserData(user: User[_], taxYear: Int)(implicit ec: ExecutionContext): Future[Either[APIErrorModel, Option[IncomeSources]]] = {
     incomeTaxUserDataRepository.find(user, taxYear).map {
       case Right(Some(userData: UserData)) => Right(Some(userData.toIncomeSourcesResponseModel))
       case Right(None) => Right(None)

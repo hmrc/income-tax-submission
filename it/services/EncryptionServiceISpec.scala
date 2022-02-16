@@ -41,6 +41,7 @@ class EncryptionServiceISpec extends IntegrationSpec {
         giftAid = result.giftAid,
         employment = result.employment,
         pensions = result.pensions,
+        cis = result.cis,
         lastUpdated = data.lastUpdated
       )
     }
@@ -50,14 +51,6 @@ class EncryptionServiceISpec extends IntegrationSpec {
       val decryptResult = underTest.decryptUserData(encryptResult)
 
       decryptResult mustBe data
-
-      decryptResult.employment.flatMap(_.hmrcEmploymentData.head.employmentData.flatMap(_.pay.flatMap(_.totalTaxToDate))) mustBe Some(200.0)
-      decryptResult.employment.flatMap(_.hmrcEmploymentData.head.employmentData.flatMap(_.pay.flatMap(_.taxMonthNo))) mustBe Some(1)
-      decryptResult.employment.flatMap(_.hmrcEmploymentData.head.employmentData.flatMap(_.pay.flatMap(_.paymentDate))) mustBe Some("2020-04-23")
-      decryptResult.employment.flatMap(_.hmrcEmploymentData.head.employmentData.flatMap(_.closeCompany)) mustBe Some(false)
-      decryptResult.pensions.flatMap(_.pensionReliefs.flatMap(_.deletedOn)) mustBe Some("2020-01-04T05:01:01Z")
-      decryptResult.interest.flatMap(_.head.taxedUkInterest) mustBe Some(100.00)
-      decryptResult.dividends.flatMap(_.otherUkDividends) mustBe Some(200.00)
     }
   }
 }

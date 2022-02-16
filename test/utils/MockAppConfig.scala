@@ -22,15 +22,19 @@ import org.scalamock.scalatest.MockFactory
 class MockAppConfig(isEncrypted: Boolean = true) extends AppConfig with MockFactory {
 
   override val authBaseUrl: String = "/auth"
+
   override val dividendsBaseUrl: String = "http://localhost:11111"
   override val interestBaseUrl: String = "http://localhost:11111"
   override val employmentBaseUrl: String = "http://localhost:11111"
   override val giftAidBaseUrl: String = "http://localhost:11111"
   override val pensionsBaseUrl: String = "http://localhost:11111"
+  override val cisBaseUrl: String = "http://localhost:11111"
+
   override val auditingEnabled: Boolean = true
   override val graphiteHost: String = "/graphite"
+
   override lazy val encryptionKey: String = "encryptionKey12345"
   override lazy val mongoTTL: Int = 1550
-  override lazy val useEncryption: Boolean = isEncrypted
 
+  override lazy val useEncryption: Boolean = isEncrypted
 }

@@ -22,7 +22,7 @@ import models.employment.EmploymentBenefits
 object EmploymentBenefitsBuilder {
 
   val anEmploymentBenefits: EmploymentBenefits = EmploymentBenefits(
-    submittedOn = "2020-02-12",
+    submittedOn = "2020-01-04T05:01:01Z",
     benefits = Some(aBenefits)
   )
 }

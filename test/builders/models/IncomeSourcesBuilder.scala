@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package builders.models.mongo
+package builders.models
 
 import builders.models.DividendsBuilder.aDividends
 import builders.models.InterestBuilder.anInterest
@@ -22,15 +22,11 @@ import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import builders.models.gifts.GiftAidBuilder.aGiftAid
 import builders.models.pensions.PensionsBuilder.aPensions
-import models.mongo.UserData
+import models.IncomeSources
 
-object UserDataBuilder {
+object IncomeSourcesBuilder {
 
-  val aUserData: UserData = UserData(
-    sessionId = "sessionId-1618a1e8-4979-41d8-a32e-5ffbe69fac81",
-    mtdItId = "1234567890",
-    nino = "AA123456A",
-    taxYear = 2022,
+  val anIncomeSources: IncomeSources = IncomeSources(
     dividends = Some(aDividends),
     interest = Some(Seq(anInterest)),
     giftAid = Some(aGiftAid),

@@ -23,12 +23,12 @@ import models.employment.EmploymentSource
 object EmploymentSourceBuilder {
 
   val anEmploymentSource: EmploymentSource = EmploymentSource(
-    employmentId = "employmentId",
-    employerName = "maggie",
-    employerRef = Some("223/AB12399"),
-    payrollId = Some("12345678"),
-    startDate = Some("2019-04-21"),
-    cessationDate = Some("2020-03-11"),
+    employmentId = "00000000-0000-0000-1111-000000000000",
+    employerName = "default-employer",
+    employerRef = Some("666/66666"),
+    payrollId = Some("1234567890"),
+    startDate = Some("2020-01-01"),
+    cessationDate = Some("2020-01-01"),
     dateIgnored = None,
     submittedOn = Some("2020-01-04T05:01:01Z"),
     employmentData = Some(anEmploymentData),

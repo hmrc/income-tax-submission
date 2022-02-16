@@ -17,18 +17,18 @@
 package connectors
 
 import config.AppConfig
-import connectors.parsers.SubmittedDividendsParser.{IncomeSourcesResponseModel, SubmittedDividendsHttpReads}
+import connectors.parsers.SubmittedCISParser.{IncomeSourcesResponseModel, SubmittedCISHttpReads}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class IncomeTaxDividendsConnector @Inject()(val http: HttpClient, val config: AppConfig)
-                                           (implicit ec: ExecutionContext) extends Connector {
+class IncomeTaxCISConnector @Inject()(val http: HttpClient,
+                                      val config: AppConfig)(implicit ec: ExecutionContext) extends Connector {
 
-  def getSubmittedDividends(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
-    val submittedDividendsUrl: String = config.dividendsBaseUrl + s"/income-tax-dividends/income-tax/nino/$nino/sources?taxYear=$taxYear"
+  def getSubmittedCIS(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
+    val submittedCISUrl: String = config.cisBaseUrl + s"/income-tax-cis/income-tax/nino/$nino/sources?taxYear=$taxYear"
 
-    http.GET[IncomeSourcesResponseModel](submittedDividendsUrl)(SubmittedDividendsHttpReads, addHeadersToHeaderCarrier(submittedDividendsUrl), ec)
+    http.GET[IncomeSourcesResponseModel](submittedCISUrl)(SubmittedCISHttpReads, addHeadersToHeaderCarrier(submittedCISUrl), ec)
   }
 }

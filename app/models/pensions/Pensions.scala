@@ -27,7 +27,6 @@ case class Pensions(pensionReliefs: Option[PensionReliefs],
 
 object Pensions {
   implicit val formats: OFormat[Pensions] = Json.format[Pensions]
-
 }
 
 case class EncryptedPensions(pensionReliefs: Option[EncryptedPensionReliefs],
@@ -36,6 +35,5 @@ case class EncryptedPensions(pensionReliefs: Option[EncryptedPensionReliefs],
 
 object EncryptedPensions {
   implicit val formats: OFormat[EncryptedPensions] = Json.format[EncryptedPensions]
-
 }
 

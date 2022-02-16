@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-package builders.models.employment
+package builders.models.cis
 
-import builders.models.employment.DeductionsBuilder.aDeductions
-import builders.models.employment.PayBuilder.aPay
-import models.employment.EmploymentData
+import builders.models.cis.CISDeductionsBuilder.aCISDeductions
+import models.cis.CISSource
 
-object EmploymentDataBuilder {
+object CISSourceBuilder {
 
-  val anEmploymentData: EmploymentData = EmploymentData(
-    submittedOn = "2020-01-04T05:01:01Z",
-    employmentSequenceNumber = Some("1002"),
-    companyDirector = Some(false),
-    closeCompany = Some(true),
-    directorshipCeasedDate = Some("2020-02-12"),
-    occPen = Some(false),
-    disguisedRemuneration = Some(false),
-    pay = Some(aPay),
-    deductions = Some(aDeductions)
+  val aCISSource: CISSource = CISSource(
+    totalDeductionAmount = Some(100.0),
+    totalCostOfMaterials = Some(200.0),
+    totalGrossAmountPaid = Some(300.0),
+    cisDeductions = Seq(aCISDeductions)
   )
 }

@@ -17,11 +17,10 @@
 package config
 
 import com.google.inject.ImplementedBy
-
-import javax.inject.Inject
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import javax.inject.Inject
 import scala.concurrent.duration.Duration
 
 class BackendAppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) extends AppConfig {
@@ -33,6 +32,7 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
   val employmentBaseUrl: String = servicesConfig.baseUrl("income-tax-employment")
   val giftAidBaseUrl: String = servicesConfig.baseUrl("income-tax-gift-aid")
   val pensionsBaseUrl: String = servicesConfig.baseUrl("income-tax-pensions")
+  val cisBaseUrl: String = servicesConfig.baseUrl("income-tax-cis")
 
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
@@ -46,7 +46,7 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
 }
 
 @ImplementedBy(classOf[BackendAppConfig])
-trait AppConfig{
+trait AppConfig {
   val authBaseUrl: String
 
   val dividendsBaseUrl: String
@@ -54,6 +54,7 @@ trait AppConfig{
   val employmentBaseUrl: String
   val giftAidBaseUrl: String
   val pensionsBaseUrl: String
+  val cisBaseUrl: String
 
   val auditingEnabled: Boolean
   val graphiteHost: String

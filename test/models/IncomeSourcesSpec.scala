@@ -16,20 +16,21 @@
 
 package models
 
+import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import com.codahale.metrics.SharedMetricRegistries
 import models.gifts.{GiftAid, GiftAidPayments, Gifts}
 import play.api.libs.json.{JsObject, Json}
 import utils.TestUtils
 
-class IncomeSourcesResponseModelSpec extends TestUtils {
+class IncomeSourcesSpec extends TestUtils {
   SharedMetricRegistries.clear()
 
   val giftAidPayments: GiftAidPayments = GiftAidPayments(Some(List("non uk charity name", "non uk charity name 2")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
   val gifts: Gifts = Gifts(Some(List("charity name")), Some(12345.67), Some(12345.67), Some(12345.67))
 
-  val model: IncomeSourcesResponseModel = IncomeSourcesResponseModel(Some(Dividends(Some(123456.78), Some(123456.78))),
+  private val underTest = IncomeSources(Some(Dividends(Some(123456.78), Some(123456.78))),
     Some(Seq(Interest("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAid(Some(giftAidPayments), Some(gifts))),
-    Some(allEmploymentData))
+    Some(anAllEmploymentData))
 
   val jsonModel: JsObject = Json.obj("dividends" ->
     Json.obj(
@@ -67,12 +68,12 @@ class IncomeSourcesResponseModelSpec extends TestUtils {
       "hmrcEmploymentData" -> Json.arr(
         Json.obj(
           "employmentId" -> "00000000-0000-0000-1111-000000000000",
-          "employerName" -> "Business",
+          "employerName" -> "default-employer",
           "employerRef" -> "666/66666",
           "payrollId" -> "1234567890",
           "startDate" -> "2020-01-01",
           "cessationDate" -> "2020-01-01",
-          "dateIgnored" -> "2020-01-01T10:00:38Z",
+          "submittedOn" -> "2020-01-04T05:01:01Z",
           "employmentData" -> Json.obj(
             "submittedOn" -> "2020-01-04T05:01:01Z",
             "employmentSequenceNumber" -> "1002",
@@ -82,51 +83,51 @@ class IncomeSourcesResponseModelSpec extends TestUtils {
             "occPen" -> false,
             "disguisedRemuneration" -> false,
             "pay" -> Json.obj(
-              "taxablePayToDate" -> 34234.15,
-              "totalTaxToDate" -> 6782.92,
+              "taxablePayToDate" -> 100.00,
+              "totalTaxToDate" -> 200.00,
               "payFrequency" -> "CALENDAR MONTHLY",
               "paymentDate" -> "2020-04-23",
-              "taxWeekNo" -> 32,
-              "taxMonthNo" -> 2
+              "taxWeekNo" -> 1,
+              "taxMonthNo" -> 1
             ),
             "deductions" -> Json.obj(
               "studentLoans" -> Json.obj(
                 "uglDeductionAmount" -> 100,
-                "pglDeductionAmount" -> 100
+                "pglDeductionAmount" -> 200
               )
             )
           ),
           "employmentBenefits" -> Json.obj(
             "submittedOn" -> "2020-01-04T05:01:01Z",
             "benefits" -> Json.obj(
-              "accommodation" -> 100,
-              "assets" -> 100,
-              "assetTransfer" -> 100,
-              "beneficialLoan" -> 100,
-              "car" -> 100,
-              "carFuel" -> 100,
-              "educationalServices" -> 100,
-              "entertaining" -> 100,
-              "expenses" -> 100,
-              "medicalInsurance" -> 100,
-              "telephone" -> 100,
-              "service" -> 100,
-              "taxableExpenses" -> 100,
-              "van" -> 100,
-              "vanFuel" -> 100,
-              "mileage" -> 100,
-              "nonQualifyingRelocationExpenses" -> 100,
-              "nurseryPlaces" -> 100,
-              "otherItems" -> 100,
-              "paymentsOnEmployeesBehalf" -> 100,
-              "personalIncidentalExpenses" -> 100,
-              "qualifyingRelocationExpenses" -> 100,
-              "employerProvidedProfessionalSubscriptions" -> 100,
-              "employerProvidedServices" -> 100,
-              "incomeTaxPaidByDirector" -> 100,
-              "travelAndSubsistence" -> 100,
-              "vouchersAndCreditCards" -> 100,
-              "nonCash" -> 100
+              "accommodation" -> 6.00,
+              "assets" -> 27.00,
+              "assetTransfer" -> 280000.00,
+              "beneficialLoan" -> 18.00,
+              "car" -> 1.23,
+              "carFuel" -> 2.00,
+              "educationalServices" -> 19.00,
+              "entertaining" -> 11.00,
+              "expenses" -> 22.00,
+              "medicalInsurance" -> 16.00,
+              "telephone" -> 12.00,
+              "service" -> 15.00,
+              "taxableExpenses" -> 23.00,
+              "van" -> 3.00,
+              "vanFuel" -> 4.00,
+              "mileage" -> 5.00,
+              "nonQualifyingRelocationExpenses" -> 8.00,
+              "nurseryPlaces" -> 17.00,
+              "otherItems" -> 26.00,
+              "paymentsOnEmployeesBehalf" -> 21.00,
+              "personalIncidentalExpenses" -> 10.00,
+              "qualifyingRelocationExpenses" -> 7.00,
+              "employerProvidedProfessionalSubscriptions" -> 14.00,
+              "employerProvidedServices" -> 13.00,
+              "incomeTaxPaidByDirector" -> 20.00,
+              "travelAndSubsistence" -> 9.00,
+              "vouchersAndCreditCards" -> 24.00,
+              "nonCash" -> 25.00
             )
           )
         )),
@@ -136,24 +137,24 @@ class IncomeSourcesResponseModelSpec extends TestUtils {
         "totalExpenses" -> 800,
         "expenses" -> Json.obj(
           "businessTravelCosts" -> 100,
-          "jobExpenses" -> 100,
-          "flatRateJobExpenses" -> 100,
-          "professionalSubscriptions" -> 100,
-          "hotelAndMealExpenses" -> 100,
-          "otherAndCapitalAllowances" -> 100,
-          "vehicleExpenses" -> 100,
-          "mileageAllowanceRelief" -> 100
+          "jobExpenses" -> 200,
+          "flatRateJobExpenses" -> 300,
+          "professionalSubscriptions" -> 400,
+          "hotelAndMealExpenses" -> 500,
+          "otherAndCapitalAllowances" -> 600,
+          "vehicleExpenses" -> 700,
+          "mileageAllowanceRelief" -> 800
         )
       ),
       "customerEmploymentData" -> Json.arr(
         Json.obj(
-          "employmentId" -> "00000000-0000-0000-2222-000000000000",
-          "employerName" -> "Business",
+          "employmentId" -> "00000000-0000-0000-1111-000000000000",
+          "employerName" -> "default-employer",
           "employerRef" -> "666/66666",
           "payrollId" -> "1234567890",
           "startDate" -> "2020-01-01",
           "cessationDate" -> "2020-01-01",
-          "submittedOn" -> "2020-01-01T10:00:38Z",
+          "submittedOn" -> "2020-01-04T05:01:01Z",
           "employmentData" -> Json.obj(
             "submittedOn" -> "2020-01-04T05:01:01Z",
             "employmentSequenceNumber" -> "1002",
@@ -163,51 +164,51 @@ class IncomeSourcesResponseModelSpec extends TestUtils {
             "occPen" -> false,
             "disguisedRemuneration" -> false,
             "pay" -> Json.obj(
-              "taxablePayToDate" -> 34234.15,
-              "totalTaxToDate" -> 6782.92,
+              "taxablePayToDate" -> 100.0,
+              "totalTaxToDate" -> 200.0,
               "payFrequency" -> "CALENDAR MONTHLY",
               "paymentDate" -> "2020-04-23",
-              "taxWeekNo" -> 32,
-              "taxMonthNo" -> 2
+              "taxWeekNo" -> 1,
+              "taxMonthNo" -> 1
             ),
             "deductions" -> Json.obj(
               "studentLoans" -> Json.obj(
                 "uglDeductionAmount" -> 100,
-                "pglDeductionAmount" -> 100
+                "pglDeductionAmount" -> 200
               )
             )
           ),
           "employmentBenefits" -> Json.obj(
             "submittedOn" -> "2020-01-04T05:01:01Z",
             "benefits" -> Json.obj(
-              "accommodation" -> 100,
-              "assets" -> 100,
-              "assetTransfer" -> 100,
-              "beneficialLoan" -> 100,
-              "car" -> 100,
-              "carFuel" -> 100,
-              "educationalServices" -> 100,
-              "entertaining" -> 100,
-              "expenses" -> 100,
-              "medicalInsurance" -> 100,
-              "telephone" -> 100,
-              "service" -> 100,
-              "taxableExpenses" -> 100,
-              "van" -> 100,
-              "vanFuel" -> 100,
-              "mileage" -> 100,
-              "nonQualifyingRelocationExpenses" -> 100,
-              "nurseryPlaces" -> 100,
-              "otherItems" -> 100,
-              "paymentsOnEmployeesBehalf" -> 100,
-              "personalIncidentalExpenses" -> 100,
-              "qualifyingRelocationExpenses" -> 100,
-              "employerProvidedProfessionalSubscriptions" -> 100,
-              "employerProvidedServices" -> 100,
-              "incomeTaxPaidByDirector" -> 100,
-              "travelAndSubsistence" -> 100,
-              "vouchersAndCreditCards" -> 100,
-              "nonCash" -> 100
+              "accommodation" -> 6.00,
+              "assets" -> 27.00,
+              "assetTransfer" -> 280000.00,
+              "beneficialLoan" -> 18.00,
+              "car" -> 1.23,
+              "carFuel" -> 2.00,
+              "educationalServices" -> 19.00,
+              "entertaining" -> 11.00,
+              "expenses" -> 22.00,
+              "medicalInsurance" -> 16.00,
+              "telephone" -> 12.00,
+              "service" -> 15.00,
+              "taxableExpenses" -> 23.00,
+              "van" -> 3.00,
+              "vanFuel" -> 4.00,
+              "mileage" -> 5.00,
+              "nonQualifyingRelocationExpenses" -> 8.00,
+              "nurseryPlaces" -> 17.00,
+              "otherItems" -> 26.00,
+              "paymentsOnEmployeesBehalf" -> 21.00,
+              "personalIncidentalExpenses" -> 10.00,
+              "qualifyingRelocationExpenses" -> 7.00,
+              "employerProvidedProfessionalSubscriptions" -> 14.00,
+              "employerProvidedServices" -> 13.00,
+              "incomeTaxPaidByDirector" -> 20.00,
+              "travelAndSubsistence" -> 9.00,
+              "vouchersAndCreditCards" -> 24.00,
+              "nonCash" -> 25.00
             )
           )
         )),
@@ -217,24 +218,23 @@ class IncomeSourcesResponseModelSpec extends TestUtils {
         "totalExpenses" -> 800,
         "expenses" -> Json.obj(
           "businessTravelCosts" -> 100,
-          "jobExpenses" -> 100,
-          "flatRateJobExpenses" -> 100,
-          "professionalSubscriptions" -> 100,
-          "hotelAndMealExpenses" -> 100,
-          "otherAndCapitalAllowances" -> 100,
-          "vehicleExpenses" -> 100,
-          "mileageAllowanceRelief" -> 100
+          "jobExpenses" -> 200,
+          "flatRateJobExpenses" -> 300,
+          "professionalSubscriptions" -> 400,
+          "hotelAndMealExpenses" -> 500,
+          "otherAndCapitalAllowances" -> 600,
+          "vehicleExpenses" -> 700,
+          "mileageAllowanceRelief" -> 800
         )
       )))
 
   "IncomeSourcesResponseModel" should {
-
     "parse to Json" in {
-      Json.toJson(model) mustBe jsonModel
+      Json.toJson(underTest) mustBe jsonModel
     }
 
     "parse from Json" in {
-      jsonModel.as[IncomeSourcesResponseModel]
+      jsonModel.as[IncomeSources]
     }
   }
 

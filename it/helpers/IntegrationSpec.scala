@@ -51,7 +51,8 @@ trait IntegrationSpec extends AnyWordSpec
     "income-tax-interest",
     "income-tax-gift-aid",
     "auth",
-    "income-tax-pensions"
+    "income-tax-pensions",
+    "income-tax-cis"
   )
 
   def servicesToUrlConfig: Seq[(String, String)] = connectedServices

@@ -29,7 +29,9 @@ import utils.SecureGCMCipher
 
 import javax.inject.Inject
 
+//scalastyle:off
 class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig: AppConfig) {
+  implicit val secureGCMCipher: SecureGCMCipher = encryptionService
 
   def encryptUserData(userData: UserData): EncryptedUserData = {
     implicit val textAndKey: TextAndKey = TextAndKey(userData.mtdItId, appConfig.encryptionKey)
@@ -44,6 +46,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       giftAid = userData.giftAid.map(encryptGiftAid),
       employment = userData.employment.map(encryptEmployment),
       pensions = userData.pensions.map(encryptPensions),
+      cis = userData.cis.map(_.encrypted),
       lastUpdated = userData.lastUpdated
     )
   }
@@ -357,6 +360,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       giftAid = userData.giftAid.map(decryptGiftAid),
       employment = userData.employment.map(decryptEmployment),
       pensions = userData.pensions.map(decryptPensions),
+      cis = userData.cis.map(_.decrypted),
       lastUpdated = userData.lastUpdated
     )
   }

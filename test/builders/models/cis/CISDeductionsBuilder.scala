@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-package builders.models
+package builders.models.cis
 
-import models.Interest
+import builders.models.cis.PeriodDataBuilder.aPeriodData
+import models.cis.CISDeductions
 
-object InterestsBuilder {
+object CISDeductionsBuilder {
 
-  val anInterest: Interest = Interest(
-    accountName = "default-account-name",
-    incomeSourceId = "default-income-source-id",
-    taxedUkInterest = Some(100.0),
-    untaxedUkInterest = Some(200.0)
+  val aCISDeductions: CISDeductions = CISDeductions(
+    fromDate = "2019-04-06",
+    toDate = "2019-05-05",
+    contractorName = Some("default-contractor"),
+    employerRef = "default-employer-ref",
+    totalDeductionAmount = Some(100.0),
+    totalCostOfMaterials = Some(200.0),
+    totalGrossAmountPaid = Some(300.0),
+    periodData = Seq(aPeriodData)
   )
 }

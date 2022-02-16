@@ -14,23 +14,20 @@
  * limitations under the License.
  */
 
-package builders.models.employment
+package builders.models.cis
 
-import builders.models.employment.DeductionsBuilder.aDeductions
-import builders.models.employment.PayBuilder.aPay
-import models.employment.EmploymentData
+import models.cis.PeriodData
 
-object EmploymentDataBuilder {
+object PeriodDataBuilder {
 
-  val anEmploymentData: EmploymentData = EmploymentData(
-    submittedOn = "2020-01-04T05:01:01Z",
-    employmentSequenceNumber = Some("1002"),
-    companyDirector = Some(false),
-    closeCompany = Some(true),
-    directorshipCeasedDate = Some("2020-02-12"),
-    occPen = Some(false),
-    disguisedRemuneration = Some(false),
-    pay = Some(aPay),
-    deductions = Some(aDeductions)
+  val aPeriodData: PeriodData = PeriodData(
+    deductionFromDate = "2019-04-06",
+    deductionToDate = "2019-05-05",
+    deductionAmount = Some(100.0),
+    costOfMaterials = Some(200.0),
+    grossAmountPaid = Some(300.0),
+    submissionDate = "2020-05-05",
+    submissionId = Some("default-submission-id"),
+    source = "default-source"
   )
 }

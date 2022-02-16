@@ -19,6 +19,7 @@ package services
 import common.IncomeSources._
 import connectors._
 import models._
+import models.cis.AllCISDeductions
 import models.employment.AllEmploymentData
 import models.gifts.GiftAid
 import models.pensions.Pensions
@@ -34,9 +35,10 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
                                         giftAidConnector: IncomeTaxGiftAidConnector,
                                         employmentConnector: IncomeTaxEmploymentConnector,
                                         pensionsConnector: IncomeTaxPensionsConnector,
+                                        cisConnector: IncomeTaxCISConnector,
                                         implicit val ec: ExecutionContext) extends Logging {
 
-  type IncomeSourceResponse = Either[APIErrorModel, IncomeSourcesResponseModel]
+  type IncomeSourceResponse = Either[APIErrorModel, IncomeSources]
 
   def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                          (implicit hc: HeaderCarrier): Future[IncomeSourceResponse] = {
@@ -46,13 +48,15 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       giftAid <- FutureEitherOps[APIErrorModel, Option[GiftAid]](getGiftAid(nino, taxYear, mtditid, excludedIncomeSources))
       employment <- FutureEitherOps[APIErrorModel, Option[AllEmploymentData]](getEmployment(nino, taxYear, mtditid, excludedIncomeSources))
       pensions <- FutureEitherOps[APIErrorModel, Option[Pensions]](getPensions(nino, taxYear, mtditid, excludedIncomeSources))
+      cis <- FutureEitherOps[APIErrorModel, Option[AllCISDeductions]](getCIS(nino, taxYear, mtditid, excludedIncomeSources))
     } yield {
-      IncomeSourcesResponseModel(
+      IncomeSources(
         dividends.map(res => Dividends(res.ukDividends, res.otherUkDividends)),
         interest,
         giftAid,
         employment,
-        pensions
+        pensions,
+        cis
       )
     }).value
   }
@@ -109,6 +113,17 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       Future(Right(None))
     } else {
       pensionsConnector.getSubmittedPensions(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
+    }
+  }
+
+  def getCIS(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+            (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[AllCISDeductions]]] = {
+
+    if (excludedIncomeSources.contains(CIS)) {
+      shutteredIncomeSourceLog(CIS)
+      Future(Right(None))
+    } else {
+      cisConnector.getSubmittedCIS(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
     }
   }
 

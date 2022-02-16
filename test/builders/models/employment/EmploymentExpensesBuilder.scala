@@ -22,9 +22,9 @@ import models.employment.EmploymentExpenses
 object EmploymentExpensesBuilder {
 
   val anEmploymentExpenses: EmploymentExpenses = EmploymentExpenses(
-    submittedOn = Some("2020-02-12"),
-    dateIgnored = None,
-    totalExpenses = None,
+    submittedOn = Some("2020-01-04T05:01:01Z"),
+    dateIgnored = Some("2020-01-04T05:01:01Z"),
+    totalExpenses = Some(800.0),
     expenses = Some(anExpenses)
   )
 }

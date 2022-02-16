@@ -16,10 +16,12 @@
 
 package services
 
+import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
+import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
+import builders.models.pensions.PensionsBuilder.aPensions
 import com.codahale.metrics.SharedMetricRegistries
 import connectors._
 import connectors.parsers.SubmittedDividendsParser.{IncomeSourcesResponseModel => IncomeSourceResponseDividends}
-import connectors.parsers.SubmittedInterestParser.{IncomeSourcesResponseModel => IncomeSourceResponseInterest}
 import models._
 import models.gifts.{GiftAid, GiftAidPayments, Gifts}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
@@ -31,93 +33,99 @@ import scala.concurrent.Future
 class GetIncomeSourcesServiceSpec extends TestUtils {
   SharedMetricRegistries.clear()
 
-  val dividendsConnector: IncomeTaxDividendsConnector = mock[IncomeTaxDividendsConnector]
-  val interestConnector: IncomeTaxInterestConnector = mock[IncomeTaxInterestConnector]
-  val giftsConnector: IncomeTaxGiftAidConnector = mock[IncomeTaxGiftAidConnector]
-  val employmentConnector: IncomeTaxEmploymentConnector = mock[IncomeTaxEmploymentConnector]
-  val pensionsConnector: IncomeTaxPensionsConnector = mock[IncomeTaxPensionsConnector]
-  val service: GetIncomeSourcesService = new GetIncomeSourcesService(dividendsConnector, interestConnector,
-    giftsConnector, employmentConnector, pensionsConnector, scala.concurrent.ExecutionContext.global)
-  val mockHeaderCarrier: HeaderCarrier = emptyHeaderCarrier.withExtraHeaders(("mtditid", "87654321"))
+  private val taxYear = 2021
 
+  private val dividendsConnector: IncomeTaxDividendsConnector = mock[IncomeTaxDividendsConnector]
+  private val interestConnector: IncomeTaxInterestConnector = mock[IncomeTaxInterestConnector]
+  private val giftsConnector: IncomeTaxGiftAidConnector = mock[IncomeTaxGiftAidConnector]
+  private val employmentConnector: IncomeTaxEmploymentConnector = mock[IncomeTaxEmploymentConnector]
+  private val pensionsConnector: IncomeTaxPensionsConnector = mock[IncomeTaxPensionsConnector]
+  private val cisConnector: IncomeTaxCISConnector = mock[IncomeTaxCISConnector]
+  private val mockHeaderCarrier: HeaderCarrier = emptyHeaderCarrier.withExtraHeaders(("mtditid", "87654321"))
+
+  private val underTest: GetIncomeSourcesService = new GetIncomeSourcesService(
+    dividendsConnector,
+    interestConnector,
+    giftsConnector,
+    employmentConnector,
+    pensionsConnector,
+    cisConnector,
+    scala.concurrent.ExecutionContext.global
+  )
 
   ".getAllIncomeSources" when {
-
     "the income sources are off" should {
       "return an empty response" in {
-        val result = await(service.getAllIncomeSources("12345678", 1234, "87654321", Seq("dividends", "interest", "gift-aid", "employment", "pensions")))
+        val eventualResponse = underTest.getAllIncomeSources(
+          nino = "12345678",
+          taxYear = taxYear,
+          mtditid = "87654321",
+          excludedIncomeSources = Seq("dividends", "interest", "gift-aid", "employment", "pensions", "cis")
+        )
 
-        result mustBe Right(IncomeSourcesResponseModel(None, None, None, None, None))
+        await(eventualResponse) mustBe Right(IncomeSources(None, None, None, None, None, None))
       }
     }
 
     "there are no errors" should {
+      "return an IncomeSourceResponseModel with existing dividends, interest and gift aid, employment and pensions" in {
+        val expectedDividendsResult = Right(Some(Dividends(Some(12345.67), Some(12345.67))))
+        val expectedInterestResult = Right(Some(List(Interest("someName", "123", Some(1234.56), Some(1234.56)))))
 
-      "return an IncomeSourceResponseModel with existing dividends, interest and giftaid, employment and pensions" in {
-
-        val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(Dividends(Some(12345.67), Some(12345.67))))
-        val expectedInterestResult: IncomeSourceResponseInterest = Right(Some(List(
-          Interest("someName", "123", Some(1234.56), Some(1234.56))
-        )))
-
-        val giftAidPayments: GiftAidPayments = GiftAidPayments(Some(List("")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
+        val giftAidPayments = GiftAidPayments(Some(List("")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
         val gifts: Gifts = Gifts(Some(List("someName")), Some(12345.67), Some(12345.67), Some(12345.67))
 
-        val incomeSourcesResult = Right(IncomeSourcesResponseModel(Some(Dividends(Some(12345.67), Some(12345.67))),
+        val incomeSourcesResult = Right(IncomeSources(Some(Dividends(Some(12345.67), Some(12345.67))),
           Some(List(Interest("someName", "123", Some(1234.56), Some(1234.56)))),
           Some(GiftAid(Some(giftAidPayments), Some(gifts))),
-          Some(allEmploymentData),
-          Some(fullPensionsModel)))
-
+          Some(anAllEmploymentData),
+          Some(aPensions),
+          Some(anAllCISDeductions)
+        ))
 
         (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
-          .expects("12345678", 1234, mockHeaderCarrier)
+          .expects("12345678", taxYear, mockHeaderCarrier)
           .returning(Future.successful(expectedDividendsResult))
 
         (interestConnector.getSubmittedInterest(_: String, _: Int)(_: HeaderCarrier))
-          .expects("12345678", 1234, mockHeaderCarrier)
+          .expects("12345678", taxYear, mockHeaderCarrier)
           .returning(Future.successful(expectedInterestResult))
 
         (employmentConnector.getSubmittedEmployment(_: String, _: Int)(_: HeaderCarrier))
-          .expects("12345678", 1234, mockHeaderCarrier)
-          .returning(Future.successful(Right(Some(allEmploymentData))))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Right(Some(anAllEmploymentData))))
 
         (giftsConnector.getSubmittedGiftAid(_: String, _: Int)(_: HeaderCarrier))
-          .expects("12345678", 1234, mockHeaderCarrier)
+          .expects("12345678", taxYear, mockHeaderCarrier)
           .returning(Future.successful(Right(Some(GiftAid(Some(giftAidPayments), Some(gifts))))))
 
         (pensionsConnector.getSubmittedPensions(_: String, _: Int)(_: HeaderCarrier))
-          .expects("12345678", 1234, mockHeaderCarrier)
-          .returning(Future.successful(Right(Some(fullPensionsModel))))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Right(Some(aPensions))))
 
-        val result = await(service.getAllIncomeSources("12345678", 1234, "87654321"))
+        (cisConnector.getSubmittedCIS(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Right(Some(anAllCISDeductions))))
 
-        result mustBe incomeSourcesResult
-
+        await(underTest.getAllIncomeSources("12345678", taxYear, "87654321")) mustBe incomeSourcesResult
       }
-
     }
   }
 
   "when there are errors" should {
-
     "return an InternalServerError" in {
-
       val errorModel: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
       val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(Dividends(Some(12345.67), Some(12345.67))))
 
       (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
-        .expects("12345678", 1234, mockHeaderCarrier)
+        .expects("12345678", taxYear, mockHeaderCarrier)
         .returning(Future.successful(expectedDividendsResult))
 
       (interestConnector.getSubmittedInterest(_: String, _: Int)(_: HeaderCarrier))
-        .expects("12345678", 1234, mockHeaderCarrier)
+        .expects("12345678", taxYear, mockHeaderCarrier)
         .returning(Future.successful(Left(errorModel)))
 
-      val result = await(service.getAllIncomeSources("12345678", 1234, "87654321"))
-
-      result mustBe Left(errorModel)
-
+      await(underTest.getAllIncomeSources("12345678", taxYear, "87654321")) mustBe Left(errorModel)
     }
   }
 }
