@@ -21,8 +21,7 @@ import utils.EncryptedValue
 
 case class PensionReliefs(submittedOn: String,
                           deletedOn: Option[String],
-                          pensionReliefs: Reliefs
-                         )
+                          pensionReliefs: Reliefs)
 
 object PensionReliefs {
   implicit val formats: OFormat[PensionReliefs] = Json.format[PensionReliefs]
@@ -30,8 +29,7 @@ object PensionReliefs {
 
 case class EncryptedPensionReliefs(submittedOn: EncryptedValue,
                                    deletedOn: Option[EncryptedValue],
-                                   pensionReliefs: EncryptedReliefs
-                                  )
+                                   pensionReliefs: EncryptedReliefs)
 
 object EncryptedPensionReliefs {
   implicit val formats: OFormat[EncryptedPensionReliefs] = Json.format[EncryptedPensionReliefs]

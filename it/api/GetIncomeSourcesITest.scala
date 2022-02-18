@@ -16,11 +16,19 @@
 
 package api
 
+import builders.models.DividendsBuilder.aDividends
+import builders.models.IncomeSourcesBuilder.anIncomeSources
+import builders.models.InterestBuilder.anInterest
+import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
+import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
+import builders.models.gifts.GiftAidBuilder.aGiftAid
+import builders.models.pensions.PensionsBuilder.aPensions
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import helpers.IntegrationSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import play.api.http.Status._
+import play.api.libs.json.Json
 
 class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
 
@@ -28,50 +36,54 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
     implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(5, Seconds))
     val successNino: String = "AA123123A"
     val taxYear: String = "2019"
-    val mtditidHeader = ("mtditid", "555555555")
-    val sessionIdHeader = ("sessionId", "555555555")
+    val mtditidHeader: (String, String) = ("mtditid", "555555555")
+    val sessionIdHeader: (String, String) = ("sessionId", "555555555")
     val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "555555555"))
     auditStubs()
   }
 
   "get income sources" when {
-
     "the user is an individual" must {
       "return the income sources for a user" in new Setup {
-
         stubGetWithResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response = """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""",
+          response = Json.toJson(aDividends).toString,
           requestHeaders
         )
 
         stubGetWithResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response = """[{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}]""",
+          response = Json.toJson(Seq(anInterest)).toString,
           requestHeaders
         )
 
         stubGetWithResponseBody(
           url = s"/income-tax-gift-aid/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response = """{"giftAidPayments":{"nonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"currentYear":6556249600,"oneOffCurrentYear":59537236000,"currentYearTreatedAsPreviousYear":14979438600,"nextYearTreatedAsCurrentYear":55751930000,"nonUkCharities":82514854000},"gifts":{"investmentsNonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"landAndBuildings":89375515000,"sharesOrSecurities":94768726000,"investmentsNonUkCharities":72965235000}}""",
+          response = Json.toJson(aGiftAid).toString,
           requestHeaders
         )
 
         stubGetWithResponseBody(
           url = s"/income-tax-employment/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response = """{"hmrcEmploymentData":[{"employmentId":"00000000-0000-0000-1111-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","dateIgnored":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}},"employmentExpenses":{"submittedOn":"2020-01-04T05:01:01Z","totalExpenses":800,"expenses":{"businessTravelCosts":100,"jobExpenses":100,"flatRateJobExpenses":100,"professionalSubscriptions":100,"hotelAndMealExpenses":100,"otherAndCapitalAllowances":100,"vehicleExpenses":100,"mileageAllowanceRelief":100}}}],"customerEmploymentData":[{"employmentId":"00000000-0000-0000-2222-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","submittedOn":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}},"employmentExpenses":{"submittedOn":"2020-01-04T05:01:01Z","totalExpenses":800,"expenses":{"businessTravelCosts":100,"jobExpenses":100,"flatRateJobExpenses":100,"professionalSubscriptions":100,"hotelAndMealExpenses":100,"otherAndCapitalAllowances":100,"vehicleExpenses":100,"mileageAllowanceRelief":100}}}]}""",
+          response = Json.toJson(anAllEmploymentData).toString,
           requestHeaders
         )
 
         stubGetWithResponseBody(
           url = s"/income-tax-pensions/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response =
-            """{"taxYear":2022,"pensionReliefs":{"submittedOn":"2020-01-04T05:01:01Z","deletedOn":"2020-01-04T05:01:01Z","pensionReliefs":{"regularPensionContributions":100.01,"oneOffPensionContributionsPaid":100.01,"retirementAnnuityPayments":100.01,"paymentToEmployersSchemeNoTaxRelief":100.01,"overseasPensionSchemeContributions":100.01}},"pensionCharges":{"submittedOn":"2020-07-27T17:00:19Z","pensionSavingsTaxCharges":{"pensionSchemeTaxReference":["00123456RA","00123456RB"],"lumpSumBenefitTakenInExcessOfLifetimeAllowance":{"amount":800.02,"taxPaid":200.02},"benefitInExcessOfLifetimeAllowance":{"amount":800.02,"taxPaid":200.02},"isAnnualAllowanceReduced":false,"taperedAnnualAllowance":false,"moneyPurchasedAllowance":false},"pensionSchemeOverseasTransfers":{"overseasSchemeProvider":[{"providerName":"overseas providerName 1 qualifying scheme","providerAddress":"overseas address 1","providerCountryCode":"ESP","qualifyingRecognisedOverseasPensionScheme":["Q100000","Q100002"]}],"transferCharge":22.77,"transferChargeTaxPaid":33.88},"pensionSchemeUnauthorisedPayments":{"pensionSchemeTaxReference":["00123456RA","00123456RB"],"surcharge":{"amount":124.44,"foreignTaxPaid":123.33},"noSurcharge":{"amount":222.44,"foreignTaxPaid":223.33}},"pensionContributions":{"pensionSchemeTaxReference":["00123456RA","00123456RB"],"inExcessOfTheAnnualAllowance":150.67,"annualAllowanceTaxPaid":178.65},"overseasPensionContributions":{"overseasSchemeProvider":[{"providerName":"overseas providerName 1 tax ref","providerAddress":"overseas address 1","providerCountryCode":"ESP","pensionSchemeTaxReference":["00123456RA","00123456RB"]}],"shortServiceRefund":1.11,"shortServiceRefundTaxPaid":2.22}}}""".stripMargin,
+          response = Json.toJson(aPensions).toString,
+          requestHeaders
+        )
+
+        stubGetWithResponseBody(
+          url = s"/income-tax-cis/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = OK,
+          response = Json.toJson(Some(anAllCISDeductions)).toString,
           requestHeaders
         )
 
@@ -79,15 +91,13 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader,sessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader)
           .get) {
           result =>
             result.status mustBe 200
-            result.body mustBe
-              """{"dividends":{"ukDividends":29320682007.99,"otherUkDividends":17060389570.99},"interest":[{"accountName":"someName","incomeSourceId":"123","taxedUkInterest":29320682007.99,"untaxedUkInterest":17060389570.99}],"giftAid":{"giftAidPayments":{"nonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"currentYear":6556249600,"oneOffCurrentYear":59537236000,"currentYearTreatedAsPreviousYear":14979438600,"nextYearTreatedAsCurrentYear":55751930000,"nonUkCharities":82514854000},"gifts":{"investmentsNonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"landAndBuildings":89375515000,"sharesOrSecurities":94768726000,"investmentsNonUkCharities":72965235000}},"employment":{"hmrcEmploymentData":[{"employmentId":"00000000-0000-0000-1111-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","dateIgnored":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}}}],"customerEmploymentData":[{"employmentId":"00000000-0000-0000-2222-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","submittedOn":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}}}]},"pensions":{"pensionReliefs":{"submittedOn":"2020-01-04T05:01:01Z","deletedOn":"2020-01-04T05:01:01Z","pensionReliefs":{"regularPensionContributions":100.01,"oneOffPensionContributionsPaid":100.01,"retirementAnnuityPayments":100.01,"paymentToEmployersSchemeNoTaxRelief":100.01,"overseasPensionSchemeContributions":100.01}},"pensionCharges":{"submittedOn":"2020-07-27T17:00:19Z","pensionSavingsTaxCharges":{"pensionSchemeTaxReference":["00123456RA","00123456RB"],"lumpSumBenefitTakenInExcessOfLifetimeAllowance":{"amount":800.02,"taxPaid":200.02},"benefitInExcessOfLifetimeAllowance":{"amount":800.02,"taxPaid":200.02},"isAnnualAllowanceReduced":false,"taperedAnnualAllowance":false,"moneyPurchasedAllowance":false},"pensionSchemeOverseasTransfers":{"overseasSchemeProvider":[{"providerName":"overseas providerName 1 qualifying scheme","providerAddress":"overseas address 1","providerCountryCode":"ESP","qualifyingRecognisedOverseasPensionScheme":["Q100000","Q100002"]}],"transferCharge":22.77,"transferChargeTaxPaid":33.88},"pensionSchemeUnauthorisedPayments":{"pensionSchemeTaxReference":["00123456RA","00123456RB"],"surcharge":{"amount":124.44,"foreignTaxPaid":123.33},"noSurcharge":{"amount":222.44,"foreignTaxPaid":223.33}},"pensionContributions":{"pensionSchemeTaxReference":["00123456RA","00123456RB"],"inExcessOfTheAnnualAllowance":150.67,"annualAllowanceTaxPaid":178.65},"overseasPensionContributions":{"overseasSchemeProvider":[{"providerName":"overseas providerName 1 tax ref","providerAddress":"overseas address 1","providerCountryCode":"ESP","pensionSchemeTaxReference":["00123456RA","00123456RB"]}],"shortServiceRefund":1.11,"shortServiceRefundTaxPaid":2.22}}}}""".stripMargin
+            result.body mustBe Json.toJson(anIncomeSources).toString
         }
       }
-
 
       "return 204 if a user has no recorded income sources" in new Setup {
         stubGetWithoutResponseBody(
@@ -118,11 +128,17 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           requestHeaders
         )
 
+        stubGetWithoutResponseBody(
+          url = s"/income-tax-cis/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = NO_CONTENT,
+          requestHeaders
+        )
+
         authorised()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader,sessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader)
           .get) {
           result =>
             result.status mustBe 204
@@ -149,7 +165,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader,sessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader)
           .get) {
           result =>
             result.status mustBe 503
@@ -162,7 +178,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader,sessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader)
           .get) {
           result =>
             result.status mustBe 401
@@ -194,40 +210,45 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
       }
     }
 
-
     "the user is an agent" must {
       "return the income sources for a user" in new Setup {
         stubGetWithResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response = """{"ukDividends": 29320682007.99,"otherUkDividends": 17060389570.99}""",
+          response = Json.toJson(aDividends).toString,
           requestHeaders
         )
         stubGetWithResponseBody(
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response = """[{"accountName": "someName", "incomeSourceId": "123", "taxedUkInterest": 29320682007.99,"untaxedUkInterest": 17060389570.99}]""",
+          response = Json.toJson(Seq(anInterest)).toString,
           requestHeaders
         )
         stubGetWithResponseBody(
           url = s"/income-tax-gift-aid/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response = """{"giftAidPayments":{"nonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"currentYear":6556249600,"oneOffCurrentYear":59537236000,"currentYearTreatedAsPreviousYear":14979438600,"nextYearTreatedAsCurrentYear":55751930000,"nonUkCharities":82514854000},"gifts":{"investmentsNonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"landAndBuildings":89375515000,"sharesOrSecurities":94768726000,"investmentsNonUkCharities":72965235000}}""",
+          response = Json.toJson(aGiftAid).toString,
           requestHeaders
         )
 
         stubGetWithResponseBody(
           url = s"/income-tax-employment/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response = """{"hmrcEmploymentData":[{"employmentId":"00000000-0000-0000-1111-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","dateIgnored":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}},"employmentExpenses":{"submittedOn":"2020-01-04T05:01:01Z","totalExpenses":800,"expenses":{"businessTravelCosts":100,"jobExpenses":100,"flatRateJobExpenses":100,"professionalSubscriptions":100,"hotelAndMealExpenses":100,"otherAndCapitalAllowances":100,"vehicleExpenses":100,"mileageAllowanceRelief":100}}}],"customerEmploymentData":[{"employmentId":"00000000-0000-0000-2222-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","submittedOn":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}},"employmentExpenses":{"submittedOn":"2020-01-04T05:01:01Z","totalExpenses":800,"expenses":{"businessTravelCosts":100,"jobExpenses":100,"flatRateJobExpenses":100,"professionalSubscriptions":100,"hotelAndMealExpenses":100,"otherAndCapitalAllowances":100,"vehicleExpenses":100,"mileageAllowanceRelief":100}}}]}""",
+          response = Json.toJson(anAllEmploymentData).toString,
           requestHeaders
         )
 
         stubGetWithResponseBody(
           url = s"/income-tax-pensions/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
-          response =
-            """{"taxYear":2022,"pensionReliefs":{"submittedOn":"2020-01-04T05:01:01Z","deletedOn":"2020-01-04T05:01:01Z","pensionReliefs":{"regularPensionContributions":100.01,"oneOffPensionContributionsPaid":100.01,"retirementAnnuityPayments":100.01,"paymentToEmployersSchemeNoTaxRelief":100.01,"overseasPensionSchemeContributions":100.01}},"pensionCharges":{"submittedOn":"2020-07-27T17:00:19Z","pensionSavingsTaxCharges":{"pensionSchemeTaxReference":["00123456RA","00123456RB"],"lumpSumBenefitTakenInExcessOfLifetimeAllowance":{"amount":800.02,"taxPaid":200.02},"benefitInExcessOfLifetimeAllowance":{"amount":800.02,"taxPaid":200.02},"isAnnualAllowanceReduced":false,"taperedAnnualAllowance":false,"moneyPurchasedAllowance":false},"pensionSchemeOverseasTransfers":{"overseasSchemeProvider":[{"providerName":"overseas providerName 1 qualifying scheme","providerAddress":"overseas address 1","providerCountryCode":"ESP","qualifyingRecognisedOverseasPensionScheme":["Q100000","Q100002"]}],"transferCharge":22.77,"transferChargeTaxPaid":33.88},"pensionSchemeUnauthorisedPayments":{"pensionSchemeTaxReference":["00123456RA","00123456RB"],"surcharge":{"amount":124.44,"foreignTaxPaid":123.33},"noSurcharge":{"amount":222.44,"foreignTaxPaid":223.33}},"pensionContributions":{"pensionSchemeTaxReference":["00123456RA","00123456RB"],"inExcessOfTheAnnualAllowance":150.67,"annualAllowanceTaxPaid":178.65},"overseasPensionContributions":{"overseasSchemeProvider":[{"providerName":"overseas providerName 1 tax ref","providerAddress":"overseas address 1","providerCountryCode":"ESP","pensionSchemeTaxReference":["00123456RA","00123456RB"]}],"shortServiceRefund":1.11,"shortServiceRefundTaxPaid":2.22}}}""".stripMargin,
+          response = Json.toJson(aPensions).toString,
+          requestHeaders
+        )
+
+        stubGetWithResponseBody(
+          url = s"/income-tax-cis/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = OK,
+          response = Json.toJson(Some(anAllCISDeductions)).toString,
           requestHeaders
         )
 
@@ -236,13 +257,12 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
-            .withHttpHeaders(mtditidHeader,sessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader)
             .get
         ) {
           result =>
             result.status mustBe 200
-            result.body mustBe
-              """{"dividends":{"ukDividends":29320682007.99,"otherUkDividends":17060389570.99},"interest":[{"accountName":"someName","incomeSourceId":"123","taxedUkInterest":29320682007.99,"untaxedUkInterest":17060389570.99}],"giftAid":{"giftAidPayments":{"nonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"currentYear":6556249600,"oneOffCurrentYear":59537236000,"currentYearTreatedAsPreviousYear":14979438600,"nextYearTreatedAsCurrentYear":55751930000,"nonUkCharities":82514854000},"gifts":{"investmentsNonUkCharitiesCharityNames":["abcdefghijklmnopqr"],"landAndBuildings":89375515000,"sharesOrSecurities":94768726000,"investmentsNonUkCharities":72965235000}},"employment":{"hmrcEmploymentData":[{"employmentId":"00000000-0000-0000-1111-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","dateIgnored":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}}}],"customerEmploymentData":[{"employmentId":"00000000-0000-0000-2222-000000000000","employerName":"Business","employerRef":"666/66666","payrollId":"1234567890","startDate":"2020-01-01","cessationDate":"2020-01-01","submittedOn":"2020-01-01T10:00:38Z","employmentData":{"submittedOn":"2020-01-04T05:01:01Z","employmentSequenceNumber":"1002","companyDirector":false,"closeCompany":true,"directorshipCeasedDate":"2020-02-12","occPen":false,"disguisedRemuneration":false,"pay":{"taxablePayToDate":34234.15,"totalTaxToDate":6782.92,"payFrequency":"CALENDAR MONTHLY","paymentDate":"2020-04-23","taxWeekNo":32,"taxMonthNo":2}},"employmentBenefits":{"submittedOn":"2020-01-04T05:01:01Z","benefits":{"accommodation":100,"assets":100,"assetTransfer":100,"beneficialLoan":100,"car":100,"carFuel":100,"educationalServices":100,"entertaining":100,"expenses":100,"medicalInsurance":100,"telephone":100,"service":100,"taxableExpenses":100,"van":100,"vanFuel":100,"mileage":100,"nonQualifyingRelocationExpenses":100,"nurseryPlaces":100,"otherItems":100,"paymentsOnEmployeesBehalf":100,"personalIncidentalExpenses":100,"qualifyingRelocationExpenses":100,"employerProvidedProfessionalSubscriptions":100,"employerProvidedServices":100,"incomeTaxPaidByDirector":100,"travelAndSubsistence":100,"vouchersAndCreditCards":100,"nonCash":100}}}]},"pensions":{"pensionReliefs":{"submittedOn":"2020-01-04T05:01:01Z","deletedOn":"2020-01-04T05:01:01Z","pensionReliefs":{"regularPensionContributions":100.01,"oneOffPensionContributionsPaid":100.01,"retirementAnnuityPayments":100.01,"paymentToEmployersSchemeNoTaxRelief":100.01,"overseasPensionSchemeContributions":100.01}},"pensionCharges":{"submittedOn":"2020-07-27T17:00:19Z","pensionSavingsTaxCharges":{"pensionSchemeTaxReference":["00123456RA","00123456RB"],"lumpSumBenefitTakenInExcessOfLifetimeAllowance":{"amount":800.02,"taxPaid":200.02},"benefitInExcessOfLifetimeAllowance":{"amount":800.02,"taxPaid":200.02},"isAnnualAllowanceReduced":false,"taperedAnnualAllowance":false,"moneyPurchasedAllowance":false},"pensionSchemeOverseasTransfers":{"overseasSchemeProvider":[{"providerName":"overseas providerName 1 qualifying scheme","providerAddress":"overseas address 1","providerCountryCode":"ESP","qualifyingRecognisedOverseasPensionScheme":["Q100000","Q100002"]}],"transferCharge":22.77,"transferChargeTaxPaid":33.88},"pensionSchemeUnauthorisedPayments":{"pensionSchemeTaxReference":["00123456RA","00123456RB"],"surcharge":{"amount":124.44,"foreignTaxPaid":123.33},"noSurcharge":{"amount":222.44,"foreignTaxPaid":223.33}},"pensionContributions":{"pensionSchemeTaxReference":["00123456RA","00123456RB"],"inExcessOfTheAnnualAllowance":150.67,"annualAllowanceTaxPaid":178.65},"overseasPensionContributions":{"overseasSchemeProvider":[{"providerName":"overseas providerName 1 tax ref","providerAddress":"overseas address 1","providerCountryCode":"ESP","pensionSchemeTaxReference":["00123456RA","00123456RB"]}],"shortServiceRefund":1.11,"shortServiceRefundTaxPaid":2.22}}}}""".stripMargin
+            result.body mustBe Json.toJson(anIncomeSources).toString
         }
       }
 
@@ -272,11 +292,16 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           status = NO_CONTENT,
           requestHeaders
         )
+        stubGetWithoutResponseBody(
+          url = s"/income-tax-cis/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = NO_CONTENT,
+          requestHeaders
+        )
         agentAuthorised()
 
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
-            .withHttpHeaders(mtditidHeader,sessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader)
             .withQueryStringParameters("taxYear" -> "2019")
             .get
         ) {
@@ -305,7 +330,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
-            .withHttpHeaders(mtditidHeader,sessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader)
             .get
         ) {
           result =>
@@ -330,7 +355,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
-            .withHttpHeaders(mtditidHeader,sessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader)
             .get
         ) {
           result =>

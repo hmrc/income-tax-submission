@@ -16,32 +16,38 @@
 
 package api
 
+import builders.models.DividendsBuilder.aDividends
+import builders.models.InterestBuilder.anInterest
+import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
+import builders.models.gifts.GiftAidBuilder.aGiftAid
+import builders.models.pensions.PensionsBuilder.aPensions
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import helpers.IntegrationSpec
-import models.{APIErrorBodyModel, IncomeSourcesResponseModel, RefreshIncomeSource}
 import models.mongo.{DatabaseError, UserData}
+import models.{APIErrorBodyModel, IncomeSources, RefreshIncomeSource}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
-import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, NO_CONTENT, OK, UNAUTHORIZED}
+import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import repositories.IncomeTaxUserDataRepositoryImpl
 
 class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
-  val repo: IncomeTaxUserDataRepositoryImpl = app.injector.instanceOf[IncomeTaxUserDataRepositoryImpl]
+  private val repo: IncomeTaxUserDataRepositoryImpl = app.injector.instanceOf[IncomeTaxUserDataRepositoryImpl]
 
   private def count = await(repo.collection.countDocuments().toFuture())
 
-  override val userData: UserData = UserData(
+  private val userDataTaxYear = 2022
+  private val userData: UserData = UserData(
     "sessionId-1618a1e8-4979-41d8-a32e-5ffbe69fac81",
     "555555555",
     "AA123123A",
-    2022,
-    dividendsModel,
-    interestsModel,
-    Some(giftAidModel),
-    Some(employmentsModel),
-    Some(fullPensionsModel)
+    userDataTaxYear,
+    Some(aDividends),
+    Some(Seq(anInterest)),
+    Some(aGiftAid),
+    Some(anAllEmploymentData),
+    Some(aPensions)
   )
 
   val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "555555555"))
@@ -50,9 +56,9 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
     implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(5, Seconds))
     val taxYear: String = userData.taxYear.toString
     val successNino: String = userData.nino
-    val mtditidHeader = ("mtditid", userData.mtdItId)
-    val sessionIdHeader = ("sessionId", userData.sessionId)
-    val xSessionIdHeader = ("X-Session-ID", userData.sessionId)
+    val mtditidHeader: (String, String) = ("mtditid", userData.mtdItId)
+    val sessionIdHeader: (String, String) = ("sessionId", userData.sessionId)
+    val xSessionIdHeader: (String, String) = ("X-Session-ID", userData.sessionId)
     auditStubs()
     await(repo.collection.drop().toFuture())
     await(repo.ensureIndexes)
@@ -63,7 +69,6 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
     "the user is an individual" must {
       "refresh the dividends income source for a user" in new Setup {
-
         val res: Either[DatabaseError, Unit] = await(repo.update(userData))
         res mustBe Right()
         count mustBe 1
@@ -91,12 +96,12 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
           result =>
             result.status mustBe OK
 
-            Json.parse(result.body).as[IncomeSourcesResponseModel].dividends.get.ukDividends mustBe Some(444.99)
-            Json.parse(result.body).as[IncomeSourcesResponseModel].dividends.get.otherUkDividends mustBe Some(333.99)
+            Json.parse(result.body).as[IncomeSources].dividends.get.ukDividends mustBe Some(444.99)
+            Json.parse(result.body).as[IncomeSources].dividends.get.otherUkDividends mustBe Some(333.99)
         }
       }
-      "refresh the dividends income source for a user when there was no dividends to start with" in new Setup {
 
+      "refresh the dividends income source for a user when there was no dividends to start with" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData.copy(dividends = None)))
         res mustBe Right()
         count mustBe 1
@@ -124,12 +129,12 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
           result =>
             result.status mustBe OK
 
-            Json.parse(result.body).as[IncomeSourcesResponseModel].dividends.get.ukDividends mustBe Some(444.99)
-            Json.parse(result.body).as[IncomeSourcesResponseModel].dividends.get.otherUkDividends mustBe Some(333.99)
+            Json.parse(result.body).as[IncomeSources].dividends.get.ukDividends mustBe Some(444.99)
+            Json.parse(result.body).as[IncomeSources].dividends.get.otherUkDividends mustBe Some(333.99)
         }
       }
-      "refresh the dividends income source for a user when there was no income source data to start with" in new Setup {
 
+      "refresh the dividends income source for a user when there was no income source data to start with" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None)))
         res mustBe Right()
         count mustBe 1
@@ -157,12 +162,12 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
           result =>
             result.status mustBe OK
 
-            Json.parse(result.body).as[IncomeSourcesResponseModel].dividends.get.ukDividends mustBe Some(444.99)
-            Json.parse(result.body).as[IncomeSourcesResponseModel].dividends.get.otherUkDividends mustBe Some(333.99)
+            Json.parse(result.body).as[IncomeSources].dividends.get.ukDividends mustBe Some(444.99)
+            Json.parse(result.body).as[IncomeSources].dividends.get.otherUkDividends mustBe Some(333.99)
         }
       }
-      "refresh the dividends income source for a user when there was no data to start with" in new Setup {
 
+      "refresh the dividends income source for a user when there was no data to start with" in new Setup {
         count mustBe 0
 
         stubGetWithResponseBody(
@@ -188,13 +193,14 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
           result =>
             result.status mustBe OK
 
-            Json.parse(result.body).as[IncomeSourcesResponseModel].dividends.get.ukDividends mustBe Some(444.99)
-            Json.parse(result.body).as[IncomeSourcesResponseModel].dividends.get.otherUkDividends mustBe Some(333.99)
+            Json.parse(result.body).as[IncomeSources].dividends.get.ukDividends mustBe Some(444.99)
+            Json.parse(result.body).as[IncomeSources].dividends.get.otherUkDividends mustBe Some(333.99)
         }
       }
-      "return a not found when the user has no income source data and no dividends retrieved" in new Setup {
 
-        val res: Either[DatabaseError, Unit] = await(repo.update(userData.copy(dividends = None, interest = None, employment = None, giftAid = None, pensions = None)))
+      "return a not found when the user has no income source data and no dividends retrieved" in new Setup {
+        val res: Either[DatabaseError, Unit] = await(repo.update(userData.copy(dividends = None, interest = None,
+          employment = None, giftAid = None, pensions = None)))
         res mustBe Right()
         count mustBe 1
 
@@ -222,20 +228,20 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
             result.status mustBe NO_CONTENT
         }
       }
-      "return a bad request invalid parameter" in new Setup {
 
+      "return a bad request invalid parameter" in new Setup {
         authorised()
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
-          .put[JsValue](Json.toJson(RefreshIncomeSource("divideadends")))) {
+          .put[JsValue](Json.toJson(RefreshIncomeSource("invalid-parameter")))) {
           result =>
             result.status mustBe BAD_REQUEST
             result.json mustBe Json.toJson(APIErrorBodyModel("INVALID_INCOME_SOURCE_PARAMETER", "Invalid income source value."))
         }
       }
-      "refresh the dividends income source for a user when there are no dividends after the update" in new Setup {
 
+      "refresh the dividends income source for a user when there are no dividends after the update" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData))
         res mustBe Right()
         count mustBe 1
@@ -263,7 +269,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
           result =>
             result.status mustBe OK
 
-            Json.parse(result.body).as[IncomeSourcesResponseModel].dividends mustBe None
+            Json.parse(result.body).as[IncomeSources].dividends mustBe None
         }
       }
 
@@ -281,7 +287,6 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
       }
 
       "return UNAUTHORIZED if the request has no MTDITID header present" in new Setup {
-
         authorised()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
@@ -296,7 +301,6 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
     "the user is an agent" must {
       "refresh the dividends income source for a user" in new Setup {
-
         val res: Either[DatabaseError, Unit] = await(repo.update(userData))
         res mustBe Right()
         count mustBe 1
@@ -325,13 +329,12 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
           result =>
             result.status mustBe OK
 
-            Json.parse(result.body).as[IncomeSourcesResponseModel].dividends.get.ukDividends mustBe Some(444.99)
-            Json.parse(result.body).as[IncomeSourcesResponseModel].dividends.get.otherUkDividends mustBe Some(333.99)
+            Json.parse(result.body).as[IncomeSources].dividends.get.ukDividends mustBe Some(444.99)
+            Json.parse(result.body).as[IncomeSources].dividends.get.otherUkDividends mustBe Some(333.99)
         }
       }
 
       "return UNAUTHORIZED if the user has no HMRC-MTD-IT enrolment" in new Setup {
-
         unauthorisedOtherEnrolment()
 
         whenReady(

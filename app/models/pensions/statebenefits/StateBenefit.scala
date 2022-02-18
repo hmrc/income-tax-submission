@@ -25,20 +25,19 @@ case class StateBenefit(benefitId: String,
                         submittedOn: Option[String],
                         endDate: Option[String],
                         amount: Option[BigDecimal],
-                        taxPaid: Option[BigDecimal]
-                       )
+                        taxPaid: Option[BigDecimal])
 
 object StateBenefit {
   implicit val format: OFormat[StateBenefit] = Json.format[StateBenefit]
 }
+
 case class EncryptedStateBenefit(benefitId: EncryptedValue,
                                  startDate: EncryptedValue,
                                  dateIgnored: Option[EncryptedValue],
                                  submittedOn: Option[EncryptedValue],
                                  endDate: Option[EncryptedValue],
                                  amount: Option[EncryptedValue],
-                                 taxPaid: Option[EncryptedValue]
-                                )
+                                 taxPaid: Option[EncryptedValue])
 
 object EncryptedStateBenefit {
   implicit val format: OFormat[EncryptedStateBenefit] = Json.format[EncryptedStateBenefit]
