@@ -48,3 +48,35 @@ case class EncryptedEmploymentSource(employmentId: EncryptedValue,
 object EncryptedEmploymentSource {
   implicit val format: OFormat[EncryptedEmploymentSource] = Json.format[EncryptedEmploymentSource]
 }
+
+case class HmrcEmploymentSource(employmentId: String,
+                                employerName: String,
+                                employerRef: Option[String],
+                                payrollId: Option[String],
+                                startDate: Option[String],
+                                cessationDate: Option[String],
+                                dateIgnored: Option[String],
+                                submittedOn: Option[String],
+                                hmrcEmploymentFinancialData: Option[EmploymentFinancialData],
+                                customerEmploymentFinancialData: Option[EmploymentFinancialData])
+
+object HmrcEmploymentSource {
+  implicit val format: OFormat[HmrcEmploymentSource] = Json.format[HmrcEmploymentSource]
+}
+
+case class EncryptedHmrcEmploymentSource(employmentId: EncryptedValue,
+                                         employerName: EncryptedValue,
+                                         employerRef: Option[EncryptedValue],
+                                         payrollId: Option[EncryptedValue],
+                                         startDate: Option[EncryptedValue],
+                                         cessationDate: Option[EncryptedValue],
+                                         dateIgnored: Option[EncryptedValue],
+                                         submittedOn: Option[EncryptedValue],
+                                         hmrcEmploymentFinancialData: Option[EncryptedEmploymentFinancialData],
+                                         customerEmploymentFinancialData: Option[EncryptedEmploymentFinancialData])
+
+object EncryptedHmrcEmploymentSource {
+  implicit val format: OFormat[EncryptedHmrcEmploymentSource] = Json.format[EncryptedHmrcEmploymentSource]
+}
+
+

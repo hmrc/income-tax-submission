@@ -18,7 +18,7 @@ package builders.models.employment
 
 import builders.models.employment.EmploymentBenefitsBuilder.anEmploymentBenefits
 import builders.models.employment.EmploymentDataBuilder.anEmploymentData
-import models.employment.EmploymentSource
+import models.employment.{EmploymentFinancialData, EmploymentSource, HmrcEmploymentSource}
 
 object EmploymentSourceBuilder {
 
@@ -33,5 +33,28 @@ object EmploymentSourceBuilder {
     submittedOn = Some("2020-01-04T05:01:01Z"),
     employmentData = Some(anEmploymentData),
     employmentBenefits = Some(anEmploymentBenefits)
+  )
+
+  val aHmrcEmploymentSource: HmrcEmploymentSource = HmrcEmploymentSource(
+    employmentId = "00000000-0000-0000-1111-000000000000",
+    employerName = "default-employer",
+    employerRef = Some("666/66666"),
+    payrollId = Some("1234567890"),
+    startDate = Some("2020-01-01"),
+    cessationDate = Some("2020-01-01"),
+    dateIgnored = None,
+    submittedOn = Some("2020-01-04T05:01:01Z"),
+    hmrcEmploymentFinancialData = Some(
+      EmploymentFinancialData(
+        employmentData = Some(anEmploymentData),
+        employmentBenefits = Some(anEmploymentBenefits)
+      )
+    ),
+    customerEmploymentFinancialData = Some(
+      EmploymentFinancialData(
+        employmentData = Some(anEmploymentData),
+        employmentBenefits = Some(anEmploymentBenefits)
+      )
+    )
   )
 }

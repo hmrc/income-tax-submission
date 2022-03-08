@@ -74,6 +74,7 @@ class IncomeSourcesSpec extends TestUtils {
           "startDate" -> "2020-01-01",
           "cessationDate" -> "2020-01-01",
           "submittedOn" -> "2020-01-04T05:01:01Z",
+          "hmrcEmploymentFinancialData" -> Json.obj(
           "employmentData" -> Json.obj(
             "submittedOn" -> "2020-01-04T05:01:01Z",
             "employmentSequenceNumber" -> "1002",
@@ -128,6 +129,65 @@ class IncomeSourcesSpec extends TestUtils {
               "travelAndSubsistence" -> 9.00,
               "vouchersAndCreditCards" -> 24.00,
               "nonCash" -> 25.00
+            )
+          )
+          ),
+          "customerEmploymentFinancialData" -> Json.obj(
+            "employmentData" -> Json.obj(
+              "submittedOn" -> "2020-01-04T05:01:01Z",
+              "employmentSequenceNumber" -> "1002",
+              "companyDirector" -> false,
+              "closeCompany" -> true,
+              "directorshipCeasedDate" -> "2020-02-12",
+              "occPen" -> false,
+              "disguisedRemuneration" -> false,
+              "pay" -> Json.obj(
+                "taxablePayToDate" -> 100.00,
+                "totalTaxToDate" -> 200.00,
+                "payFrequency" -> "CALENDAR MONTHLY",
+                "paymentDate" -> "2020-04-23",
+                "taxWeekNo" -> 1,
+                "taxMonthNo" -> 1
+              ),
+              "deductions" -> Json.obj(
+                "studentLoans" -> Json.obj(
+                  "uglDeductionAmount" -> 100,
+                  "pglDeductionAmount" -> 200
+                )
+              )
+            ),
+            "employmentBenefits" -> Json.obj(
+              "submittedOn" -> "2020-01-04T05:01:01Z",
+              "benefits" -> Json.obj(
+                "accommodation" -> 6.00,
+                "assets" -> 27.00,
+                "assetTransfer" -> 280000.00,
+                "beneficialLoan" -> 18.00,
+                "car" -> 1.23,
+                "carFuel" -> 2.00,
+                "educationalServices" -> 19.00,
+                "entertaining" -> 11.00,
+                "expenses" -> 22.00,
+                "medicalInsurance" -> 16.00,
+                "telephone" -> 12.00,
+                "service" -> 15.00,
+                "taxableExpenses" -> 23.00,
+                "van" -> 3.00,
+                "vanFuel" -> 4.00,
+                "mileage" -> 5.00,
+                "nonQualifyingRelocationExpenses" -> 8.00,
+                "nurseryPlaces" -> 17.00,
+                "otherItems" -> 26.00,
+                "paymentsOnEmployeesBehalf" -> 21.00,
+                "personalIncidentalExpenses" -> 10.00,
+                "qualifyingRelocationExpenses" -> 7.00,
+                "employerProvidedProfessionalSubscriptions" -> 14.00,
+                "employerProvidedServices" -> 13.00,
+                "incomeTaxPaidByDirector" -> 20.00,
+                "travelAndSubsistence" -> 9.00,
+                "vouchersAndCreditCards" -> 24.00,
+                "nonCash" -> 25.00
+              )
             )
           )
         )),

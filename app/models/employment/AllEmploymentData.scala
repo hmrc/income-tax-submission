@@ -18,7 +18,7 @@ package models.employment
 
 import play.api.libs.json.{Json, OFormat}
 
-case class AllEmploymentData(hmrcEmploymentData: Seq[EmploymentSource],
+case class AllEmploymentData(hmrcEmploymentData: Seq[HmrcEmploymentSource],
                              hmrcExpenses: Option[EmploymentExpenses],
                              customerEmploymentData: Seq[EmploymentSource],
                              customerExpenses: Option[EmploymentExpenses])
@@ -27,7 +27,7 @@ object AllEmploymentData {
   implicit val format: OFormat[AllEmploymentData] = Json.format[AllEmploymentData]
 }
 
-case class EncryptedAllEmploymentData(hmrcEmploymentData: Seq[EncryptedEmploymentSource],
+case class EncryptedAllEmploymentData(hmrcEmploymentData: Seq[EncryptedHmrcEmploymentSource],
                                       hmrcExpenses: Option[EncryptedEmploymentExpenses],
                                       customerEmploymentData: Seq[EncryptedEmploymentSource],
                                       customerExpenses: Option[EncryptedEmploymentExpenses])
