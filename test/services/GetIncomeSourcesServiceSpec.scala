@@ -18,6 +18,7 @@ package services
 
 import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
+import builders.models.employment.HmrcEmploymentSourceBuilder.aHmrcEmploymentSource
 import builders.models.pensions.PensionsBuilder.aPensions
 import com.codahale.metrics.SharedMetricRegistries
 import connectors._
@@ -91,9 +92,13 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           .expects("12345678", taxYear, mockHeaderCarrier)
           .returning(Future.successful(expectedInterestResult))
 
+        val employmentDataContainingPensionIncome = anAllEmploymentData.copy(hmrcEmploymentData = Seq(
+          aHmrcEmploymentSource.copy(occupationalPension = Some(true)),
+          aHmrcEmploymentSource
+        ))
         (employmentConnector.getSubmittedEmployment(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
-          .returning(Future.successful(Right(Some(anAllEmploymentData))))
+          .returning(Future.successful(Right(Some(employmentDataContainingPensionIncome))))
 
         (giftsConnector.getSubmittedGiftAid(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
@@ -110,22 +115,22 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
         await(underTest.getAllIncomeSources("12345678", taxYear, "87654321")) mustBe incomeSourcesResult
       }
     }
-  }
 
-  "when there are errors" should {
-    "return an InternalServerError" in {
-      val errorModel: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
-      val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(Dividends(Some(12345.67), Some(12345.67))))
+    "when there are errors" should {
+      "return an InternalServerError" in {
+        val errorModel: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
+        val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(Dividends(Some(12345.67), Some(12345.67))))
 
-      (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
-        .expects("12345678", taxYear, mockHeaderCarrier)
-        .returning(Future.successful(expectedDividendsResult))
+        (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(expectedDividendsResult))
 
-      (interestConnector.getSubmittedInterest(_: String, _: Int)(_: HeaderCarrier))
-        .expects("12345678", taxYear, mockHeaderCarrier)
-        .returning(Future.successful(Left(errorModel)))
+        (interestConnector.getSubmittedInterest(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Left(errorModel)))
 
-      await(underTest.getAllIncomeSources("12345678", taxYear, "87654321")) mustBe Left(errorModel)
+        await(underTest.getAllIncomeSources("12345678", taxYear, "87654321")) mustBe Left(errorModel)
+      }
     }
   }
 }

@@ -54,7 +54,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
         dividends.map(res => Dividends(res.ukDividends, res.otherUkDividends)),
         interest,
         giftAid,
-        employment,
+        employment.map(_.excludePensionIncome()),
         pensions,
         cis
       )

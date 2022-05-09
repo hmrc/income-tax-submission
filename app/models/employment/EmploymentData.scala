@@ -27,7 +27,10 @@ case class EmploymentData(submittedOn: String,
                           occPen: Option[Boolean],
                           disguisedRemuneration: Option[Boolean],
                           pay: Option[Pay],
-                          deductions: Option[Deductions])
+                          deductions: Option[Deductions]) {
+
+  lazy val hasOccPen: Boolean = occPen.contains(true)
+}
 
 object EmploymentData {
   implicit val formats: OFormat[EmploymentData] = Json.format[EmploymentData]

@@ -133,23 +133,22 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def encryptHmrcEmploymentSource(e: HmrcEmploymentSource)(implicit textAndKey: TextAndKey): EncryptedHmrcEmploymentSource ={
+  private def encryptHmrcEmploymentSource(e: HmrcEmploymentSource)
+                                         (implicit textAndKey: TextAndKey): EncryptedHmrcEmploymentSource = EncryptedHmrcEmploymentSource(
+    employmentId = encryptionService.encrypt(e.employmentId),
+    employerName = encryptionService.encrypt(e.employerName),
+    employerRef = e.employerRef.map(encryptionService.encrypt),
+    payrollId = e.payrollId.map(encryptionService.encrypt),
+    startDate = e.startDate.map(encryptionService.encrypt),
+    cessationDate = e.cessationDate.map(encryptionService.encrypt),
+    dateIgnored = e.dateIgnored.map(encryptionService.encrypt),
+    submittedOn = e.submittedOn.map(encryptionService.encrypt),
+    hmrcEmploymentFinancialData = e.hmrcEmploymentFinancialData.map(encryptEmploymentFinancialData),
+    customerEmploymentFinancialData = e.customerEmploymentFinancialData.map(encryptEmploymentFinancialData),
+    occupationalPension = e.occupationalPension.map(encryptionService.encrypt)
+  )
 
-    EncryptedHmrcEmploymentSource(
-      employmentId = encryptionService.encrypt(e.employmentId),
-      employerName = encryptionService.encrypt(e.employerName),
-      employerRef = e.employerRef.map(encryptionService.encrypt),
-      payrollId = e.payrollId.map(encryptionService.encrypt),
-      startDate = e.startDate.map(encryptionService.encrypt),
-      cessationDate = e.cessationDate.map(encryptionService.encrypt),
-      dateIgnored = e.dateIgnored.map(encryptionService.encrypt),
-      submittedOn = e.submittedOn.map(encryptionService.encrypt),
-      hmrcEmploymentFinancialData = e.hmrcEmploymentFinancialData.map(encryptEmploymentFinancialData),
-      customerEmploymentFinancialData = e.customerEmploymentFinancialData.map(encryptEmploymentFinancialData)
-    )
-  }
-
-  private def encryptEmploymentFinancialData(e: EmploymentFinancialData)(implicit textAndKey: TextAndKey): EncryptedEmploymentFinancialData ={
+  private def encryptEmploymentFinancialData(e: EmploymentFinancialData)(implicit textAndKey: TextAndKey): EncryptedEmploymentFinancialData = {
 
     EncryptedEmploymentFinancialData(
       employmentData = e.employmentData.map(encryptEmploymentData),
@@ -157,54 +156,52 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def encryptEmploymentSource(e: EmploymentSource)(implicit textAndKey: TextAndKey): EncryptedEmploymentSource ={
+  private def encryptEmploymentSource(e: EmploymentSource)
+                                     (implicit textAndKey: TextAndKey): EncryptedEmploymentSource = EncryptedEmploymentSource(
+    employmentId = encryptionService.encrypt(e.employmentId),
+    employerName = encryptionService.encrypt(e.employerName),
+    employerRef = e.employerRef.map(encryptionService.encrypt),
+    payrollId = e.payrollId.map(encryptionService.encrypt),
+    startDate = e.startDate.map(encryptionService.encrypt),
+    cessationDate = e.cessationDate.map(encryptionService.encrypt),
+    dateIgnored = e.dateIgnored.map(encryptionService.encrypt),
+    submittedOn = e.submittedOn.map(encryptionService.encrypt),
+    employmentData = e.employmentData.map(encryptEmploymentData),
+    employmentBenefits = e.employmentBenefits.map(encryptEmploymentBenefits),
+    occupationalPension = e.occupationalPension.map(encryptionService.encrypt)
+  )
 
-    EncryptedEmploymentSource(
-      employmentId = encryptionService.encrypt(e.employmentId),
-      employerName = encryptionService.encrypt(e.employerName),
-      employerRef = e.employerRef.map(encryptionService.encrypt),
-      payrollId = e.payrollId.map(encryptionService.encrypt),
-      startDate = e.startDate.map(encryptionService.encrypt),
-      cessationDate = e.cessationDate.map(encryptionService.encrypt),
-      dateIgnored = e.dateIgnored.map(encryptionService.encrypt),
-      submittedOn = e.submittedOn.map(encryptionService.encrypt),
-      employmentData = e.employmentData.map(encryptEmploymentData),
-      employmentBenefits = e.employmentBenefits.map(encryptEmploymentBenefits)
-    )
-  }
+  private def decryptEmploymentSource(e: EncryptedEmploymentSource)
+                                     (implicit textAndKey: TextAndKey): EmploymentSource = EmploymentSource(
+    employmentId = encryptionService.decrypt[String](e.employmentId.value, e.employmentId.nonce),
+    employerName = encryptionService.decrypt[String](e.employerName.value, e.employerName.nonce),
+    employerRef = e.employerRef.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+    payrollId = e.payrollId.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+    startDate = e.startDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+    cessationDate = e.cessationDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+    dateIgnored = e.dateIgnored.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+    submittedOn = e.submittedOn.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+    employmentData = e.employmentData.map(decryptEmploymentData),
+    employmentBenefits = e.employmentBenefits.map(decryptEmploymentBenefits),
+    occupationalPension = e.occupationalPension.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce))
+  )
 
-  private def decryptEmploymentSource(e: EncryptedEmploymentSource)(implicit textAndKey: TextAndKey): EmploymentSource = {
+  private def decryptHmrcEmploymentSource(e: EncryptedHmrcEmploymentSource)
+                                         (implicit textAndKey: TextAndKey): HmrcEmploymentSource = HmrcEmploymentSource(
+    employmentId = encryptionService.decrypt[String](e.employmentId.value, e.employmentId.nonce),
+    employerName = encryptionService.decrypt[String](e.employerName.value, e.employerName.nonce),
+    employerRef = e.employerRef.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+    payrollId = e.payrollId.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+    startDate = e.startDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+    cessationDate = e.cessationDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+    dateIgnored = e.dateIgnored.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+    submittedOn = e.submittedOn.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+    hmrcEmploymentFinancialData = e.hmrcEmploymentFinancialData.map(decryptEmploymentFinancialData),
+    customerEmploymentFinancialData = e.customerEmploymentFinancialData.map(decryptEmploymentFinancialData),
+    occupationalPension = e.occupationalPension.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce))
+  )
 
-    EmploymentSource(
-      employmentId = encryptionService.decrypt[String](e.employmentId.value, e.employmentId.nonce),
-      employerName = encryptionService.decrypt[String](e.employerName.value, e.employerName.nonce),
-      employerRef = e.employerRef.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-      payrollId = e.payrollId.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-      startDate = e.startDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-      cessationDate = e.cessationDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-      dateIgnored = e.dateIgnored.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-      submittedOn = e.submittedOn.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-      employmentData = e.employmentData.map(decryptEmploymentData),
-      employmentBenefits = e.employmentBenefits.map(decryptEmploymentBenefits)
-    )
-  }
-
-  private def decryptHmrcEmploymentSource(e: EncryptedHmrcEmploymentSource)(implicit textAndKey: TextAndKey): HmrcEmploymentSource ={
-
-    HmrcEmploymentSource(
-      employmentId = encryptionService.decrypt[String](e.employmentId.value,e.employmentId.nonce),
-      employerName = encryptionService.decrypt[String](e.employerName.value,e.employerName.nonce),
-      employerRef = e.employerRef.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      payrollId = e.payrollId.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      startDate = e.startDate.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      cessationDate = e.cessationDate.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      dateIgnored = e.dateIgnored.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      submittedOn = e.submittedOn.map(x => encryptionService.decrypt[String](x.value,x.nonce)),
-      hmrcEmploymentFinancialData = e.hmrcEmploymentFinancialData.map(decryptEmploymentFinancialData),
-      customerEmploymentFinancialData = e.customerEmploymentFinancialData.map(decryptEmploymentFinancialData)
-    )
-  }
-  private def decryptEmploymentFinancialData(e: EncryptedEmploymentFinancialData)(implicit textAndKey: TextAndKey): EmploymentFinancialData ={
+  private def decryptEmploymentFinancialData(e: EncryptedEmploymentFinancialData)(implicit textAndKey: TextAndKey): EmploymentFinancialData = {
 
     EmploymentFinancialData(
       employmentData = e.employmentData.map(decryptEmploymentData),
@@ -212,7 +209,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def encryptEmploymentData(e: EmploymentData)(implicit textAndKey: TextAndKey): EncryptedEmploymentData ={
+  private def encryptEmploymentData(e: EmploymentData)(implicit textAndKey: TextAndKey): EncryptedEmploymentData = {
 
     val pay = e.pay.map { p =>
       EncryptedPay(

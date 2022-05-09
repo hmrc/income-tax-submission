@@ -16,13 +16,12 @@
 
 package builders.models.employment
 
-import builders.models.employment.EmploymentBenefitsBuilder.anEmploymentBenefits
-import builders.models.employment.EmploymentDataBuilder.anEmploymentData
-import models.employment.EmploymentSource
+import builders.models.employment.EmploymentFinancialDataBuilder.anEmploymentFinancialData
+import models.employment.HmrcEmploymentSource
 
-object EmploymentSourceBuilder {
+object HmrcEmploymentSourceBuilder {
 
-  val anEmploymentSource: EmploymentSource = EmploymentSource(
+  val aHmrcEmploymentSource: HmrcEmploymentSource = HmrcEmploymentSource(
     employmentId = "00000000-0000-0000-1111-000000000000",
     employerName = "default-employer",
     employerRef = Some("666/66666"),
@@ -31,8 +30,8 @@ object EmploymentSourceBuilder {
     cessationDate = Some("2020-01-01"),
     dateIgnored = None,
     submittedOn = Some("2020-01-04T05:01:01Z"),
-    employmentData = Some(anEmploymentData),
-    employmentBenefits = Some(anEmploymentBenefits),
+    hmrcEmploymentFinancialData = Some(anEmploymentFinancialData),
+    customerEmploymentFinancialData = Some(anEmploymentFinancialData),
     occupationalPension = None
   )
 }

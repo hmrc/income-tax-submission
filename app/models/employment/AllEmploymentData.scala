@@ -21,7 +21,13 @@ import play.api.libs.json.{Json, OFormat}
 case class AllEmploymentData(hmrcEmploymentData: Seq[HmrcEmploymentSource],
                              hmrcExpenses: Option[EmploymentExpenses],
                              customerEmploymentData: Seq[EmploymentSource],
-                             customerExpenses: Option[EmploymentExpenses])
+                             customerExpenses: Option[EmploymentExpenses]) {
+
+  def excludePensionIncome(): AllEmploymentData = this.copy(
+    hmrcEmploymentData = hmrcEmploymentData.filterNot(_.hasOccupationalPension),
+    customerEmploymentData = customerEmploymentData.filterNot(_.hasOccupationalPension)
+  )
+}
 
 object AllEmploymentData {
   implicit val format: OFormat[AllEmploymentData] = Json.format[AllEmploymentData]
