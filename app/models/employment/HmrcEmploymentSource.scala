@@ -16,8 +16,10 @@
 
 package models.employment
 
+import org.joda.time.DateTime
 import play.api.libs.json.{Json, OFormat}
 import utils.EncryptedValue
+import play.api.Logging
 
 case class HmrcEmploymentSource(employmentId: String,
                                 employerName: String,
@@ -29,11 +31,42 @@ case class HmrcEmploymentSource(employmentId: String,
                                 submittedOn: Option[String],
                                 hmrcEmploymentFinancialData: Option[EmploymentFinancialData],
                                 customerEmploymentFinancialData: Option[EmploymentFinancialData],
-                                occupationalPension: Option[Boolean]) {
+                                occupationalPension: Option[Boolean]) extends Logging {
 
   //scalastyle:off
   lazy val hasOccupationalPension: Boolean = occupationalPension.contains(true) || hmrcEmploymentFinancialData.exists(_.hasOccPen)
   //scalastyle:on
+
+
+  private def parseDate(submittedOn: String): Option[DateTime] = {
+    try {
+      Some(DateTime.parse(submittedOn))
+    } catch {
+      case e: Exception =>
+        logger.error(s"[HmrcEmploymentSource][parseDate] Couldn't parse submitted on to DateTime - ${e.getMessage}")
+        None
+    }
+  }
+
+  def getLatestEmploymentFinancialData: Option[EmploymentFinancialData] = {
+
+    (hmrcEmploymentFinancialData, customerEmploymentFinancialData) match {
+      case (None, None) => None
+      case (Some(hmrc), None) => Some(hmrc)
+      case (None, Some(customer)) => Some(customer)
+      case (Some(hmrc), Some(customer)) =>
+
+        val hmrcSubmittedOn: Option[DateTime] = hmrc.employmentData.map(_.submittedOn).flatMap(parseDate)
+        val customerSubmittedOn: Option[DateTime] = customer.employmentData.map(_.submittedOn).flatMap(parseDate)
+
+        Some((hmrcSubmittedOn,customerSubmittedOn) match {
+          case (Some(hmrcSubmittedOn), Some(customerSubmittedOn)) => if(hmrcSubmittedOn.isAfter(customerSubmittedOn)) hmrc else customer
+          case (Some(_), None) => hmrc
+          case (None, Some(_)) => customer
+          case (None, None) => customer
+        })
+    }
+  }
 }
 
 object HmrcEmploymentSource {

@@ -17,13 +17,18 @@
 package builders.models.employment
 
 import builders.models.employment.EmploymentBenefitsBuilder.anEmploymentBenefits
-import builders.models.employment.EmploymentDataBuilder.anEmploymentData
+import builders.models.employment.EmploymentDataBuilder.{anEmploymentData, anEmploymentDataOccPen}
 import models.employment.EmploymentFinancialData
 
 object EmploymentFinancialDataBuilder {
 
   val anEmploymentFinancialData: EmploymentFinancialData = EmploymentFinancialData(
     employmentData = Some(anEmploymentData),
+    employmentBenefits = Some(anEmploymentBenefits)
+  )
+
+  val anEmploymentFinancialDataOccPen: EmploymentFinancialData = EmploymentFinancialData(
+    employmentData = Some(anEmploymentDataOccPen),
     employmentBenefits = Some(anEmploymentBenefits)
   )
 }

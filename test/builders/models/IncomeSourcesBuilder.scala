@@ -21,7 +21,7 @@ import builders.models.InterestBuilder.anInterest
 import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import builders.models.gifts.GiftAidBuilder.aGiftAid
-import builders.models.pensions.PensionsBuilder.aPensions
+import builders.models.pensions.PensionsBuilder.aPensionsAlternative
 import models.IncomeSources
 
 object IncomeSourcesBuilder {
@@ -31,7 +31,7 @@ object IncomeSourcesBuilder {
     interest = Some(Seq(anInterest)),
     giftAid = Some(aGiftAid),
     employment = Some(anAllEmploymentData),
-    pensions = Some(aPensions),
+    pensions = Some(aPensionsAlternative),
     cis = Some(anAllCISDeductions)
   )
 }

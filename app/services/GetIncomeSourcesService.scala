@@ -55,7 +55,9 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
         interest,
         giftAid,
         employment.map(_.excludePensionIncome()),
-        pensions,
+        pensions.map(_.copy(
+          employmentPensions = employment.map(_.buildEmploymentPensions())
+        )),
         cis
       )
     }).value
