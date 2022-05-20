@@ -19,13 +19,26 @@ package builders.models.pensions
 import builders.models.pensions.charges.PensionChargesBuilder.aPensionCharges
 import builders.models.pensions.reliefs.PensionReliefsBuilder.aPensionReliefs
 import builders.models.pensions.statebenefits.StateBenefitsModelBuilder.aStateBenefitsModel
+import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentDataWithOccPen
 import models.pensions.Pensions
+import models.pensions.employmentPensions.EmploymentPensions
 
 object PensionsBuilder {
 
   val aPensions: Pensions = Pensions(
     pensionReliefs = Some(aPensionReliefs),
     pensionCharges = Some(aPensionCharges),
-    stateBenefits = Some(aStateBenefitsModel)
+    stateBenefits = Some(aStateBenefitsModel),
+    employmentPensions = None
+  )
+
+  val aPensionsAlternative: Pensions =
+    aPensions.copy(employmentPensions = Some(EmploymentPensions(Seq())))
+
+  val aPensionsWithEmployments: Pensions = Pensions(
+    pensionReliefs = Some(aPensionReliefs),
+    pensionCharges = Some(aPensionCharges),
+    stateBenefits = Some(aStateBenefitsModel),
+    employmentPensions = Some(anAllEmploymentDataWithOccPen.buildEmploymentPensions())
   )
 }

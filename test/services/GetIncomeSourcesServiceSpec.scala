@@ -17,9 +17,9 @@
 package services
 
 import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
-import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
+import builders.models.employment.AllEmploymentDataBuilder.{anAllEmploymentData, anAllEmploymentDataWithOccPen}
 import builders.models.employment.HmrcEmploymentSourceBuilder.aHmrcEmploymentSource
-import builders.models.pensions.PensionsBuilder.aPensions
+import builders.models.pensions.PensionsBuilder.{aPensions, aPensionsWithEmployments}
 import com.codahale.metrics.SharedMetricRegistries
 import connectors._
 import connectors.parsers.SubmittedDividendsParser.{IncomeSourcesResponseModel => IncomeSourceResponseDividends}
@@ -80,7 +80,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           Some(List(Interest("someName", "123", Some(1234.56), Some(1234.56)))),
           Some(GiftAid(Some(giftAidPayments), Some(gifts))),
           Some(anAllEmploymentData),
-          Some(aPensions),
+          Some(aPensionsWithEmployments),
           Some(anAllCISDeductions)
         ))
 
@@ -92,13 +92,9 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           .expects("12345678", taxYear, mockHeaderCarrier)
           .returning(Future.successful(expectedInterestResult))
 
-        val employmentDataContainingPensionIncome = anAllEmploymentData.copy(hmrcEmploymentData = Seq(
-          aHmrcEmploymentSource.copy(occupationalPension = Some(true)),
-          aHmrcEmploymentSource
-        ))
         (employmentConnector.getSubmittedEmployment(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
-          .returning(Future.successful(Right(Some(employmentDataContainingPensionIncome))))
+          .returning(Future.successful(Right(Some(anAllEmploymentDataWithOccPen))))
 
         (giftsConnector.getSubmittedGiftAid(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)

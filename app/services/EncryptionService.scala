@@ -26,8 +26,8 @@ import models.pensions.reliefs.{EncryptedPensionReliefs, EncryptedReliefs, Pensi
 import models.pensions.statebenefits._
 import models.{Dividends, EncryptedDividends, EncryptedInterest, Interest}
 import utils.SecureGCMCipher
-
 import javax.inject.Inject
+import models.pensions.employmentPensions.{EmploymentPensionModel, EmploymentPensions, EncryptedEmploymentPensionModel, EncryptedEmploymentPensions}
 
 //scalastyle:off
 class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig: AppConfig) {
@@ -526,10 +526,60 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       }
     }
 
+    val eEmploymentPensions: Option[EncryptedEmploymentPensions] = {
+      pensions.employmentPensions.map {
+        e =>
+          EncryptedEmploymentPensions(
+            employmentData = e.employmentData.map(encryptEmploymentPensionModel)
+          )
+      }
+    }
+
     EncryptedPensions(
       pensionReliefs = ePensionReliefs,
       pensionCharges = ePensionCharges,
-      stateBenefits = eStateBenefitsModel
+      stateBenefits = eStateBenefitsModel,
+      employmentPensions = eEmploymentPensions
+    )
+  }
+
+  private def encryptEmploymentPensions(e: EmploymentPensions)(implicit textAndKey: TextAndKey): EncryptedEmploymentPensions = {
+    EncryptedEmploymentPensions(
+      employmentData = e.employmentData.map(encryptEmploymentPensionModel)
+    )
+  }
+
+  private def encryptEmploymentPensionModel(e: EmploymentPensionModel)(implicit textAndKey: TextAndKey): EncryptedEmploymentPensionModel = {
+    EncryptedEmploymentPensionModel(
+      employmentId = encryptionService.encrypt(e.employmentId),
+      pensionSchemeName = encryptionService.encrypt(e.pensionSchemeName),
+      pensionSchemeRef = e.pensionSchemeRef.map(encryptionService.encrypt),
+      pensionId = e.pensionId.map(encryptionService.encrypt),
+      startDate = e.startDate.map(encryptionService.encrypt),
+      endDate = e.endDate.map(encryptionService.encrypt),
+      amount = e.amount.map(encryptionService.encrypt),
+      taxPaid = e.taxPaid.map(encryptionService.encrypt),
+      isCustomerEmploymentData = e.isCustomerEmploymentData.map(encryptionService.encrypt)
+    )
+  }
+
+  private def decryptEmploymentPensions(e: EncryptedEmploymentPensions)(implicit textAndKey: TextAndKey): EmploymentPensions = {
+    EmploymentPensions(
+      employmentData = e.employmentData.map(decryptEmploymentPensionModel)
+    )
+  }
+
+  private def decryptEmploymentPensionModel(e: EncryptedEmploymentPensionModel)(implicit textAndKey: TextAndKey): EmploymentPensionModel = {
+    EmploymentPensionModel(
+      employmentId = encryptionService.decrypt[String](e.employmentId.value, e.employmentId.nonce),
+      pensionSchemeName = encryptionService.decrypt[String](e.pensionSchemeName.value, e.pensionSchemeName.nonce),
+      pensionSchemeRef = e.pensionSchemeRef.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      pensionId = e.pensionId.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      startDate = e.startDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      endDate = e.endDate.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      amount = e.amount.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      taxPaid = e.taxPaid.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+      isCustomerEmploymentData = e.isCustomerEmploymentData.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce))
     )
   }
 
@@ -775,10 +825,18 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
         )
     }
 
+    val employmentPensions: Option[EmploymentPensions] = pensions.employmentPensions.map {
+      e =>
+        EmploymentPensions(
+          employmentData = e.employmentData.map(decryptEmploymentPensionModel)
+        )
+    }
+
     Pensions(
       pensionReliefs = pensionReliefs,
       pensionCharges = pensionCharges,
-      stateBenefits = stateBenefitsModel
+      stateBenefits = stateBenefitsModel,
+      employmentPensions = employmentPensions
     )
   }
 }

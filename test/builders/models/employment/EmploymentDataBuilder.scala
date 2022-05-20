@@ -33,4 +33,16 @@ object EmploymentDataBuilder {
     pay = Some(aPay),
     deductions = Some(aDeductions)
   )
+
+  val anEmploymentDataOccPen: EmploymentData = EmploymentData(
+    submittedOn = "2020-01-04T05:01:01Z",
+    employmentSequenceNumber = Some("1002"),
+    companyDirector = Some(false),
+    closeCompany = Some(true),
+    directorshipCeasedDate = Some("2020-02-12"),
+    occPen = Some(true),
+    disguisedRemuneration = Some(false),
+    pay = Some(aPay),
+    deductions = Some(aDeductions)
+  )
 }

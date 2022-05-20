@@ -16,6 +16,7 @@
 
 package models.employment
 
+import models.pensions.employmentPensions.{EmploymentPensionModel, EmploymentPensions}
 import play.api.libs.json.{Json, OFormat}
 
 case class AllEmploymentData(hmrcEmploymentData: Seq[HmrcEmploymentSource],
@@ -27,6 +28,48 @@ case class AllEmploymentData(hmrcEmploymentData: Seq[HmrcEmploymentSource],
     hmrcEmploymentData = hmrcEmploymentData.filterNot(_.hasOccupationalPension),
     customerEmploymentData = customerEmploymentData.filterNot(_.hasOccupationalPension)
   )
+
+  def onlyPensionIncome(): AllEmploymentData = this.copy(
+    hmrcEmploymentData = hmrcEmploymentData.filter(_.hasOccupationalPension),
+    customerEmploymentData = customerEmploymentData.filter(_.hasOccupationalPension)
+  )
+
+  def buildEmploymentPensions(): EmploymentPensions = {
+
+    val onlyOccPen = this.onlyPensionIncome()
+
+    val hmrc: Seq[EmploymentPensionModel] = onlyOccPen.hmrcEmploymentData.map(
+      x =>
+        EmploymentPensionModel(
+          employmentId = x.employmentId,
+          pensionSchemeName = x.employerName,
+          pensionSchemeRef = x.employerRef,
+          pensionId = x.payrollId,
+          startDate = x.startDate,
+          endDate = x.cessationDate,
+          amount = x.getLatestEmploymentFinancialData.flatMap(_.employmentData.flatMap(_.pay.flatMap(_.taxablePayToDate))),
+          taxPaid = x.getLatestEmploymentFinancialData.flatMap(_.employmentData.flatMap(_.pay.flatMap(_.totalTaxToDate))),
+          isCustomerEmploymentData = Some(false)
+        )
+    )
+
+    val customer: Seq[EmploymentPensionModel] = onlyOccPen.customerEmploymentData.map(
+      x =>
+        EmploymentPensionModel(
+          employmentId = x.employmentId,
+          pensionSchemeName = x.employerName,
+          pensionSchemeRef = x.employerRef,
+          pensionId = x.payrollId,
+          startDate = x.startDate,
+          endDate = x.cessationDate,
+          amount = x.employmentData.flatMap(_.pay.flatMap(_.taxablePayToDate)),
+          taxPaid = x.employmentData.flatMap(_.pay.flatMap(_.totalTaxToDate)),
+          isCustomerEmploymentData = Some(true)
+        )
+    )
+
+    EmploymentPensions(hmrc ++ customer)
+  }
 }
 
 object AllEmploymentData {
