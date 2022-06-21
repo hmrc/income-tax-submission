@@ -80,7 +80,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
   ".getExclusions" must {
 
     "return a list of excluded journeys" which {
-      lazy val request = FakeRequest("POST", s"/income-tax-submission-service/exclude-journey/$taxYear")
+      lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/exclude-journey/$taxYear")
         .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
 
       lazy val userData = ExclusionUserDataModel(nino, taxYear, Seq(
@@ -91,7 +91,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
       lazy val result = {
         mockAuth()
         mockFind(Right(Some(userData)))
-        controller.getExclusions(taxYear)(request)
+        controller.getExclusions(taxYear, nino)(request)
       }
 
       "has a status of OK(200)" in {
@@ -106,13 +106,13 @@ class ExcludeJourneyControllerSpec extends TestUtils {
     "return an internal server error" when {
 
       "there is an error accessing the database" in {
-        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/exclude-journey/$taxYear")
+        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/exclude-journey/$taxYear")
           .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
 
         lazy val result = {
           mockAuth()
           mockFind(Left(MongoError("uh oh")))
-          controller.getExclusions(taxYear)(request)
+          controller.getExclusions(taxYear, nino)(request)
         }
 
         status(result) mustBe INTERNAL_SERVER_ERROR
@@ -179,7 +179,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
     "return a NoContent" when {
 
       "the journey key is valid" in {
-        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/exclude-journey/$taxYear")
+        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/exclude-journey/$taxYear")
           .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
           .withJsonBody(Json.obj("journey" -> INTEREST))
 
@@ -189,7 +189,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
           mockModelGeneration(INTEREST, Some(Right(ExcludeJourneyModel(INTEREST, None))))
           mockCreateOrUpdate(Right(true))
 
-          await(controller.excludeJourney(taxYear)(request))
+          await(controller.excludeJourney(taxYear, nino)(request))
         }
 
         result.header.status mustBe NO_CONTENT
@@ -200,12 +200,12 @@ class ExcludeJourneyControllerSpec extends TestUtils {
     "return a BadRequest" when {
 
       "The body is not valid json" which {
-        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/exclude-journey/$taxYear")
+        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/exclude-journey/$taxYear")
           .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
 
         lazy val result = {
           mockAuth()
-          controller.excludeJourney(taxYear)(request)
+          controller.excludeJourney(taxYear, nino)(request)
         }
 
         "has the body of 'Invalid Body'" in {
@@ -218,13 +218,13 @@ class ExcludeJourneyControllerSpec extends TestUtils {
       }
 
       "The json is valid, but the wrong data" which {
-        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/exclude-journey/$taxYear")
+        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/exclude-journey/$taxYear")
           .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
           .withJsonBody(Json.obj("notAJourney" -> INTEREST))
 
         lazy val result = {
           mockAuth()
-          controller.excludeJourney(taxYear)(request)
+          controller.excludeJourney(taxYear, nino)(request)
         }
 
         "has the body of 'Incorrect Json Body'" in {
@@ -237,13 +237,13 @@ class ExcludeJourneyControllerSpec extends TestUtils {
       }
 
       "The journey key is not valid" which {
-        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/exclude-journey/$taxYear")
+        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/exclude-journey/$taxYear")
           .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
           .withJsonBody(Json.obj("journey" -> "NotAJourneyKey"))
 
         lazy val result = {
           mockAuth()
-          controller.excludeJourney(taxYear)(request)
+          controller.excludeJourney(taxYear, nino)(request)
         }
 
         "has a status of BAD_REQUEST(400)" in {
@@ -264,7 +264,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
     "return a NoContent" when {
 
       "the journeys are valid" in {
-        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/clear-excluded-journeys/$taxYear")
+        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/clear-excluded-journeys/$taxYear")
           .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
           .withJsonBody(Json.obj("journeys" -> Json.arr(
             INTEREST,
@@ -291,7 +291,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
           mockAuth()
           mockFind(Right(Some(findData)))
           mockCreateOrUpdateMultiple(expectedInputData, Right(true))
-          controller.clearJourneys(taxYear)(request)
+          controller.clearJourneys(taxYear, nino)(request)
         }
 
         status(result) mustBe NO_CONTENT
@@ -302,12 +302,12 @@ class ExcludeJourneyControllerSpec extends TestUtils {
     "return a BadRequest" when {
 
       "the body is not valid json" which {
-        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/clear-excluded-journeys/$taxYear")
+        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/clear-excluded-journeys/$taxYear")
           .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
 
         lazy val result = {
           mockAuth()
-          controller.clearJourneys(taxYear)(request)
+          controller.clearJourneys(taxYear, nino)(request)
         }
 
         "has the body of 'Invalid Body'" in {
@@ -324,7 +324,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
     "return an InternalServerError" when {
 
       "the find request returns an error" in {
-        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/clear-excluded-journeys/$taxYear")
+        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/clear-excluded-journeys/$taxYear")
           .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
           .withJsonBody(Json.obj("journeys" -> Json.arr(
             INTEREST,
@@ -334,14 +334,14 @@ class ExcludeJourneyControllerSpec extends TestUtils {
         lazy val result = {
           mockAuth()
           mockFind(Left(MongoError("eh")))
-          controller.clearJourneys(taxYear)(request)
+          controller.clearJourneys(taxYear, nino)(request)
         }
 
         status(result) mustBe INTERNAL_SERVER_ERROR
       }
 
       "the create/update database action returns an error" in {
-        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/clear-excluded-journeys/$taxYear")
+        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/clear-excluded-journeys/$taxYear")
           .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
           .withJsonBody(Json.obj("journeys" -> Json.arr(
             INTEREST,
@@ -354,7 +354,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
             nino, taxYear, Seq.empty
           ))))
           mockCreateOrUpdateMultiple(ExclusionUserDataModel(nino, taxYear, Seq.empty), Left(MongoError("eh")))
-          controller.clearJourneys(taxYear)(request)
+          controller.clearJourneys(taxYear, nino)(request)
         }
 
         status(result) mustBe INTERNAL_SERVER_ERROR

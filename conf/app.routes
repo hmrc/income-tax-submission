@@ -1,13 +1,13 @@
 # microservice specific routes
 
-GET         /income-tax/nino/:nino/sources                controllers.IncomeSourcesController.getIncomeSources(nino: String, taxYear: Int)
+GET         /income-tax/nino/:nino/sources                                         controllers.IncomeSourcesController.getIncomeSources(nino: String, taxYear: Int)
 
-GET         /income-tax/nino/:nino/sources/session        controllers.IncomeSourcesController.getIncomeSourcesFromSession(nino: String, taxYear: Int)
+GET         /income-tax/nino/:nino/sources/session                                 controllers.IncomeSourcesController.getIncomeSourcesFromSession(nino: String, taxYear: Int)
 
-PUT         /income-tax/nino/:nino/sources/session        controllers.IncomeSourcesController.refreshIncomeSource(nino: String, taxYear: Int)
+PUT         /income-tax/nino/:nino/sources/session                                 controllers.IncomeSourcesController.refreshIncomeSource(nino: String, taxYear: Int)
 
-GET         /excluded-journeys/:taxYear                   controllers.ExcludeJourneyController.getExclusions(taxYear: Int)
+GET         /income-tax/nino/:nino/sources/excluded-journeys/:taxYear              controllers.ExcludeJourneyController.getExclusions(taxYear: Int, nino: String)
 
-POST        /exclude-journey/:taxYear                     controllers.ExcludeJourneyController.excludeJourney(taxYear: Int)
+POST        /income-tax/nino/:nino/sources/exclude-journey/:taxYear                controllers.ExcludeJourneyController.excludeJourney(taxYear: Int, nino: String)
 
-POST        /clear-excluded-journeys/:taxYear             controllers.ExcludeJourneyController.clearJourneys(taxYear: Int)
+POST        /income-tax/nino/:nino/sources/clear-excluded-journeys/:taxYear        controllers.ExcludeJourneyController.clearJourneys(taxYear: Int, nino: String)

@@ -36,7 +36,7 @@ class ExcludeJourneyController @Inject()(
 
   val allJourneys: Seq[String] = Seq(INTEREST, DIVIDENDS, GIFT_AID, EMPLOYMENT, CIS)
 
-  def getExclusions(taxYear: Int): Action[AnyContent] = auth.async { implicit user =>
+  def getExclusions(taxYear: Int, nino: String): Action[AnyContent] = auth.async { implicit user =>
     excludeJourneyService.findExclusionData(taxYear).map {
       case Right(data) =>
         val model = GetExclusionsDataModel(data.map(_.exclusionModel).getOrElse(Seq.empty))
@@ -45,7 +45,7 @@ class ExcludeJourneyController @Inject()(
     }
   }
 
-  def excludeJourney(taxYear: Int): Action[AnyContent] = auth.async { implicit user =>
+  def excludeJourney(taxYear: Int, nino: String): Action[AnyContent] = auth.async { implicit user =>
     user.body.asJson match {
       case None =>
         Future.successful(BadRequest("Invalid Body"))
@@ -83,7 +83,7 @@ class ExcludeJourneyController @Inject()(
     }
   }
 
-  def clearJourneys(taxYear: Int): Action[AnyContent] = auth.async { implicit user =>
+  def clearJourneys(taxYear: Int, nino: String): Action[AnyContent] = auth.async { implicit user =>
     user.body.asJson match {
       case None => Future.successful(BadRequest("Invalid Body"))
       case Some(json) =>
