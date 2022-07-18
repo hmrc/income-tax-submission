@@ -27,6 +27,7 @@ import com.github.tomakehurst.wiremock.http.HttpHeader
 import helpers.IntegrationSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
+import play.api.http.HeaderNames
 import play.api.http.Status._
 import play.api.libs.json.Json
 
@@ -36,6 +37,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
     implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(5, Seconds))
     val successNino: String = "AA123123A"
     val taxYear: String = "2019"
+    val authorizationHeader: (String, String) = HeaderNames.AUTHORIZATION -> "mock-bearer-token"
     val mtditidHeader: (String, String) = ("mtditid", "555555555")
     val sessionIdHeader: (String, String) = ("sessionId", "555555555")
     val requestHeaders: Seq[HttpHeader] = Seq(new HttpHeader("mtditid", "555555555"))
@@ -91,7 +93,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader, sessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe 200
@@ -138,7 +140,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader, sessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe 204
@@ -165,7 +167,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader, sessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe 503
@@ -178,7 +180,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader, sessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe 401
@@ -257,7 +259,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
-            .withHttpHeaders(mtditidHeader, sessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
             .get
         ) {
           result =>
@@ -301,7 +303,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
-            .withHttpHeaders(mtditidHeader, sessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
             .withQueryStringParameters("taxYear" -> "2019")
             .get
         ) {
@@ -330,7 +332,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
-            .withHttpHeaders(mtditidHeader, sessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
             .get
         ) {
           result =>
@@ -355,7 +357,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
-            .withHttpHeaders(mtditidHeader, sessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
             .get
         ) {
           result =>
