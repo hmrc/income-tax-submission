@@ -27,6 +27,7 @@ import models.mongo.{DatabaseError, UserData}
 import models.{APIErrorBodyModel, IncomeSources, RefreshIncomeSource}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
+import play.api.http.HeaderNames
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import repositories.IncomeTaxUserDataRepositoryImpl
@@ -56,6 +57,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
     implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(5, Seconds))
     val taxYear: String = userData.taxYear.toString
     val successNino: String = userData.nino
+    val authorizationHeader: (String, String) = HeaderNames.AUTHORIZATION -> "mock-bearer-token"
     val mtditidHeader: (String, String) = ("mtditid", userData.mtdItId)
     val sessionIdHeader: (String, String) = ("sessionId", userData.sessionId)
     val xSessionIdHeader: (String, String) = ("X-Session-ID", userData.sessionId)
@@ -83,7 +85,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         authorised()
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .put[JsValue](Json.toJson(RefreshIncomeSource("dividends")))) {
           result =>
             result.status mustBe NO_CONTENT
@@ -91,7 +93,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe OK
@@ -116,7 +118,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         authorised()
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .put[JsValue](Json.toJson(RefreshIncomeSource("dividends")))) {
           result =>
             result.status mustBe NO_CONTENT
@@ -124,7 +126,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe OK
@@ -149,7 +151,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         authorised()
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .put[JsValue](Json.toJson(RefreshIncomeSource("dividends")))) {
           result =>
             result.status mustBe NO_CONTENT
@@ -157,7 +159,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe OK
@@ -180,7 +182,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         authorised()
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .put[JsValue](Json.toJson(RefreshIncomeSource("dividends")))) {
           result =>
             result.status mustBe NO_CONTENT
@@ -188,7 +190,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe OK
@@ -214,7 +216,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         authorised()
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .put[JsValue](Json.toJson(RefreshIncomeSource("dividends")))) {
           result =>
             result.status mustBe NOT_FOUND
@@ -222,7 +224,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe NO_CONTENT
@@ -233,7 +235,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         authorised()
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .put[JsValue](Json.toJson(RefreshIncomeSource("invalid-parameter")))) {
           result =>
             result.status mustBe BAD_REQUEST
@@ -256,7 +258,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         authorised()
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .put[JsValue](Json.toJson(RefreshIncomeSource("dividends")))) {
           result =>
             result.status mustBe NO_CONTENT
@@ -264,7 +266,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe OK
@@ -278,7 +280,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .put[JsValue](Json.toJson(RefreshIncomeSource("dividends")))) {
           result =>
             result.status mustBe UNAUTHORIZED
@@ -316,7 +318,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .put[JsValue](Json.toJson(RefreshIncomeSource("dividends")))) {
           result =>
             result.status mustBe NO_CONTENT
@@ -324,7 +326,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe OK
@@ -340,7 +342,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
             .withQueryStringParameters("taxYear" -> taxYear)
-            .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
             .put[JsValue](Json.toJson(RefreshIncomeSource("dividends")))) {
           result =>
             result.status mustBe UNAUTHORIZED

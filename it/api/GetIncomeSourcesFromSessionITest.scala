@@ -25,12 +25,13 @@ import helpers.IntegrationSpec
 import models.mongo.{DatabaseError, UserData}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
+import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import repositories.IncomeTaxUserDataRepositoryImpl
 
 class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures {
 
-  val repo: IncomeTaxUserDataRepositoryImpl = app.injector.instanceOf[IncomeTaxUserDataRepositoryImpl]
+  private val repo: IncomeTaxUserDataRepositoryImpl = app.injector.instanceOf[IncomeTaxUserDataRepositoryImpl]
 
   private def count = await(repo.collection.countDocuments().toFuture())
 
@@ -51,6 +52,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
     implicit val patienceConfig: PatienceConfig = PatienceConfig(Span(5, Seconds))
     val taxYear: String = userData.taxYear.toString
     val successNino: String = userData.nino
+    val authorizationHeader: (String, String) = HeaderNames.AUTHORIZATION -> "mock-bearer-token"
     val mtditidHeader: (String, String) = ("mtditid", userData.mtdItId)
     val sessionIdHeader: (String, String) = ("sessionId", userData.sessionId)
     val xSessionIdHeader: (String, String) = ("X-Session-ID", userData.sessionId)
@@ -70,7 +72,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
         authorised()
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe 200
@@ -86,7 +88,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
         authorised()
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe 200
@@ -104,7 +106,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe 204
@@ -117,7 +119,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe 204
@@ -130,7 +132,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+          .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
           .get) {
           result =>
             result.status mustBe 401
@@ -139,11 +141,11 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
       }
 
       "return 401 if the request has no MTDITID header present" in new Setup {
-
         authorised()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
+          .withHttpHeaders(authorizationHeader)
           .get) {
           result =>
             result.status mustBe 401
@@ -163,7 +165,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
             .withQueryStringParameters("taxYear" -> taxYear)
-            .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
             .get
         ) {
           result =>
@@ -183,7 +185,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
             .withQueryStringParameters("taxYear" -> taxYear)
-            .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
             .get
         ) {
           result =>
@@ -199,7 +201,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
             .withQueryStringParameters("taxYear" -> taxYear)
-            .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
             .get
         ) {
           result =>
@@ -209,13 +211,12 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
       }
 
       "return 401 if the user has no HMRC-MTD-IT enrolment" in new Setup {
-
         unauthorisedOtherEnrolment()
 
         whenReady(
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
             .withQueryStringParameters("taxYear" -> taxYear)
-            .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader)
+            .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
             .get
         ) {
           result =>
