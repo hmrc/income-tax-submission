@@ -178,21 +178,23 @@ class ExcludeJourneyControllerSpec extends TestUtils {
 
     "return a NoContent" when {
 
-      "the journey key is valid" in {
-        lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/exclude-journey/$taxYear")
-          .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
-          .withJsonBody(Json.obj("journey" -> INTEREST))
+      controller.allJourneys.foreach { key =>
+        s"the journey key is $key" in {
+          lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/exclude-journey/$taxYear")
+            .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
+            .withJsonBody(Json.obj("journey" -> key))
 
-        lazy val result = {
-          mockAuth()
-          mockFind(Right(None))
-          mockModelGeneration(INTEREST, Some(Right(ExcludeJourneyModel(INTEREST, None))))
-          mockCreateOrUpdate(Right(true))
+          lazy val result = {
+            mockAuth()
+            mockFind(Right(None))
+            mockModelGeneration(key, Some(Right(ExcludeJourneyModel(key, None))))
+            mockCreateOrUpdate(Right(true))
 
-          await(controller.excludeJourney(taxYear, nino)(request))
+            await(controller.excludeJourney(taxYear, nino)(request))
+          }
+
+          result.header.status mustBe NO_CONTENT
         }
-
-        result.header.status mustBe NO_CONTENT
       }
 
     }

@@ -34,7 +34,7 @@ class ExcludeJourneyController @Inject()(
                                           excludeJourneyService: ExcludeJourneyService
                                         )(implicit ec: ExecutionContext) extends BackendController(controllerComponents) {
 
-  val allJourneys: Seq[String] = Seq(INTEREST, DIVIDENDS, GIFT_AID, EMPLOYMENT, CIS)
+  val allJourneys: Seq[String] = Seq(INTEREST, DIVIDENDS, GIFT_AID, EMPLOYMENT, CIS, PENSIONS)
 
   def getExclusions(taxYear: Int, nino: String): Action[AnyContent] = auth.async { implicit user =>
     excludeJourneyService.findExclusionData(taxYear).map {
