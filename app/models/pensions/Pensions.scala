@@ -38,7 +38,7 @@ case class EncryptedPensions(pensionReliefs: Option[EncryptedPensionReliefs],
                              pensionCharges: Option[EncryptedPensionCharges],
                              stateBenefits: Option[EncryptedStateBenefitsModel],
                              employmentPensions: Option[EncryptedEmploymentPensions],
-                             pensionIncome: Option[EncryptedPensionIncomeModel])
+                             pensionIncome: Option[EncryptedPensionIncomeModel]
   )
 
 object EncryptedPensions {
