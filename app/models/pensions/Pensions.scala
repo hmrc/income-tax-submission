@@ -17,15 +17,18 @@
 package models.pensions
 
 import models.pensions.charges.{EncryptedPensionCharges, PensionCharges}
+import models.pensions.income.{EncryptedPensionIncomeModel, PensionIncomeModel}
 import models.pensions.employmentPensions.{EmploymentPensions, EncryptedEmploymentPensions}
 import models.pensions.reliefs.{EncryptedPensionReliefs, PensionReliefs}
 import models.pensions.statebenefits.{EncryptedStateBenefitsModel, StateBenefitsModel}
 import play.api.libs.json.{Json, OFormat}
 
 case class Pensions(pensionReliefs: Option[PensionReliefs],
-                    pensionCharges: Option[PensionCharges],
-                    stateBenefits: Option[StateBenefitsModel],
-                    employmentPensions: Option[EmploymentPensions])
+                         pensionCharges: Option[PensionCharges],
+                         stateBenefits: Option[StateBenefitsModel],
+                         employmentPensions: Option[EmploymentPensions],
+                          pensionIncome: Option[PensionIncomeModel]
+                        )
 
 object Pensions {
   implicit val formats: OFormat[Pensions] = Json.format[Pensions]
@@ -34,7 +37,9 @@ object Pensions {
 case class EncryptedPensions(pensionReliefs: Option[EncryptedPensionReliefs],
                              pensionCharges: Option[EncryptedPensionCharges],
                              stateBenefits: Option[EncryptedStateBenefitsModel],
-                             employmentPensions: Option[EncryptedEmploymentPensions])
+                             employmentPensions: Option[EncryptedEmploymentPensions],
+                             pensionIncome: Option[EncryptedPensionIncomeModel])
+  )
 
 object EncryptedPensions {
   implicit val formats: OFormat[EncryptedPensions] = Json.format[EncryptedPensions]
