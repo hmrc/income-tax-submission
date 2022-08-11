@@ -22,7 +22,7 @@ import models.gifts._
 import models.mongo.{EncryptedUserData, TextAndKey, UserData}
 import models.pensions._
 import models.pensions.charges._
-import models.pensions.income.{EncryptedForeignPension, EncryptedOverseasPensionContribution, EncryptedPensionIncomeModel, ForeignPension, OverseasPensionContribution, PensionIncomeModel}
+import models.pensions.income._
 import models.pensions.reliefs.{EncryptedPensionReliefs, EncryptedReliefs, PensionReliefs, Reliefs}
 import models.pensions.statebenefits._
 import models.{Dividends, EncryptedDividends, EncryptedInterest, Interest}
@@ -538,12 +538,12 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
 
     val ePensionIncomeModel: Option[EncryptedPensionIncomeModel] = {
       pensions.pensionIncome.map {
-        s =>
+        pI =>
           EncryptedPensionIncomeModel(
-            submittedOn = encryptionService.encrypt(s.submittedOn),
-            deletedOn = s.deletedOn.map(encryptionService.encrypt),
-            foreignPension = s.foreignPension.map(encryptForeignPension),
-            overseasPensionContribution = s.overseasPensionContribution.map(encryptOverseasPensionContribution)
+            submittedOn = encryptionService.encrypt(pI.submittedOn),
+            deletedOn = pI.deletedOn.map(encryptionService.encrypt),
+            foreignPension = pI.foreignPension.map(encryptForeignPension),
+            overseasPensionContribution = pI.overseasPensionContribution.map(encryptOverseasPensionContribution)
           )
       }
     }
@@ -554,12 +554,6 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       stateBenefits = eStateBenefitsModel,
       employmentPensions = eEmploymentPensions,
       pensionIncome = ePensionIncomeModel
-    )
-  }
-
-  private def encryptEmploymentPensions(e: EmploymentPensions)(implicit textAndKey: TextAndKey): EncryptedEmploymentPensions = {
-    EncryptedEmploymentPensions(
-      employmentData = e.employmentData.map(encryptEmploymentPensionModel)
     )
   }
 
