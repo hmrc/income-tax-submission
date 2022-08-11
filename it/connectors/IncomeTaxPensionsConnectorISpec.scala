@@ -73,7 +73,7 @@ class IncomeTaxPensionsConnectorISpec extends ConnectorIntegrationTest {
       }
 
       "return a Right None if pensions data is None" in {
-        val responseBody = Some(Pensions(None, None, None, None, None))
+        val responseBody = Some(Pensions(None, None, None, None))
 
         stubGetWithResponseBody(s"/income-tax-pensions/income-tax/nino/$nino/sources\\?taxYear=$taxYear",
           OK, Json.toJson(responseBody).toString(), requestHeaders)
