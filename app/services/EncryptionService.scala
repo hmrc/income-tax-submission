@@ -22,7 +22,6 @@ import models.gifts._
 import models.mongo.{EncryptedUserData, TextAndKey, UserData}
 import models.pensions._
 import models.pensions.charges._
-import models.pensions.income._
 import models.pensions.reliefs.{EncryptedPensionReliefs, EncryptedReliefs, PensionReliefs, Reliefs}
 import models.pensions.statebenefits._
 import models.{Dividends, EncryptedDividends, EncryptedInterest, Interest}
@@ -536,24 +535,17 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       }
     }
 
-    val ePensionIncomeModel: Option[EncryptedPensionIncomeModel] = {
-      pensions.pensionIncome.map {
-        pI =>
-          EncryptedPensionIncomeModel(
-            submittedOn = encryptionService.encrypt(pI.submittedOn),
-            deletedOn = pI.deletedOn.map(encryptionService.encrypt),
-            foreignPension = pI.foreignPension.map(encryptForeignPension),
-            overseasPensionContribution = pI.overseasPensionContribution.map(encryptOverseasPensionContribution)
-          )
-      }
-    }
-
     EncryptedPensions(
       pensionReliefs = ePensionReliefs,
       pensionCharges = ePensionCharges,
       stateBenefits = eStateBenefitsModel,
-      employmentPensions = eEmploymentPensions,
-      pensionIncome = ePensionIncomeModel
+      employmentPensions = eEmploymentPensions
+    )
+  }
+
+  private def encryptEmploymentPensions(e: EmploymentPensions)(implicit textAndKey: TextAndKey): EncryptedEmploymentPensions = {
+    EncryptedEmploymentPensions(
+      employmentData = e.employmentData.map(encryptEmploymentPensionModel)
     )
   }
 
@@ -591,30 +583,6 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def encryptForeignPension(f: ForeignPension)(implicit textAndKey: TextAndKey): EncryptedForeignPension = {
-    EncryptedForeignPension(
-      countryCode = encryptionService.encrypt(f.countryCode),
-      taxableAmount = encryptionService.encrypt(f.taxableAmount),
-      amountBeforeTax = f.amountBeforeTax.map(encryptionService.encrypt),
-      taxTakenOff = f.taxTakenOff.map(encryptionService.encrypt),
-      specialWithholdingTax = f.specialWithholdingTax.map(encryptionService.encrypt),
-      foreignTaxCreditRelief = f.foreignTaxCreditRelief.map(encryptionService.encrypt)
-    )
-  }
-
-  private def encryptOverseasPensionContribution(o: OverseasPensionContribution)(implicit textAndKey: TextAndKey): EncryptedOverseasPensionContribution = {
-    EncryptedOverseasPensionContribution(
-      customerReference = o.customerReference.map(encryptionService.encrypt),
-      exemptEmployersPensionContribs = encryptionService.encrypt(o.exemptEmployersPensionContribs),
-      migrantMemReliefQopsRefNo = o.migrantMemReliefQopsRefNo.map(encryptionService.encrypt),
-      dblTaxationRelief = o.dblTaxationRelief.map(encryptionService.encrypt),
-      dblTaxationCountry = o.dblTaxationCountry.map(encryptionService.encrypt),
-      dblTaxationArticle = o.dblTaxationArticle.map(encryptionService.encrypt),
-      dblTaxationTreaty = o.dblTaxationTreaty.map(encryptionService.encrypt),
-      sf74Reference = o.sf74Reference.map(encryptionService.encrypt)
-    )
-  }
-
   private def encryptStateBenefits(s: StateBenefits)(implicit textAndKey: TextAndKey): EncryptedStateBenefits = {
     EncryptedStateBenefits(
       incapacityBenefit = s.incapacityBenefit.map(_.map(encryptStateBenefit)),
@@ -624,6 +592,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       jobSeekersAllowance = s.jobSeekersAllowance.map(_.map(encryptStateBenefit)),
       bereavementAllowance = s.bereavementAllowance.map(encryptStateBenefit),
       otherStateBenefits = s.otherStateBenefits.map(encryptStateBenefit)
+
     )
   }
 
@@ -826,30 +795,6 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     )
   }
 
-  private def decryptForeignPension(f: EncryptedForeignPension)(implicit textAndKey: TextAndKey): ForeignPension = {
-    ForeignPension(
-      countryCode = encryptionService.decrypt[String](f.countryCode.value, f.countryCode.nonce),
-      taxableAmount = encryptionService.decrypt[BigDecimal](f.taxableAmount.value, f.taxableAmount.nonce),
-      amountBeforeTax = f.amountBeforeTax.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
-      taxTakenOff = f.taxTakenOff.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
-      specialWithholdingTax = f.specialWithholdingTax.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
-      foreignTaxCreditRelief = f.foreignTaxCreditRelief.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce))
-    )
-  }
-
-  private def decryptOverseasPensionContribution(o: EncryptedOverseasPensionContribution)(implicit textAndKey: TextAndKey): OverseasPensionContribution = {
-    OverseasPensionContribution(
-      customerReference = o.customerReference.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-      exemptEmployersPensionContribs = encryptionService.decrypt[BigDecimal](o.exemptEmployersPensionContribs.value, o.exemptEmployersPensionContribs.nonce),
-      migrantMemReliefQopsRefNo = o.migrantMemReliefQopsRefNo.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-      dblTaxationRelief = o.dblTaxationRelief.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
-      dblTaxationCountry = o.dblTaxationCountry.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-      dblTaxationArticle = o.dblTaxationArticle.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-      dblTaxationTreaty = o.dblTaxationTreaty.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-      sf74Reference = o.sf74Reference.map(x => encryptionService.decrypt[String](x.value, x.nonce))
-    )
-  }
-
   private def decryptPensions(pensions: EncryptedPensions)(implicit textAndKey: TextAndKey): Pensions = {
     val pensionReliefs: Option[PensionReliefs] = pensions.pensionReliefs.map {
       r =>
@@ -887,22 +832,11 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
         )
     }
 
-    val pensionIncome: Option[PensionIncomeModel] = pensions.pensionIncome.map {
-        s =>
-          PensionIncomeModel(
-            submittedOn = encryptionService.decrypt[String](s.submittedOn.value, s.submittedOn.nonce),
-            deletedOn = s.deletedOn.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-            foreignPension = s.foreignPension.map(decryptForeignPension),
-            overseasPensionContribution = s.overseasPensionContribution.map(decryptOverseasPensionContribution)
-          )
-      }
-
     Pensions(
       pensionReliefs = pensionReliefs,
       pensionCharges = pensionCharges,
       stateBenefits = stateBenefitsModel,
-      employmentPensions = employmentPensions,
-      pensionIncome = pensionIncome
+      employmentPensions = employmentPensions
     )
   }
 }

@@ -217,30 +217,7 @@ class PensionsSpec extends TestUtils {
           "amount" -> 100.0,
           "taxPaid" -> 200.0
         )
-      )),
-    "pensionIncome" -> Json.obj(
-      "submittedOn" -> "2022-07-28T07:59:39.041Z",
-      "deletedOn" -> "2022-07-28T07:59:39.041Z",
-      "foreignPension" -> Json.arr(Json.obj(
-        "countryCode" -> "FRA",
-        "amountBeforeTax" -> 1999.99,
-        "taxTakenOff" -> 1999.99,
-        "specialWithholdingTax" -> 1999.99,
-        "foreignTaxCreditRelief" -> false,
-        "taxableAmount" -> 1999.99)),
-      "overseasPensionContribution" -> Json.arr(Json.obj(
-        "customerReference" -> "PENSIONINCOME245",
-        "exemptEmployersPensionContribs" -> 1999.99,
-        "migrantMemReliefQopsRefNo" -> "QOPS000000",
-        "dblTaxationRelief" -> 1999.99,
-        "dblTaxationCountry" -> "FRA",
-        "dblTaxationArticle" -> "AB3211-1",
-        "dblTaxationTreaty" -> "Munich",
-        "sf74Reference" -> "SF74-123456"
-      )
-      )
-    )
-  )
+      )))
 
   "PensionsModel" should {
     "parse from Json" in {
