@@ -23,6 +23,7 @@ import models.cis.AllCISDeductions
 import models.employment.AllEmploymentData
 import models.gifts.GiftAid
 import models.pensions.Pensions
+import models.statebenefits.AllStateBenefitsData
 import play.api.Logging
 import services.util.FutureEitherOps
 import uk.gov.hmrc.http.HeaderCarrier
@@ -36,6 +37,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
                                         employmentConnector: IncomeTaxEmploymentConnector,
                                         pensionsConnector: IncomeTaxPensionsConnector,
                                         cisConnector: IncomeTaxCISConnector,
+                                        stateBenefitsConnector: IncomeTaxStateBenefitsConnector,
                                         implicit val ec: ExecutionContext) extends Logging {
 
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSources]
@@ -49,6 +51,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       employment <- FutureEitherOps[APIErrorModel, Option[AllEmploymentData]](getEmployment(nino, taxYear, mtditid, excludedIncomeSources))
       pensions <- FutureEitherOps[APIErrorModel, Option[Pensions]](getPensions(nino, taxYear, mtditid, excludedIncomeSources))
       cis <- FutureEitherOps[APIErrorModel, Option[AllCISDeductions]](getCIS(nino, taxYear, mtditid, excludedIncomeSources))
+      stateBenefits <- FutureEitherOps[APIErrorModel, Option[AllStateBenefitsData]](getStateBenefits(nino, taxYear, mtditid, excludedIncomeSources))
     } yield {
       IncomeSources(
         dividends.map(res => Dividends(res.ukDividends, res.otherUkDividends)),
@@ -58,7 +61,8 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
         pensions.map(_.copy(
           employmentPensions = employment.map(_.buildEmploymentPensions())
         )),
-        cis
+        cis,
+        stateBenefits
       )
     }).value
   }
@@ -129,8 +133,17 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
     }
   }
 
+  def getStateBenefits(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+                      (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[AllStateBenefitsData]]] = {
+    if (excludedIncomeSources.contains(STATE_BENEFITS)) {
+      shutteredIncomeSourceLog(STATE_BENEFITS)
+      Future(Right(None))
+    } else {
+      stateBenefitsConnector.getSubmittedStateBenefits(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
+    }
+  }
+
   def shutteredIncomeSourceLog(source: String): Unit = {
     logger.info(s"Income source $source is currently shuttered. Not retrieving data for $source.")
   }
-
 }

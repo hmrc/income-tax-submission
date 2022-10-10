@@ -23,6 +23,7 @@ import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import builders.models.gifts.GiftAidBuilder.aGiftAid
 import builders.models.pensions.PensionsBuilder.aPensions
+import builders.models.statebenefits.AllStateBenefitsDataBuilder.anAllStateBenefitsData
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import helpers.IntegrationSpec
 import org.scalatest.concurrent.ScalaFutures
@@ -89,6 +90,13 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           requestHeaders
         )
 
+        stubGetWithResponseBody(
+          url = s"/income-tax-state-benefits/income-tax/nino/AA123123A/tax-year/2019",
+          status = OK,
+          response = Json.toJson(Some(anAllStateBenefitsData)).toString,
+          requestHeaders
+        )
+
         authorised()
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
@@ -132,6 +140,12 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
 
         stubGetWithoutResponseBody(
           url = s"/income-tax-cis/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = NO_CONTENT,
+          requestHeaders
+        )
+
+        stubGetWithoutResponseBody(
+          url = s"/income-tax-state-benefits/income-tax/nino/AA123123A/tax-year/2019",
           status = NO_CONTENT,
           requestHeaders
         )
@@ -254,6 +268,13 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           requestHeaders
         )
 
+        stubGetWithResponseBody(
+          url = s"/income-tax-state-benefits/income-tax/nino/AA123123A/tax-year/2019",
+          status = OK,
+          response = Json.toJson(Some(anAllStateBenefitsData)).toString,
+          requestHeaders
+        )
+
         agentAuthorised()
 
         whenReady(
@@ -296,6 +317,11 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         )
         stubGetWithoutResponseBody(
           url = s"/income-tax-cis/income-tax/nino/AA123123A/sources\\?taxYear=2019",
+          status = NO_CONTENT,
+          requestHeaders
+        )
+        stubGetWithoutResponseBody(
+          url = s"/income-tax-state-benefits/income-tax/nino/AA123123A/tax-year/2019",
           status = NO_CONTENT,
           requestHeaders
         )

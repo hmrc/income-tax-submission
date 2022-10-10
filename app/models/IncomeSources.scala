@@ -20,6 +20,7 @@ import models.cis.AllCISDeductions
 import models.employment.AllEmploymentData
 import models.gifts.GiftAid
 import models.pensions.Pensions
+import models.statebenefits.AllStateBenefitsData
 import play.api.libs.json.{Json, OFormat}
 
 case class IncomeSources(dividends: Option[Dividends] = None,
@@ -27,7 +28,8 @@ case class IncomeSources(dividends: Option[Dividends] = None,
                          giftAid: Option[GiftAid] = None,
                          employment: Option[AllEmploymentData] = None,
                          pensions: Option[Pensions] = None,
-                         cis: Option[AllCISDeductions] = None)
+                         cis: Option[AllCISDeductions] = None,
+                         stateBenefits: Option[AllStateBenefitsData] = None)
 
 object IncomeSources {
   implicit val format: OFormat[IncomeSources] = Json.format[IncomeSources]

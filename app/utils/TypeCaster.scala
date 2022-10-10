@@ -16,9 +16,13 @@
 
 package utils
 
+import java.time.{Instant, LocalDate}
+import java.util.UUID
+
 object TypeCaster {
 
-  trait Converter[T] { self =>
+  trait Converter[T] {
+    self =>
     def convert(v: String): T
   }
 
@@ -27,5 +31,8 @@ object TypeCaster {
     implicit val intLoader: Converter[Int] = (v: String) => v.toInt
     implicit val booleanLoader: Converter[Boolean] = (v: String) => v.toBoolean
     implicit val bigDecimalLoader: Converter[BigDecimal] = (v: String) => BigDecimal(v)
+    implicit val uuidLoader: Converter[UUID] = (v: String) => UUID.fromString(v)
+    implicit val localDateLoader: Converter[LocalDate] = (v: String) => LocalDate.parse(v)
+    implicit val instantLoader: Converter[Instant] = (v: String) => Instant.parse(v)
   }
 }

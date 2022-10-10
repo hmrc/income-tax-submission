@@ -21,6 +21,7 @@ import models.cis.{AllCISDeductions, EncryptedAllCISDeductions}
 import models.employment.{AllEmploymentData, EncryptedAllEmploymentData}
 import models.gifts.{EncryptedGiftAid, GiftAid}
 import models.pensions.{EncryptedPensions, Pensions}
+import models.statebenefits.{AllStateBenefitsData, EncryptedAllStateBenefitsData}
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
@@ -35,10 +36,11 @@ case class UserData(sessionId: String,
                     employment: Option[AllEmploymentData] = None,
                     pensions: Option[Pensions] = None,
                     cis: Option[AllCISDeductions] = None,
+                    stateBenefits: Option[AllStateBenefitsData] = None,
                     lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)) {
 
   def toIncomeSourcesResponseModel: IncomeSources = {
-    IncomeSources(dividends, interest, giftAid, employment, pensions, cis)
+    IncomeSources(dividends, interest, giftAid, employment, pensions, cis, stateBenefits)
   }
 }
 
@@ -59,6 +61,7 @@ case class EncryptedUserData(sessionId: String,
                              employment: Option[EncryptedAllEmploymentData] = None,
                              pensions: Option[EncryptedPensions] = None,
                              cis: Option[EncryptedAllCISDeductions] = None,
+                             stateBenefits: Option[EncryptedAllStateBenefitsData] = None,
                              lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC))
 
 object EncryptedUserData extends MongoJodaFormats {

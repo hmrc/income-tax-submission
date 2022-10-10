@@ -26,7 +26,6 @@ class EncryptionServiceISpec extends IntegrationSpec {
   private val underTest: EncryptionService = app.injector.instanceOf[EncryptionService]
 
   "encryptUserData" should {
-
     val data = aUserData.copy(employment = Some(anAllEmploymentData))
 
     "encrypt all the user data apart from the look up ids and timestamp" in {
@@ -42,6 +41,7 @@ class EncryptionServiceISpec extends IntegrationSpec {
         employment = result.employment,
         pensions = result.pensions,
         cis = result.cis,
+        stateBenefits = result.stateBenefits,
         lastUpdated = data.lastUpdated
       )
     }

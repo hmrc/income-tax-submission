@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package common
+package builders.models.statebenefits
 
-object IncomeSources {
+import builders.models.statebenefits.CustomerAddedStateBenefitsDataBuilder.aCustomerAddedStateBenefitsData
+import builders.models.statebenefits.StateBenefitsDataBuilder.aStateBenefitsData
+import models.statebenefits.AllStateBenefitsData
 
-  val DIVIDENDS = "dividends"
-  val INTEREST = "interest"
-  val GIFT_AID = "gift-aid"
-  val EMPLOYMENT = "employment"
-  val PENSIONS = "pensions"
-  val CIS = "cis"
-  val STATE_BENEFITS = "state-benefits"
+object AllStateBenefitsDataBuilder {
+
+  val anAllStateBenefitsData: AllStateBenefitsData = AllStateBenefitsData(
+    stateBenefitsData = aStateBenefitsData,
+    customerAddedStateBenefitsData = Some(aCustomerAddedStateBenefitsData)
+  )
 }

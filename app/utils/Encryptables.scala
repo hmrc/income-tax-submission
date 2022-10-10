@@ -18,6 +18,9 @@ package utils
 
 import models.mongo.TextAndKey
 
+import java.time.{Instant, LocalDate}
+import java.util.UUID
+
 trait Encryptable[A] {
   def encrypt(value: A)(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedValue
 
@@ -45,6 +48,27 @@ object EncryptableInstances {
 
     def decrypt(value: EncryptedValue)(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): BigDecimal =
       secureGCMCipher.decrypt[BigDecimal](value.value, value.nonce)
+  }
+
+  implicit val uuidEncryptable: Encryptable[UUID] = new Encryptable[UUID] {
+    override def encrypt(value: UUID)(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedValue = secureGCMCipher.encrypt(value)
+
+    override def decrypt(value: EncryptedValue)(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): UUID =
+      secureGCMCipher.decrypt[UUID](value.value, value.nonce)
+  }
+
+  implicit val localDateEncryptable: Encryptable[LocalDate] = new Encryptable[LocalDate] {
+    override def encrypt(value: LocalDate)(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedValue = secureGCMCipher.encrypt(value)
+
+    override def decrypt(value: EncryptedValue)(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): LocalDate =
+      secureGCMCipher.decrypt[LocalDate](value.value, value.nonce)
+  }
+
+  implicit val instantEncryptable: Encryptable[Instant] = new Encryptable[Instant] {
+    override def encrypt(value: Instant)(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedValue = secureGCMCipher.encrypt(value)
+
+    override def decrypt(value: EncryptedValue)(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): Instant =
+      secureGCMCipher.decrypt[Instant](value.value, value.nonce)
   }
 }
 

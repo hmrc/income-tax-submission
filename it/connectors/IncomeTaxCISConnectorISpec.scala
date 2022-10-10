@@ -28,7 +28,7 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
-class IncomeTaxCISConnectorSpec extends ConnectorIntegrationTest {
+class IncomeTaxCISConnectorISpec extends ConnectorIntegrationTest {
 
   private val mtditid = "some-mtditid"
   private val sessionId = "some-sessionId"

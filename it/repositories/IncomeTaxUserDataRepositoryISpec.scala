@@ -103,9 +103,8 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       val res2 = await(repo.update(aUserData.copy(sessionId = "1234567890")))
       res2.left.get.message must include("Command failed with error 11000 (DuplicateKey)")
       count mustBe 1
-
-
     }
+
     "add a document to the collection" in new EmptyDatabase {
       count mustBe 0
       val res = await(repo.update(aUserData))
@@ -116,6 +115,7 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
         aUserData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
       )
     }
+
     "upsert a document to the collection when already exists" in {
       count mustBe 1
       val res = await(repo.update(aUserData))
