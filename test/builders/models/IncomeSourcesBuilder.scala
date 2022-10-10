@@ -22,6 +22,7 @@ import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import builders.models.gifts.GiftAidBuilder.aGiftAid
 import builders.models.pensions.PensionsBuilder.aPensionsAlternative
+import builders.models.statebenefits.AllStateBenefitsDataBuilder.anAllStateBenefitsData
 import models.IncomeSources
 
 object IncomeSourcesBuilder {
@@ -32,6 +33,7 @@ object IncomeSourcesBuilder {
     giftAid = Some(aGiftAid),
     employment = Some(anAllEmploymentData),
     pensions = Some(aPensionsAlternative),
-    cis = Some(anAllCISDeductions)
+    cis = Some(anAllCISDeductions),
+    stateBenefits = Some(anAllStateBenefitsData)
   )
 }

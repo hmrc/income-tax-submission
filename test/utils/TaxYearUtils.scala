@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package common
+package utils
 
-object IncomeSources {
+import java.time.LocalDate
 
-  val DIVIDENDS = "dividends"
-  val INTEREST = "interest"
-  val GIFT_AID = "gift-aid"
-  val EMPLOYMENT = "employment"
-  val PENSIONS = "pensions"
-  val CIS = "cis"
-  val STATE_BENEFITS = "state-benefits"
+object TaxYearUtils {
+
+  private val dateNow: LocalDate = LocalDate.now()
+  private val taxYearCutoffDate: LocalDate = LocalDate.parse(s"${dateNow.getYear}-04-05")
+
+  val taxYear: Int = if (dateNow.isAfter(taxYearCutoffDate)) LocalDate.now().getYear + 1 else LocalDate.now().getYear
+  val taxYearEOY: Int = taxYear - 1
 }

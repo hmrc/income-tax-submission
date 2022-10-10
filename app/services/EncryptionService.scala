@@ -22,13 +22,14 @@ import models.gifts._
 import models.mongo.{EncryptedUserData, TextAndKey, UserData}
 import models.pensions._
 import models.pensions.charges._
+import models.pensions.employmentPensions.{EmploymentPensionModel, EmploymentPensions, EncryptedEmploymentPensionModel, EncryptedEmploymentPensions}
 import models.pensions.income._
 import models.pensions.reliefs.{EncryptedPensionReliefs, EncryptedReliefs, PensionReliefs, Reliefs}
 import models.pensions.statebenefits._
 import models.{Dividends, EncryptedDividends, EncryptedInterest, Interest}
 import utils.SecureGCMCipher
+
 import javax.inject.Inject
-import models.pensions.employmentPensions.{EmploymentPensionModel, EmploymentPensions, EncryptedEmploymentPensionModel, EncryptedEmploymentPensions}
 
 //scalastyle:off
 class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig: AppConfig) {
@@ -48,6 +49,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       employment = userData.employment.map(encryptEmployment),
       pensions = userData.pensions.map(encryptPensions),
       cis = userData.cis.map(_.encrypted),
+      stateBenefits = userData.stateBenefits.map(_.encrypted),
       lastUpdated = userData.lastUpdated
     )
   }
@@ -406,6 +408,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       employment = userData.employment.map(decryptEmployment),
       pensions = userData.pensions.map(decryptPensions),
       cis = userData.cis.map(_.decrypted),
+      stateBenefits = userData.stateBenefits.map(_.decrypted),
       lastUpdated = userData.lastUpdated
     )
   }
@@ -888,14 +891,14 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     }
 
     val pensionIncome: Option[PensionIncomeModel] = pensions.pensionIncome.map {
-        s =>
-          PensionIncomeModel(
-            submittedOn = encryptionService.decrypt[String](s.submittedOn.value, s.submittedOn.nonce),
-            deletedOn = s.deletedOn.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
-            foreignPension = s.foreignPension.map(decryptForeignPension),
-            overseasPensionContribution = s.overseasPensionContribution.map(decryptOverseasPensionContribution)
-          )
-      }
+      s =>
+        PensionIncomeModel(
+          submittedOn = encryptionService.decrypt[String](s.submittedOn.value, s.submittedOn.nonce),
+          deletedOn = s.deletedOn.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+          foreignPension = s.foreignPension.map(decryptForeignPension),
+          overseasPensionContribution = s.overseasPensionContribution.map(decryptOverseasPensionContribution)
+        )
+    }
 
     Pensions(
       pensionReliefs = pensionReliefs,
