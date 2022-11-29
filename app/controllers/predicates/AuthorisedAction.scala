@@ -63,7 +63,7 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
     )
   }
 
-  val minimumConfidenceLevel: Int = ConfidenceLevel.L200.level
+  val minimumConfidenceLevel: Int = ConfidenceLevel.L250.level
 
   def sessionId(implicit request: Request[_], hc: HeaderCarrier): Option[String] = {
     lazy val key = "sessionId"
@@ -104,7 +104,7 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
             unauthorized
         }
       case _ =>
-        logger.info("[AuthorisedAction][individualAuthentication] User has confidence level below 200.")
+        logger.info("[AuthorisedAction][individualAuthentication] User has confidence level below 250.")
         unauthorized
     }
   }
