@@ -22,11 +22,11 @@ import play.api.libs.json.{JsPath, OWrites, Reads}
 import utils.JsonUtils.jsonObjNoNulls
 import utils.SecureGCMCipher
 
-case class AllStateBenefitsData(stateBenefitsData: StateBenefitsData,
+case class AllStateBenefitsData(stateBenefitsData: Option[StateBenefitsData],
                                 customerAddedStateBenefitsData: Option[CustomerAddedStateBenefitsData] = None) {
 
   def encrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedAllStateBenefitsData = EncryptedAllStateBenefitsData(
-    stateBenefitsData = stateBenefitsData.encrypted,
+    stateBenefitsData = stateBenefitsData.map(_.encrypted),
     customerAddedStateBenefitsData = customerAddedStateBenefitsData.map(_.encrypted)
   )
 }
@@ -41,16 +41,16 @@ object AllStateBenefitsData {
   }
 
   implicit val allStateBenefitsDataReads: Reads[AllStateBenefitsData] = (
-    (JsPath \ "stateBenefits").read[StateBenefitsData] and
+    (JsPath \ "stateBenefits").readNullable[StateBenefitsData] and
       (JsPath \ "customerAddedStateBenefits").readNullable[CustomerAddedStateBenefitsData]
     ) (AllStateBenefitsData.apply _)
 }
 
-case class EncryptedAllStateBenefitsData(stateBenefitsData: EncryptedStateBenefitsData,
+case class EncryptedAllStateBenefitsData(stateBenefitsData: Option[EncryptedStateBenefitsData],
                                          customerAddedStateBenefitsData: Option[EncryptedCustomerAddedStateBenefitsData] = None) {
 
   def decrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): AllStateBenefitsData = AllStateBenefitsData(
-    stateBenefitsData = stateBenefitsData.decrypted,
+    stateBenefitsData = stateBenefitsData.map(_.decrypted),
     customerAddedStateBenefitsData = customerAddedStateBenefitsData.map(_.decrypted)
   )
 }
@@ -65,7 +65,7 @@ object EncryptedAllStateBenefitsData {
   }
 
   implicit val encryptedAllStateBenefitsDataReads: Reads[EncryptedAllStateBenefitsData] = (
-    (JsPath \ "stateBenefits").read[EncryptedStateBenefitsData] and
+    (JsPath \ "stateBenefits").readNullable[EncryptedStateBenefitsData] and
       (JsPath \ "customerAddedStateBenefits").readNullable[EncryptedCustomerAddedStateBenefitsData]
     ) (EncryptedAllStateBenefitsData.apply _)
 }
