@@ -30,6 +30,7 @@ case class IncomeSources(dividends: Option[Dividends] = None,
                          pensions: Option[Pensions] = None,
                          cis: Option[AllCISDeductions] = None,
                          stateBenefits: Option[AllStateBenefitsData] = None,
+                         interestSavings: Option[SavingsIncomeDataModel] = None),
                          gains: Option[InsurancePoliciesModel] = None)
 
 object IncomeSources {

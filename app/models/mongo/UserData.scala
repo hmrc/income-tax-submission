@@ -37,11 +37,12 @@ case class UserData(sessionId: String,
                     pensions: Option[Pensions] = None,
                     cis: Option[AllCISDeductions] = None,
                     stateBenefits: Option[AllStateBenefitsData] = None,
+                    interestSavings: Option[SavingsIncomeDataModel] = None,
                     gains: Option[InsurancePoliciesModel] = None,
                     lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)) {
 
   def toIncomeSourcesResponseModel: IncomeSources = {
-    IncomeSources(dividends, interest, giftAid, employment, pensions, cis, stateBenefits, gains)
+    IncomeSources(dividends, interest, giftAid, employment, pensions, cis, stateBenefits, interestSavings, gains)
   }
 }
 
@@ -63,6 +64,7 @@ case class EncryptedUserData(sessionId: String,
                              pensions: Option[EncryptedPensions] = None,
                              cis: Option[EncryptedAllCISDeductions] = None,
                              stateBenefits: Option[EncryptedAllStateBenefitsData] = None,
+                             interestSavings: Option[EncryptedSavingsIncomeDataModel] = None,
                              gains: Option[EncryptedInsurancePoliciesModel] = None,
                              lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC))
 

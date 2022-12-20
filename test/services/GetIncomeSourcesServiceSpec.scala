@@ -16,6 +16,7 @@
 
 package services
 
+import builders.models.SavingsIncomeBuilder.anSavingIncome
 import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.{anAllEmploymentData, anAllEmploymentDataWithOccPen}
 import builders.models.gains.GainsBuilder.anGains
@@ -44,6 +45,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
   private val pensionsConnector: IncomeTaxPensionsConnector = mock[IncomeTaxPensionsConnector]
   private val cisConnector: IncomeTaxCISConnector = mock[IncomeTaxCISConnector]
   private val stateBenefitsConnector: IncomeTaxStateBenefitsConnector = mock[IncomeTaxStateBenefitsConnector]
+  private val incomeTaxInterestSavingsConnector: IncomeTaxInterestSavingsConnector = mock[IncomeTaxInterestSavingsConnector]
   private val gainsConnector: IncomeTaxGainsConnector = mock[IncomeTaxGainsConnector]
   private val mockHeaderCarrier: HeaderCarrier = emptyHeaderCarrier.withExtraHeaders(("mtditid", "87654321"))
 
@@ -55,6 +57,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
     pensionsConnector,
     cisConnector,
     stateBenefitsConnector,
+    incomeTaxInterestSavingsConnector,
     gainsConnector,
     scala.concurrent.ExecutionContext.global
   )
@@ -66,7 +69,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           nino = "12345678",
           taxYear = taxYear,
           mtditid = "87654321",
-          excludedIncomeSources = Seq("dividends", "interest", "gift-aid", "employment", "pensions", "cis", "state-benefits", "gains")
+          excludedIncomeSources = Seq("dividends", "interest", "gift-aid", "employment", "pensions", "cis", "state-benefits", "interest-savings", "gains")
         )
 
         await(eventualResponse) mustBe Right(IncomeSources(None, None, None, None, None, None, None))
@@ -89,6 +92,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           Some(aPensionsWithEmployments),
           Some(anAllCISDeductions),
           Some(anAllStateBenefitsData),
+          Some(anSavingIncome),
           Some(anGains)
         ))
 
@@ -119,6 +123,10 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
         (stateBenefitsConnector.getSubmittedStateBenefits(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
           .returning(Future.successful(Right(Some(anAllStateBenefitsData))))
+
+        (incomeTaxInterestSavingsConnector.getSubmittedInterestSavings(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Right(Some(anSavingIncome))))
 
         (gainsConnector.getSubmittedGains(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)

@@ -18,6 +18,7 @@ package builders.models.mongo
 
 import builders.models.DividendsBuilder.aDividends
 import builders.models.InterestBuilder.anInterest
+import builders.models.SavingsIncomeBuilder.anSavingIncome
 import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import builders.models.gains.GainsBuilder.anGains
@@ -40,6 +41,7 @@ object UserDataBuilder {
     pensions = Some(aPensions),
     cis = Some(anAllCISDeductions),
     stateBenefits = Some(anAllStateBenefitsData),
+    interestSavings = Some(anSavingIncome),
     gains = Some(anGains)
   )
 }

@@ -19,6 +19,7 @@ package api
 import builders.models.DividendsBuilder.aDividends
 import builders.models.IncomeSourcesBuilder.anIncomeSources
 import builders.models.InterestBuilder.anInterest
+import builders.models.SavingsIncomeBuilder.anSavingIncome
 import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import builders.models.gains.GainsBuilder.anGains
@@ -60,6 +61,13 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
           response = Json.toJson(Seq(anInterest)).toString,
+          requestHeaders
+        )
+
+        stubGetWithResponseBody(
+          url = s"/income-tax-interest/income-tax/nino/AA123123A/savings\\?taxYear=2019",
+          status = OK,
+          response = Json.toJson(anSavingIncome).toString,
           requestHeaders
         )
 
@@ -246,6 +254,12 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = OK,
           response = Json.toJson(Seq(anInterest)).toString,
+          requestHeaders
+        )
+        stubGetWithResponseBody(
+          url = s"/income-tax-interest/income-tax/nino/AA123123A/savings\\?taxYear=2019",
+          status = OK,
+          response = Json.toJson(anSavingIncome).toString,
           requestHeaders
         )
         stubGetWithResponseBody(
