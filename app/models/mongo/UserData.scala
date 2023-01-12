@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,10 +37,11 @@ case class UserData(sessionId: String,
                     pensions: Option[Pensions] = None,
                     cis: Option[AllCISDeductions] = None,
                     stateBenefits: Option[AllStateBenefitsData] = None,
+                    gains: Option[InsurancePoliciesModel] = None,
                     lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)) {
 
   def toIncomeSourcesResponseModel: IncomeSources = {
-    IncomeSources(dividends, interest, giftAid, employment, pensions, cis, stateBenefits)
+    IncomeSources(dividends, interest, giftAid, employment, pensions, cis, stateBenefits, gains)
   }
 }
 
@@ -62,6 +63,7 @@ case class EncryptedUserData(sessionId: String,
                              pensions: Option[EncryptedPensions] = None,
                              cis: Option[EncryptedAllCISDeductions] = None,
                              stateBenefits: Option[EncryptedAllStateBenefitsData] = None,
+                             gains: Option[EncryptedInsurancePoliciesModel] = None,
                              lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC))
 
 object EncryptedUserData extends MongoJodaFormats {

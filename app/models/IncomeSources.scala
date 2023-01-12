@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ case class IncomeSources(dividends: Option[Dividends] = None,
                          employment: Option[AllEmploymentData] = None,
                          pensions: Option[Pensions] = None,
                          cis: Option[AllCISDeductions] = None,
-                         stateBenefits: Option[AllStateBenefitsData] = None)
+                         stateBenefits: Option[AllStateBenefitsData] = None,
+                         gains: Option[InsurancePoliciesModel] = None)
 
 object IncomeSources {
   implicit val format: OFormat[IncomeSources] = Json.format[IncomeSources]

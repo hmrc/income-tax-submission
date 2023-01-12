@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import builders.models.DividendsBuilder.aDividends
 import builders.models.InterestBuilder.anInterest
 import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
+import builders.models.gains.GainsBuilder.anGains
 import builders.models.gifts.GiftAidBuilder.aGiftAid
 import builders.models.pensions.PensionsBuilder.aPensions
 import builders.models.statebenefits.AllStateBenefitsDataBuilder.anAllStateBenefitsData
@@ -38,6 +39,7 @@ object UserDataBuilder {
     employment = Some(anAllEmploymentData),
     pensions = Some(aPensions),
     cis = Some(anAllCISDeductions),
-    stateBenefits = Some(anAllStateBenefitsData)
+    stateBenefits = Some(anAllStateBenefitsData),
+    gains = Some(anGains)
   )
 }

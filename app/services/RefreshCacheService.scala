@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case Right(Some(model: Pensions)) => updateCacheBasedOnNewData[Pensions](taxYear, incomeSource, Some(model))
       case Right(Some(model: AllCISDeductions)) => updateCacheBasedOnNewData[AllCISDeductions](taxYear, incomeSource, Some(model))
       case Right(Some(model: AllStateBenefitsData)) => updateCacheBasedOnNewData[AllStateBenefitsData](taxYear, incomeSource, Some(model))
+      case Right(Some(model: InsurancePoliciesModel)) => updateCacheBasedOnNewData[InsurancePoliciesModel](taxYear, incomeSource, Some(model))
       case Left(error) => Future.successful(Status(error.status)(error.toJson))
       case _ => Future.successful(Status(INTERNAL_SERVER_ERROR)(Json.toJson(APIErrorBodyModel.parsingError)))
     }
@@ -68,6 +69,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case PENSIONS => getIncomeSourcesService.getPensions(nino, taxYear, user.mtditid)
       case CIS => getIncomeSourcesService.getCIS(nino, taxYear, user.mtditid)
       case STATE_BENEFITS => getIncomeSourcesService.getStateBenefits(nino, taxYear, user.mtditid)
+      case GAINS => getIncomeSourcesService.getGains(nino, taxYear, user.mtditid)
     }
   }
 
@@ -82,6 +84,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case Some(model: Pensions) => currentData.copy(pensions = Some(model))
       case Some(model: AllCISDeductions) => currentData.copy(cis = Some(model))
       case Some(model: AllStateBenefitsData) => currentData.copy(stateBenefits = Some(model))
+      case Some(model: InsurancePoliciesModel) => currentData.copy(gains = Some(model))
       case _ => defaultCurrentData(currentData, incomeSource)
 
     }
@@ -96,6 +99,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case PENSIONS => currentData.copy(pensions = None)
       case CIS => currentData.copy(cis = None)
       case STATE_BENEFITS => currentData.copy(stateBenefits = None)
+      case GAINS => currentData.copy(gains = None)
     }
   }
 
@@ -103,7 +107,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
                                           (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
 
     incomeTaxUserDataService.findUserData(user, taxYear).flatMap {
-      case Right(None) | Right(Some(IncomeSources(None, None, None, None, None, None, None))) =>
+      case Right(None) | Right(Some(IncomeSources(None, None, None, None, None, None, None, None))) =>
 
         logger.info(s"${log("updateCacheBasedOnNewData")} User doesn't have any cache data or doesn't have any income source data." +
           s" SessionId: ${user.sessionId}")
@@ -145,6 +149,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case PENSIONS => noDataLog(data.pensions.isEmpty)
       case CIS => noDataLog(data.cis.isEmpty)
       case STATE_BENEFITS => noDataLog(data.stateBenefits.isEmpty)
+      case GAINS => noDataLog(data.gains.isEmpty)
     }
   }
 }

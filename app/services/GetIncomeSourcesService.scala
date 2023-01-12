@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
                                         pensionsConnector: IncomeTaxPensionsConnector,
                                         cisConnector: IncomeTaxCISConnector,
                                         stateBenefitsConnector: IncomeTaxStateBenefitsConnector,
+                                        gainsConnector: IncomeTaxGainsConnector,
                                         implicit val ec: ExecutionContext) extends Logging {
 
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSources]
@@ -52,6 +53,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       pensions <- FutureEitherOps[APIErrorModel, Option[Pensions]](getPensions(nino, taxYear, mtditid, excludedIncomeSources))
       cis <- FutureEitherOps[APIErrorModel, Option[AllCISDeductions]](getCIS(nino, taxYear, mtditid, excludedIncomeSources))
       stateBenefits <- FutureEitherOps[APIErrorModel, Option[AllStateBenefitsData]](getStateBenefits(nino, taxYear, mtditid, excludedIncomeSources))
+      gains <- FutureEitherOps[APIErrorModel, Option[InsurancePoliciesModel]](getGains(nino, taxYear, mtditid, excludedIncomeSources))
     } yield {
       IncomeSources(
         dividends.map(res => Dividends(res.ukDividends, res.otherUkDividends)),
@@ -62,7 +64,8 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
           employmentPensions = employment.map(_.buildEmploymentPensions())
         )),
         cis,
-        stateBenefits
+        stateBenefits,
+        gains
       )
     }).value
   }
@@ -140,6 +143,16 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       Future(Right(None))
     } else {
       stateBenefitsConnector.getSubmittedStateBenefits(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
+    }
+  }
+
+  def getGains(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+                        (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[InsurancePoliciesModel]]] = {
+    if (excludedIncomeSources.contains(GAINS)) {
+      shutteredIncomeSourceLog(GAINS)
+      Future(Right(None))
+    } else {
+      gainsConnector.getSubmittedGains(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
     }
   }
 
