@@ -38,6 +38,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
                                         pensionsConnector: IncomeTaxPensionsConnector,
                                         cisConnector: IncomeTaxCISConnector,
                                         stateBenefitsConnector: IncomeTaxStateBenefitsConnector,
+                                        interestSavingsConnector: IncomeTaxInterestSavingsConnector,
                                         gainsConnector: IncomeTaxGainsConnector,
                                         implicit val ec: ExecutionContext) extends Logging {
 
@@ -53,6 +54,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       pensions <- FutureEitherOps[APIErrorModel, Option[Pensions]](getPensions(nino, taxYear, mtditid, excludedIncomeSources))
       cis <- FutureEitherOps[APIErrorModel, Option[AllCISDeductions]](getCIS(nino, taxYear, mtditid, excludedIncomeSources))
       stateBenefits <- FutureEitherOps[APIErrorModel, Option[AllStateBenefitsData]](getStateBenefits(nino, taxYear, mtditid, excludedIncomeSources))
+      interestSavings <- FutureEitherOps[APIErrorModel, Option[SavingsIncomeDataModel]](getSavingsInterest(nino, taxYear, mtditid, excludedIncomeSources))
       gains <- FutureEitherOps[APIErrorModel, Option[InsurancePoliciesModel]](getGains(nino, taxYear, mtditid, excludedIncomeSources))
     } yield {
       IncomeSources(
@@ -65,6 +67,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
         )),
         cis,
         stateBenefits,
+        interestSavings,
         gains
       )
     }).value
@@ -143,6 +146,15 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       Future(Right(None))
     } else {
       stateBenefitsConnector.getSubmittedStateBenefits(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
+    }
+  }
+  def getSavingsInterest(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+                      (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[SavingsIncomeDataModel]]] = {
+    if (excludedIncomeSources.contains(INTEREST_SAVINGS)) {
+      shutteredIncomeSourceLog(INTEREST_SAVINGS)
+      Future(Right(None))
+    } else {
+      interestSavingsConnector.getSubmittedInterestSavings(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
     }
   }
 

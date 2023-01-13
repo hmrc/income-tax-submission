@@ -26,6 +26,8 @@ import models.pensions.employmentPensions.{EmploymentPensionModel, EmploymentPen
 import models.pensions.income._
 import models.pensions.reliefs.{EncryptedPensionReliefs, EncryptedReliefs, PensionReliefs, Reliefs}
 import models.pensions.statebenefits._
+import models.{Dividends, EncryptedDividends, EncryptedForeignInterestModel, EncryptedInterest, EncryptedSavingsIncomeDataModel, EncryptedSecuritiesModel, ForeignInterestModel, Interest, SavingsIncomeDataModel, SecuritiesModel}
+import utils.SecureGCMCipher
 import models.{CapitalRedemptionModel, Dividends, EncryptedCapitalRedemptionModel, EncryptedDividends, EncryptedForeignModel, EncryptedInsurancePoliciesModel, EncryptedInterest, EncryptedLifeAnnuityModel, EncryptedLifeInsuranceModel, EncryptedVoidedIsaModel, ForeignModel, InsurancePoliciesModel, Interest, LifeAnnuityModel, LifeInsuranceModel, VoidedIsaModel}
 import utils.{EncryptedValue, SecureGCMCipher}
 
@@ -50,6 +52,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       pensions = userData.pensions.map(encryptPensions),
       cis = userData.cis.map(_.encrypted),
       stateBenefits = userData.stateBenefits.map(_.encrypted),
+      interestSavings = userData.interestSavings.map(encryptSavingsIncome),
       gains = userData.gains.map(encryptGains),
       lastUpdated = userData.lastUpdated
     )
@@ -102,6 +105,74 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
     }
 
     EncryptedGiftAid(giftAidPayments = eGiftAidPayments, gifts = eGifts)
+  }
+  private def encryptSavingsIncome(savingsIncome: SavingsIncomeDataModel)(implicit textAndKey: TextAndKey): EncryptedSavingsIncomeDataModel = {
+
+    val eSecurities: Option[EncryptedSecuritiesModel] = {
+      savingsIncome.securities.map {
+        g =>
+          EncryptedSecuritiesModel(
+            taxTakenOff = g.taxTakenOff.map(encryptionService.encrypt),
+            grossAmount = encryptionService.encrypt(g.grossAmount),
+            netAmount = g.netAmount.map(encryptionService.encrypt)
+          )
+      }
+    }
+    val eForeignSavings: Option[Seq[EncryptedForeignInterestModel]] = {
+      savingsIncome.foreignInterest.map {
+        g =>
+          g.map(foreignInterests =>
+            EncryptedForeignInterestModel(
+              countryCode = encryptionService.encrypt(foreignInterests.countryCode),
+              amountBeforeTax = foreignInterests.amountBeforeTax.map(encryptionService.encrypt),
+              taxTakenOff = foreignInterests.taxTakenOff.map(encryptionService.encrypt),
+              specialWithholdingTax = foreignInterests.specialWithholdingTax.map(encryptionService.encrypt),
+              foreignTaxCreditRelief = foreignInterests.foreignTaxCreditRelief.map(encryptionService.encrypt),
+              taxableAmount = encryptionService.encrypt(foreignInterests.taxableAmount)
+            )
+          )
+      }
+    }
+
+    EncryptedSavingsIncomeDataModel(
+      submittedOn = savingsIncome.submittedOn.map(encryptionService.encrypt),
+      securities = eSecurities,
+      foreignInterest = eForeignSavings
+    )
+  }
+  private def decryptSavingsIncome(savingsIncome: EncryptedSavingsIncomeDataModel)(implicit textAndKey: TextAndKey): SavingsIncomeDataModel = {
+
+    val eSecurities: Option[SecuritiesModel] = {
+      savingsIncome.securities.map {
+        g =>
+          SecuritiesModel(
+            taxTakenOff = g.taxTakenOff.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+            grossAmount = encryptionService.decrypt[BigDecimal](g.grossAmount.value, g.grossAmount.nonce),
+            netAmount = g.netAmount.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce))
+          )
+      }
+    }
+    val eForeignSavings: Option[Seq[ForeignInterestModel]] = {
+      savingsIncome.foreignInterest.map {
+        g =>
+          g.map(foreignInterests =>
+            ForeignInterestModel(
+              countryCode = encryptionService.decrypt[String](foreignInterests.countryCode.value, foreignInterests.countryCode.nonce),
+              amountBeforeTax = foreignInterests.amountBeforeTax.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+              taxTakenOff = foreignInterests.taxTakenOff.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+              specialWithholdingTax = foreignInterests.specialWithholdingTax.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+              foreignTaxCreditRelief = foreignInterests.foreignTaxCreditRelief.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce)),
+              taxableAmount = encryptionService.decrypt[BigDecimal](foreignInterests.taxableAmount.value, foreignInterests.taxableAmount.nonce)
+            )
+          )
+      }
+    }
+
+    SavingsIncomeDataModel(
+      submittedOn = savingsIncome.submittedOn.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+      securities = eSecurities,
+      foreignInterest = eForeignSavings
+    )
   }
 
   private def encryptEmployment(employment: AllEmploymentData)(implicit textAndKey: TextAndKey): EncryptedAllEmploymentData = {
@@ -410,6 +481,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       pensions = userData.pensions.map(decryptPensions),
       cis = userData.cis.map(_.decrypted),
       stateBenefits = userData.stateBenefits.map(_.decrypted),
+      interestSavings = userData.interestSavings.map(decryptSavingsIncome),
       gains = userData.gains.map(decryptGains),
       lastUpdated = userData.lastUpdated
     )

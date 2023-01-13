@@ -14,17 +14,26 @@
  * limitations under the License.
  */
 
-package common
+package builders.models
 
-object IncomeSources {
+import models.{ForeignInterestModel, SavingsIncomeDataModel, SecuritiesModel}
 
-  val DIVIDENDS = "dividends"
-  val INTEREST = "interest"
-  val INTEREST_SAVINGS = "interest-savings"
-  val GIFT_AID = "gift-aid"
-  val EMPLOYMENT = "employment"
-  val PENSIONS = "pensions"
-  val CIS = "cis"
-  val STATE_BENEFITS = "state-benefits"
-  val GAINS = "gains"
+object SavingsIncomeBuilder {
+
+  val anSavingIncome: SavingsIncomeDataModel = SavingsIncomeDataModel(
+    submittedOn = Some("2020-02-04T05:01:01Z"),
+    securities = Some(SecuritiesModel(
+      Some(800.67),
+      7455.99,
+      Some(6123.2)
+    )),
+    foreignInterest = Some(Seq(ForeignInterestModel(
+      "BES",
+      Some(1232.56),
+      Some(3422.22),
+      Some(5622.67),
+      Some(true),
+      2821.92)
+    ))
+  )
 }
