@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ class IncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSource
     val excludedIncomeSources: Seq[String] = user.headers.get("excluded-income-sources").fold[Seq[String]](Seq.empty)(_.split(","))
 
     getIncomeSourcesService.getAllIncomeSources(nino, taxYear, user.mtditid, excludedIncomeSources).flatMap {
-      case Right(IncomeSources(None, None, None, None, None, None, None)) =>
+      case Right(IncomeSources(None, None, None, None, None, None, None, None)) =>
         incomeTaxUserDataService.saveUserData(taxYear, None)(NoContent)
       case Right(responseModel) =>
         incomeTaxUserDataService.saveUserData(taxYear, Some(responseModel))(Ok(Json.toJson(responseModel)))
@@ -55,7 +55,7 @@ class IncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSource
       case Right(None) =>
         logger.info(noDataLog)
         NoContent
-      case Right(Some(IncomeSources(None, None, None, None, None, None, None))) =>
+      case Right(Some(IncomeSources(None, None, None, None, None, None, None, None))) =>
         logger.info(noDataLog)
         NoContent
       case Right(Some(responseModel)) => Ok(Json.toJson(responseModel))
@@ -69,7 +69,7 @@ class IncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSource
       case Some(JsSuccess(RefreshIncomeSource(incomeSource), _)) =>
 
         incomeSource match {
-          case DIVIDENDS | INTEREST | GIFT_AID | EMPLOYMENT | PENSIONS | CIS | STATE_BENEFITS =>
+          case DIVIDENDS | INTEREST | GIFT_AID | EMPLOYMENT | PENSIONS | CIS | STATE_BENEFITS | GAINS =>
             refreshCacheService.getLatestDataAndRefreshCache(taxYear, incomeSource)
           case _ => Future.successful(BadRequest(Json.toJson(
             APIErrorBodyModel("INVALID_INCOME_SOURCE_PARAMETER", "Invalid income source value."))))

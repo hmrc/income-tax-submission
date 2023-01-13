@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import models.pensions.employmentPensions.{EmploymentPensionModel, EmploymentPen
 import models.pensions.income._
 import models.pensions.reliefs.{EncryptedPensionReliefs, EncryptedReliefs, PensionReliefs, Reliefs}
 import models.pensions.statebenefits._
-import models.{Dividends, EncryptedDividends, EncryptedInterest, Interest}
-import utils.SecureGCMCipher
+import models.{CapitalRedemptionModel, Dividends, EncryptedCapitalRedemptionModel, EncryptedDividends, EncryptedForeignModel, EncryptedInsurancePoliciesModel, EncryptedInterest, EncryptedLifeAnnuityModel, EncryptedLifeInsuranceModel, EncryptedVoidedIsaModel, ForeignModel, InsurancePoliciesModel, Interest, LifeAnnuityModel, LifeInsuranceModel, VoidedIsaModel}
+import utils.{EncryptedValue, SecureGCMCipher}
 
 import javax.inject.Inject
 
@@ -50,6 +50,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       pensions = userData.pensions.map(encryptPensions),
       cis = userData.cis.map(_.encrypted),
       stateBenefits = userData.stateBenefits.map(_.encrypted),
+      gains = userData.gains.map(encryptGains),
       lastUpdated = userData.lastUpdated
     )
   }
@@ -409,6 +410,7 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       pensions = userData.pensions.map(decryptPensions),
       cis = userData.cis.map(_.decrypted),
       stateBenefits = userData.stateBenefits.map(_.decrypted),
+      gains = userData.gains.map(decryptGains),
       lastUpdated = userData.lastUpdated
     )
   }
@@ -906,6 +908,189 @@ class EncryptionService @Inject()(encryptionService: SecureGCMCipher, appConfig:
       stateBenefits = stateBenefitsModel,
       employmentPensions = employmentPensions,
       pensionIncome = pensionIncome
+    )
+  }
+
+  private def encryptGains(gains: InsurancePoliciesModel)(implicit textAndKey: TextAndKey): EncryptedInsurancePoliciesModel = {
+
+    val eForeign: Option[Seq[EncryptedForeignModel]] = {
+      gains.foreign.map {
+        g =>
+          g.map(f =>
+            EncryptedForeignModel(
+              customerReference = f.customerReference.map(encryptionService.encrypt),
+              gainAmount = encryptionService.encrypt(f.gainAmount),
+              taxPaidAmount = f.taxPaidAmount.map(encryptionService.encrypt),
+              yearsHeld = f.yearsHeld.map(encryptionService.encrypt)
+            )
+          )
+      }
+    }
+    val eCapitalRedemption: Option[Seq[EncryptedCapitalRedemptionModel]] = {
+      gains.capitalRedemption.map {
+        g =>
+          g.map(c =>
+            EncryptedCapitalRedemptionModel(
+              customerReference = c.customerReference.map(encryptionService.encrypt),
+              event = c.event.map(encryptionService.encrypt),
+              gainAmount = encryptionService.encrypt(c.gainAmount),
+              taxPaid = c.taxPaid.map(encryptionService.encrypt),
+              yearsHeld = c.yearsHeld.map(encryptionService.encrypt),
+              yearsHeldSinceLastGain = c.yearsHeldSinceLastGain.map(encryptionService.encrypt),
+              deficiencyRelief = c.deficiencyRelief.map(encryptionService.encrypt)
+            )
+          )
+      }
+    }
+
+    val eLifeAnnuity: Option[Seq[EncryptedLifeAnnuityModel]] = {
+      gains.lifeAnnuity.map {
+        g =>
+          g.map(l =>
+            EncryptedLifeAnnuityModel(
+              customerReference = l.customerReference.map(encryptionService.encrypt),
+              event = l.event.map(encryptionService.encrypt),
+              gainAmount = encryptionService.encrypt(l.gainAmount),
+              taxPaid = l.taxPaid.map(encryptionService.encrypt),
+              yearsHeld = l.yearsHeld.map(encryptionService.encrypt),
+              yearsHeldSinceLastGain = l.yearsHeldSinceLastGain.map(encryptionService.encrypt),
+              deficiencyRelief = l.deficiencyRelief.map(encryptionService.encrypt)
+            )
+          )
+      }
+    }
+
+    val eLifeInsurance: Seq[EncryptedLifeInsuranceModel] = {
+      gains.lifeInsurance.map {
+        g =>
+          EncryptedLifeInsuranceModel(
+            customerReference = g.customerReference.map(encryptionService.encrypt),
+            event = g.event.map(encryptionService.encrypt),
+            gainAmount = encryptionService.encrypt(g.gainAmount),
+            taxPaid = g.taxPaid.map(encryptionService.encrypt),
+            yearsHeld = g.yearsHeld.map(encryptionService.encrypt),
+            yearsHeldSinceLastGain = g.yearsHeldSinceLastGain.map(encryptionService.encrypt),
+            deficiencyRelief = g.deficiencyRelief.map(encryptionService.encrypt)
+          )
+      }
+    }
+
+    val eVoidedIsa: Option[Seq[EncryptedVoidedIsaModel]] = {
+      gains.voidedIsa.map {
+        g =>
+          g.map(v =>
+            EncryptedVoidedIsaModel(
+              customerReference = v.customerReference.map(encryptionService.encrypt),
+              event = v.event.map(encryptionService.encrypt),
+              gainAmount = encryptionService.encrypt(v.gainAmount),
+              taxPaidAmount = v.taxPaidAmount.map(encryptionService.encrypt),
+              yearsHeld = v.yearsHeld.map(encryptionService.encrypt),
+              yearsHeldSinceLastGain = v.yearsHeldSinceLastGain.map(encryptionService.encrypt)
+            )
+          )
+      }
+    }
+
+
+    EncryptedInsurancePoliciesModel(
+      submittedOn = encryptionService.encrypt(gains.submittedOn),
+      lifeInsurance = eLifeInsurance,
+      capitalRedemption = eCapitalRedemption,
+      lifeAnnuity = eLifeAnnuity,
+      voidedIsa = eVoidedIsa,
+      foreign = eForeign
+    )
+  }
+
+  private def decryptGains(gains: EncryptedInsurancePoliciesModel)(implicit textAndKey: TextAndKey): InsurancePoliciesModel = {
+
+    val eForeign: Option[Seq[ForeignModel]] = {
+      gains.foreign.map {
+        g =>
+          g.map(f =>
+            ForeignModel(
+              customerReference = f.customerReference.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+              gainAmount = encryptionService.decrypt[BigDecimal](f.gainAmount.value, f.gainAmount.nonce),
+              taxPaidAmount = f.taxPaidAmount.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+              yearsHeld = f.yearsHeld.map(x => encryptionService.decrypt[Int](x.value, x.nonce))
+            )
+          )
+      }
+    }
+
+    val eCapitalRedemption: Option[Seq[CapitalRedemptionModel]] = {
+      gains.capitalRedemption.map {
+        g =>
+          g.map(c =>
+            CapitalRedemptionModel(
+              customerReference = c.customerReference.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+              event = c.event.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+              gainAmount = encryptionService.decrypt[BigDecimal](c.gainAmount.value, c.gainAmount.nonce),
+              taxPaid = c.taxPaid.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce)),
+              yearsHeld = c.yearsHeld.map(x => encryptionService.decrypt[Int](x.value, x.nonce)),
+              yearsHeldSinceLastGain = c.yearsHeldSinceLastGain.map(x => encryptionService.decrypt[Int](x.value, x.nonce)),
+              deficiencyRelief = c.deficiencyRelief.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce))
+            )
+          )
+      }
+    }
+
+    val eLifeAnnuity: Option[Seq[LifeAnnuityModel]] = {
+      gains.lifeAnnuity.map {
+        g =>
+          g.map(l =>
+            LifeAnnuityModel(
+              customerReference = l.customerReference.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+              event = l.event.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+              gainAmount = encryptionService.decrypt[BigDecimal](l.gainAmount.value, l.gainAmount.nonce),
+              taxPaid = l.taxPaid.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce)),
+              yearsHeld = l.yearsHeld.map(x => encryptionService.decrypt[Int](x.value, x.nonce)),
+              yearsHeldSinceLastGain = l.yearsHeldSinceLastGain.map(x => encryptionService.decrypt[Int](x.value, x.nonce)),
+              deficiencyRelief = l.deficiencyRelief.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce))
+            )
+          )
+      }
+    }
+
+    val eLifeInsurance: Seq[LifeInsuranceModel] = {
+      gains.lifeInsurance.map {
+        g =>
+          LifeInsuranceModel(
+            customerReference = g.customerReference.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+            event = g.event.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+            gainAmount = encryptionService.decrypt[BigDecimal](g.gainAmount.value, g.gainAmount.nonce),
+            taxPaid = g.taxPaid.map(x => encryptionService.decrypt[Boolean](x.value, x.nonce)),
+            yearsHeld = g.yearsHeld.map(x => encryptionService.decrypt[Int](x.value, x.nonce)),
+            yearsHeldSinceLastGain = g.yearsHeldSinceLastGain.map(x => encryptionService.decrypt[Int](x.value, x.nonce)),
+            deficiencyRelief = g.deficiencyRelief.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce))
+          )
+      }
+    }
+
+    val eVoidedIsa: Option[Seq[VoidedIsaModel]] = {
+      gains.voidedIsa.map {
+        g =>
+          g.map(v =>
+            VoidedIsaModel(
+              customerReference = v.customerReference.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+              event = v.event.map(x => encryptionService.decrypt[String](x.value, x.nonce)),
+              gainAmount = encryptionService.decrypt[BigDecimal](v.gainAmount.value, v.gainAmount.nonce),
+              taxPaidAmount = v.taxPaidAmount.map(x => encryptionService.decrypt[BigDecimal](x.value, x.nonce)),
+              yearsHeld = v.yearsHeld.map(x => encryptionService.decrypt[Int](x.value, x.nonce)),
+              yearsHeldSinceLastGain = v.yearsHeldSinceLastGain.map(x => encryptionService.decrypt[Int](x.value, x.nonce))
+            )
+          )
+      }
+    }
+
+
+    InsurancePoliciesModel(
+      submittedOn = encryptionService.decrypt[String](gains.submittedOn.value, gains.submittedOn.nonce),
+      lifeInsurance = eLifeInsurance,
+      capitalRedemption = eCapitalRedemption,
+      lifeAnnuity = eLifeAnnuity,
+      voidedIsa = eVoidedIsa,
+      foreign = eForeign
     )
   }
 }
