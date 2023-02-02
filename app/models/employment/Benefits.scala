@@ -17,8 +17,8 @@
 package models.employment
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{OFormat, __}
-import utils.EncryptedValue
+import play.api.libs.json.{Json, OFormat, __}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class Benefits(accommodation: Option[BigDecimal] = None,
                     assets: Option[BigDecimal] = None,
@@ -89,8 +89,9 @@ object Benefits {
       (__ \ "nonCash").formatNullable[BigDecimal]
     ).tupled
 
+
   implicit val format: OFormat[Benefits] = {
-    (firstSetOfFields and secondSetOfFields).apply({
+    (firstSetOfFields and secondSetOfFields)({
       case (
         (accommodation, assets, assetTransfer, beneficialLoan, car, carFuel, educationalServices, entertaining,
         expenses, medicalInsurance, telephone, service, taxableExpenses, van, vanFuel, mileage, nonQualifyingRelocationExpenses,
@@ -105,8 +106,14 @@ object Benefits {
           employerProvidedProfessionalSubscriptions, employerProvidedServices, incomeTaxPaidByDirector, travelAndSubsistence,
           vouchersAndCreditCards, nonCash
         )
-    }, {
-      benefits =>
+    }: ((Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal],
+      Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal],
+      Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal],
+      Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal],
+      Option[BigDecimal], Option[BigDecimal]),
+      (Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal],
+        Option[BigDecimal])) => Benefits, {
+      benefits: Benefits =>
         (
           (benefits.accommodation, benefits.assets, benefits.assetTransfer, benefits.beneficialLoan, benefits.car, benefits.carFuel,
             benefits.educationalServices, benefits.entertaining, benefits.expenses, benefits.medicalInsurance, benefits.telephone,
@@ -116,7 +123,17 @@ object Benefits {
           (benefits.employerProvidedProfessionalSubscriptions, benefits.employerProvidedServices, benefits.incomeTaxPaidByDirector,
             benefits.travelAndSubsistence, benefits.vouchersAndCreditCards, benefits.nonCash)
         )
-    })
+    }: Benefits => (
+      (Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal],
+        Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal],
+        Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal],
+        Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal],
+        Option[BigDecimal], Option[BigDecimal]),
+        (Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal],
+          Option[BigDecimal])
+      )
+
+    )
   }
 }
 
@@ -150,6 +167,8 @@ case class EncryptedBenefits(accommodation: Option[EncryptedValue] = None,
                              nonCash: Option[EncryptedValue] = None)
 
 object EncryptedBenefits {
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
   val firstSetOfFields: OFormat[(Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
     Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
     Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
@@ -190,7 +209,7 @@ object EncryptedBenefits {
     ).tupled
 
   implicit val format: OFormat[EncryptedBenefits] = {
-    (firstSetOfFields and secondSetOfFields).apply({
+    (firstSetOfFields and secondSetOfFields)({
       case (
         (accommodation, assets, assetTransfer, beneficialLoan, car, carFuel, educationalServices, entertaining,
         expenses, medicalInsurance, telephone, service, taxableExpenses, van, vanFuel, mileage, nonQualifyingRelocationExpenses,
@@ -205,8 +224,14 @@ object EncryptedBenefits {
           employerProvidedProfessionalSubscriptions, employerProvidedServices, incomeTaxPaidByDirector, travelAndSubsistence,
           vouchersAndCreditCards, nonCash
         )
-    }, {
-      benefits =>
+    }: ((Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+      Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+      Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+      Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+      Option[EncryptedValue], Option[EncryptedValue]),
+      (Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+        Option[EncryptedValue])) => EncryptedBenefits, {
+      benefits: EncryptedBenefits =>
         (
           (benefits.accommodation, benefits.assets, benefits.assetTransfer, benefits.beneficialLoan, benefits.car, benefits.carFuel,
             benefits.educationalServices, benefits.entertaining, benefits.expenses, benefits.medicalInsurance, benefits.telephone,
@@ -216,6 +241,15 @@ object EncryptedBenefits {
           (benefits.employerProvidedProfessionalSubscriptions, benefits.employerProvidedServices, benefits.incomeTaxPaidByDirector,
             benefits.travelAndSubsistence, benefits.vouchersAndCreditCards, benefits.nonCash)
         )
-    })
+    }: EncryptedBenefits => (
+      (Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+        Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+        Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+        Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+        Option[EncryptedValue], Option[EncryptedValue]),
+        (Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
+          Option[EncryptedValue])
+      )
+    )
   }
 }

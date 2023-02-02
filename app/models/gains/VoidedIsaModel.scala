@@ -16,8 +16,8 @@
 
 package models
 
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class VoidedIsaModel(
                            customerReference: Option[String],
@@ -42,5 +42,7 @@ case class EncryptedVoidedIsaModel(
                          )
 
 object EncryptedVoidedIsaModel {
-  implicit val formats: OFormat[EncryptedVoidedIsaModel] = Json.format[EncryptedVoidedIsaModel]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val formats: Format[EncryptedVoidedIsaModel] = Json.format[EncryptedVoidedIsaModel]
 }

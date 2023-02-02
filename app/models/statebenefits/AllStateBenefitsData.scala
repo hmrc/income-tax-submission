@@ -16,18 +16,17 @@
 
 package models.statebenefits
 
-import models.mongo.TextAndKey
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{JsPath, OWrites, Reads}
 import utils.JsonUtils.jsonObjNoNulls
-import utils.SecureGCMCipher
+import utils.AesGcmAdCrypto
 
 case class AllStateBenefitsData(stateBenefitsData: Option[StateBenefitsData],
                                 customerAddedStateBenefitsData: Option[CustomerAddedStateBenefitsData] = None) {
 
-  def encrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedAllStateBenefitsData = EncryptedAllStateBenefitsData(
-    stateBenefitsData = stateBenefitsData.map(_.encrypted),
-    customerAddedStateBenefitsData = customerAddedStateBenefitsData.map(_.encrypted)
+  def encrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): EncryptedAllStateBenefitsData = EncryptedAllStateBenefitsData(
+    stateBenefitsData = stateBenefitsData.map(_.encrypted()),
+    customerAddedStateBenefitsData = customerAddedStateBenefitsData.map(_.encrypted())
   )
 }
 
@@ -49,9 +48,9 @@ object AllStateBenefitsData {
 case class EncryptedAllStateBenefitsData(stateBenefitsData: Option[EncryptedStateBenefitsData],
                                          customerAddedStateBenefitsData: Option[EncryptedCustomerAddedStateBenefitsData] = None) {
 
-  def decrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): AllStateBenefitsData = AllStateBenefitsData(
-    stateBenefitsData = stateBenefitsData.map(_.decrypted),
-    customerAddedStateBenefitsData = customerAddedStateBenefitsData.map(_.decrypted)
+  def decrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): AllStateBenefitsData = AllStateBenefitsData(
+    stateBenefitsData = stateBenefitsData.map(_.decrypted()),
+    customerAddedStateBenefitsData = customerAddedStateBenefitsData.map(_.decrypted())
   )
 }
 

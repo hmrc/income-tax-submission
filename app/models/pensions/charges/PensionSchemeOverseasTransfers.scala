@@ -16,8 +16,8 @@
 
 package models.pensions.charges
 
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class PensionSchemeOverseasTransfers(overseasSchemeProvider: Seq[OverseasSchemeProvider],
                                           transferCharge: BigDecimal,
@@ -32,6 +32,8 @@ case class EncryptedPensionSchemeOverseasTransfers(overseasSchemeProvider: Seq[E
                                                    transferChargeTaxPaid: EncryptedValue)
 
 object EncryptedPensionSchemeOverseasTransfers {
-  implicit val format: OFormat[EncryptedPensionSchemeOverseasTransfers] = Json.format[EncryptedPensionSchemeOverseasTransfers]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedPensionSchemeOverseasTransfers] = Json.format[EncryptedPensionSchemeOverseasTransfers]
 }
 

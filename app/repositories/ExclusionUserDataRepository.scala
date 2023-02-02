@@ -27,6 +27,7 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class ExclusionUserDataRepositoryImpl @Inject()(
                                              mongo: MongoComponent,
                                              appConfig: AppConfig,

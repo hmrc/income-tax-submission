@@ -16,13 +16,12 @@
 
 package models.statebenefits
 
-import models.mongo.TextAndKey
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptableInstances.{bigDecimalEncryptable, instantEncryptable, localDateEncryptable, uuidEncryptable}
-import utils.EncryptableSyntax.{DecryptableOps, EncryptableOps}
-import utils.{EncryptedValue, SecureGCMCipher}
-
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
+import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
+import utils.AesGcmAdCrypto
 import java.time.{Instant, LocalDate}
+
 import java.util.UUID
 
 case class StateBenefit(benefitId: UUID,
@@ -33,12 +32,12 @@ case class StateBenefit(benefitId: UUID,
                         amount: Option[BigDecimal] = None,
                         taxPaid: Option[BigDecimal] = None) {
 
-  def encrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedStateBenefit = EncryptedStateBenefit(
-    benefitId = benefitId.encrypted,
-    startDate = startDate.encrypted,
-    endDate = endDate.map(_.encrypted),
-    dateIgnored = dateIgnored.map(_.encrypted),
-    submittedOn = submittedOn.map(_.encrypted),
+  def encrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): EncryptedStateBenefit = EncryptedStateBenefit(
+    benefitId = benefitId.toString.encrypted,
+    startDate = startDate.toString.encrypted,
+    endDate = endDate.map(_.toString.encrypted),
+    dateIgnored = dateIgnored.map(_.toString.encrypted),
+    submittedOn = submittedOn.map(_.toString.encrypted),
     amount = amount.map(_.encrypted),
     taxPaid = taxPaid.map(_.encrypted)
   )
@@ -56,7 +55,7 @@ case class EncryptedStateBenefit(benefitId: EncryptedValue,
                                  amount: Option[EncryptedValue] = None,
                                  taxPaid: Option[EncryptedValue] = None) {
 
-  def decrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): StateBenefit = StateBenefit(
+  def decrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): StateBenefit = StateBenefit(
     benefitId = benefitId.decrypted[UUID],
     startDate = startDate.decrypted[LocalDate],
     endDate = endDate.map(_.decrypted[LocalDate]),
@@ -68,5 +67,7 @@ case class EncryptedStateBenefit(benefitId: EncryptedValue,
 }
 
 object EncryptedStateBenefit {
-  implicit val format: OFormat[EncryptedStateBenefit] = Json.format[EncryptedStateBenefit]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedStateBenefit] = Json.format[EncryptedStateBenefit]
 }

@@ -63,7 +63,7 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       countFromOtherDatabase mustBe 0
       val res: Either[DatabaseError, Unit] = await(repoWithInvalidEncryption.update(aUserData))
       res mustBe Left(EncryptionDecryptionError(
-        "Key being used is not valid. It could be due to invalid encoding, wrong length or uninitialized for encrypt Invalid AES key length: 2 bytes"))
+        "Failed encrypting data"))
     }
   }
 
@@ -74,7 +74,7 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       countFromOtherDatabase mustBe 1
       val res = await(repoWithInvalidEncryption.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
       res mustBe Left(EncryptionDecryptionError(
-        "Key being used is not valid. It could be due to invalid encoding, wrong length or uninitialized for decrypt Invalid AES key length: 2 bytes"))
+        "Failed encrypting data"))
     }
   }
 
@@ -96,22 +96,23 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       await(ensureIndexes)
       count mustBe 0
 
-      val res = await(repo.update(aUserData))
-      res mustBe Right()
+      val res: Either[DatabaseError, Unit] = await(repo.update(aUserData))
+      res mustBe Right(())
       count mustBe 1
 
-      val res2 = await(repo.update(aUserData.copy(sessionId = "1234567890")))
-      res2.left.get.message must include("Command failed with error 11000 (DuplicateKey)")
+      val res2: Either[DatabaseError, Unit] = await(repo.update(aUserData.copy(sessionId = "1234567890")))
+      res2.left.e.swap.getOrElse(new Exception("").getMessage).toString must include("Command failed with error 11000 (DuplicateKey)")
       count mustBe 1
     }
 
     "add a document to the collection" in new EmptyDatabase {
       count mustBe 0
-      val res = await(repo.update(aUserData))
-      res mustBe Right()
+      val res: Either[DatabaseError, Unit] = await(repo.update(aUserData))
+      res mustBe Right(())
       count mustBe 1
-      val data = await(repo.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
-      data.right.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
+      val data: Either[DatabaseError, Option[UserData]] =
+        await(repo.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
+      data.toOption.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
         aUserData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
       )
     }
@@ -119,10 +120,10 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
     "upsert a document to the collection when already exists" in {
       count mustBe 1
       val res = await(repo.update(aUserData))
-      res mustBe Right()
+      res mustBe Right(())
       count mustBe 1
       val data = await(repo.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
-      data.right.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
+      data.toOption.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
         aUserData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
       )
     }
@@ -130,10 +131,10 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       val newUserData = aUserData.copy(dividends = Some(aDividends.copy(ukDividends = Some(344565.44))))
       count mustBe 1
       val res = await(repo.update(newUserData))
-      res mustBe Right()
+      res mustBe Right(())
       count mustBe 1
       val data = await(repo.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
-      data.right.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
+      data.toOption.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
         newUserData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
       )
     }
@@ -141,7 +142,7 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       val newUserData = aUserData.copy(sessionId = "sessionId-000001")
       count mustBe 1
       val res = await(repo.update(newUserData))
-      res mustBe Right()
+      res mustBe Right(())
       count mustBe 2
     }
   }
@@ -160,8 +161,8 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       val dataBefore: UserData = encryption.decryptUserData(await(repo.collection.find(filter(aUserData.sessionId, aUserData.mtdItId, aUserData.nino, aUserData.taxYear)).toFuture()).head)
       val dataAfter = await(repo.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
 
-      dataAfter.right.get.map(_.copy(lastUpdated = dataBefore.lastUpdated)) mustBe Some(dataBefore)
-      dataAfter.right.get.map(_.lastUpdated.isAfter(dataBefore.lastUpdated)) mustBe Some(true)
+      dataAfter.toOption.get.map(_.copy(lastUpdated = dataBefore.lastUpdated)) mustBe Some(dataBefore)
+      dataAfter.toOption.get.map(_.lastUpdated.isAfter(dataBefore.lastUpdated)) mustBe Some(true)
     }
   }
 
@@ -173,7 +174,8 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
         case e: Exception => Left(e)
       }
       result.isLeft mustBe true
-      result.left.get.getMessage must include("E11000 duplicate key error collection: income-tax-submission.userData index: UserDataLookupIndex dup key:")
+      result.left.e.swap.getOrElse(new Exception(""))
+        .getMessage must include("E11000 duplicate key error collection: income-tax-submission.userData index: UserDataLookupIndex dup key:")
     }
   }
 }

@@ -35,7 +35,6 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
-import utils.EncryptionDecryptionException
 import utils.PagerDutyHelper.PagerDutyKeys.{ENCRYPTION_DECRYPTION_ERROR, FAILED_TO_FIND_DATA, FAILED_TO_UPDATE_DATA}
 import utils.PagerDutyHelper.pagerDutyLog
 
@@ -66,7 +65,7 @@ class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
           replacement = encryptedData,
           options = FindOneAndReplaceOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
         ).toFutureOption().map {
-          case Some(_) => Right()
+          case Some(_) => Right(())
           case None =>
             pagerDutyLog(FAILED_TO_UPDATE_DATA, s"$start Failed to update user data.")
             Left(DataNotUpdated)
@@ -112,13 +111,8 @@ class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
   )
 
   def handleEncryptionDecryptionException[T](exception: Exception, startOfMessage: String): Left[DatabaseError, T] = {
-    val message: String = exception match {
-      case exception: EncryptionDecryptionException => s"${exception.failureReason} ${exception.failureMessage}"
-      case _ => exception.getMessage
-    }
-
-    pagerDutyLog(ENCRYPTION_DECRYPTION_ERROR, s"$startOfMessage $message")
-    Left(EncryptionDecryptionError(message))
+    pagerDutyLog(ENCRYPTION_DECRYPTION_ERROR, s"$startOfMessage ${exception.getMessage}")
+    Left(EncryptionDecryptionError(exception.getMessage))
   }
 }
 

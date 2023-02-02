@@ -16,30 +16,33 @@
 
 package models
 
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class ForeignInterestModel(
-  countryCode: String,
-  amountBeforeTax: Option[BigDecimal],
-  taxTakenOff: Option[BigDecimal],
-  specialWithholdingTax: Option[BigDecimal],
-  foreignTaxCreditRelief: Option[Boolean],
-  taxableAmount: BigDecimal)
+                                 countryCode: String,
+                                 amountBeforeTax: Option[BigDecimal],
+                                 taxTakenOff: Option[BigDecimal],
+                                 specialWithholdingTax: Option[BigDecimal],
+                                 foreignTaxCreditRelief: Option[Boolean],
+                                 taxableAmount: BigDecimal
+                               )
 
-object ForeignInterestModel{
+object ForeignInterestModel {
   implicit val formats: OFormat[ForeignInterestModel] = Json.format[ForeignInterestModel]
 }
 
 case class EncryptedForeignInterestModel(
-  countryCode: EncryptedValue,
-  amountBeforeTax: Option[EncryptedValue],
-  taxTakenOff: Option[EncryptedValue],
-  specialWithholdingTax: Option[EncryptedValue],
-  foreignTaxCreditRelief: Option[EncryptedValue],
-  taxableAmount: EncryptedValue
-                               )
+                                          countryCode: EncryptedValue,
+                                          amountBeforeTax: Option[EncryptedValue],
+                                          taxTakenOff: Option[EncryptedValue],
+                                          specialWithholdingTax: Option[EncryptedValue],
+                                          foreignTaxCreditRelief: Option[EncryptedValue],
+                                          taxableAmount: EncryptedValue
+                                        )
 
-object EncryptedForeignInterestModel{
-  implicit val formats: OFormat[EncryptedForeignInterestModel] = Json.format[EncryptedForeignInterestModel]
+object EncryptedForeignInterestModel {
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val formats: Format[EncryptedForeignInterestModel] = Json.format[EncryptedForeignInterestModel]
 }

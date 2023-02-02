@@ -16,11 +16,10 @@
 
 package models.cis
 
-import models.mongo.TextAndKey
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptableInstances._
-import utils.EncryptableSyntax._
-import utils.{EncryptedValue, SecureGCMCipher}
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
+import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
+import utils.AesGcmAdCrypto
 
 case class CISDeductions(fromDate: String,
                          toDate: String,
@@ -31,15 +30,15 @@ case class CISDeductions(fromDate: String,
                          totalGrossAmountPaid: Option[BigDecimal],
                          periodData: Seq[PeriodData]) {
 
-  def encrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedCISDeductions = EncryptedCISDeductions(
-    fromDate = fromDate.encrypted,
+  def encrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): EncryptedCISDeductions = EncryptedCISDeductions(
+    fromDate = fromDate.encrypted(aesGcmAdCrypto, associatedText),
     toDate = toDate.encrypted,
     contractorName = contractorName.map(_.encrypted),
     employerRef = employerRef.encrypted,
     totalDeductionAmount = totalDeductionAmount.map(_.encrypted),
     totalCostOfMaterials = totalCostOfMaterials.map(_.encrypted),
     totalGrossAmountPaid = totalGrossAmountPaid.map(_.encrypted),
-    periodData = periodData.map(_.encrypted)
+    periodData = periodData.map(_.encrypted())
   )
 }
 
@@ -56,7 +55,7 @@ case class EncryptedCISDeductions(fromDate: EncryptedValue,
                                   totalGrossAmountPaid: Option[EncryptedValue],
                                   periodData: Seq[EncryptedGetPeriodData]) {
 
-  def decrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): CISDeductions = CISDeductions(
+  def decrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): CISDeductions = CISDeductions(
     fromDate = fromDate.decrypted[String],
     toDate = toDate.decrypted[String],
     contractorName = contractorName.map(ev => ev.decrypted[String]),
@@ -64,10 +63,12 @@ case class EncryptedCISDeductions(fromDate: EncryptedValue,
     totalDeductionAmount = totalDeductionAmount.map(ev => ev.decrypted[BigDecimal]),
     totalCostOfMaterials = totalCostOfMaterials.map(ev => ev.decrypted[BigDecimal]),
     totalGrossAmountPaid = totalGrossAmountPaid.map(ev => ev.decrypted[BigDecimal]),
-    periodData = periodData.map(_.decrypted)
+    periodData = periodData.map(_.decrypted())
   )
 }
 
 object EncryptedCISDeductions {
-  implicit val format: OFormat[EncryptedCISDeductions] = Json.format[EncryptedCISDeductions]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedCISDeductions] = Json.format[EncryptedCISDeductions]
 }

@@ -37,7 +37,7 @@ class IncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSource
 
   def getIncomeSources(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
 
-    val excludedIncomeSources: Seq[String] = user.headers.get("excluded-income-sources").fold[Seq[String]](Seq.empty)(_.split(","))
+    val excludedIncomeSources: Seq[String] = user.headers.get("excluded-income-sources").fold(Seq[String]())(_.split(",").toIndexedSeq)
 
     getIncomeSourcesService.getAllIncomeSources(nino, taxYear, user.mtditid, excludedIncomeSources).flatMap {
       case Right(IncomeSources(None, None, None, None, None, None, None, None, None)) =>

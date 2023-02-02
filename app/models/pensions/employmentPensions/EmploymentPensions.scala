@@ -17,7 +17,7 @@
 package models.pensions.employmentPensions
 
 import play.api.libs.json._
-import utils.EncryptedValue
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class EmploymentPensions(employmentData: Seq[EmploymentPensionModel])
 
@@ -28,7 +28,9 @@ object EmploymentPensions {
 case class EncryptedEmploymentPensions(employmentData: Seq[EncryptedEmploymentPensionModel])
 
 object EncryptedEmploymentPensions {
-  implicit val format: OFormat[EncryptedEmploymentPensions] = Json.format[EncryptedEmploymentPensions]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedEmploymentPensions] = Json.format[EncryptedEmploymentPensions]
 }
 
 case class EmploymentPensionModel(employmentId: String,
@@ -59,5 +61,7 @@ case class EncryptedEmploymentPensionModel(employmentId: EncryptedValue,
                                  )
 
 object EncryptedEmploymentPensionModel {
-  implicit val format: OFormat[EncryptedEmploymentPensionModel] = Json.format[EncryptedEmploymentPensionModel]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedEmploymentPensionModel] = Json.format[EncryptedEmploymentPensionModel]
 }

@@ -21,6 +21,7 @@ import connectors._
 import models._
 import models.cis.AllCISDeductions
 import models.employment.AllEmploymentData
+import models.gains.InsurancePoliciesModel
 import models.gifts.GiftAid
 import models.pensions.Pensions
 import models.statebenefits.AllStateBenefitsData

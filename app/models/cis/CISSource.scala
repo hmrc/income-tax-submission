@@ -16,22 +16,22 @@
 
 package models.cis
 
-import models.mongo.TextAndKey
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptableInstances._
-import utils.EncryptableSyntax._
-import utils.{EncryptedValue, SecureGCMCipher}
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
+import utils.AesGcmAdCrypto
+import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
+
 
 case class CISSource(totalDeductionAmount: Option[BigDecimal],
                      totalCostOfMaterials: Option[BigDecimal],
                      totalGrossAmountPaid: Option[BigDecimal],
                      cisDeductions: Seq[CISDeductions]) {
 
-  def encrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedCISSource = EncryptedCISSource(
+  def encrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): EncryptedCISSource = EncryptedCISSource(
     totalDeductionAmount = totalDeductionAmount.map(_.encrypted),
     totalCostOfMaterials = totalCostOfMaterials.map(_.encrypted),
     totalGrossAmountPaid = totalGrossAmountPaid.map(_.encrypted),
-    cisDeductions = cisDeductions.map(_.encrypted)
+    cisDeductions = cisDeductions.map(_.encrypted())
   )
 }
 
@@ -44,14 +44,16 @@ case class EncryptedCISSource(totalDeductionAmount: Option[EncryptedValue],
                               totalGrossAmountPaid: Option[EncryptedValue],
                               cisDeductions: Seq[EncryptedCISDeductions]) {
 
-  def decrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): CISSource = CISSource(
+  def decrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): CISSource = CISSource(
     totalDeductionAmount = totalDeductionAmount.map(_.decrypted[BigDecimal]),
     totalCostOfMaterials = totalCostOfMaterials.map(_.decrypted[BigDecimal]),
     totalGrossAmountPaid = totalGrossAmountPaid.map(_.decrypted[BigDecimal]),
-    cisDeductions = cisDeductions.map(_.decrypted)
+    cisDeductions = cisDeductions.map(_.decrypted())
   )
 }
 
 object EncryptedCISSource {
-  implicit val format: OFormat[EncryptedCISSource] = Json.format[EncryptedCISSource]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedCISSource] = Json.format[EncryptedCISSource]
 }

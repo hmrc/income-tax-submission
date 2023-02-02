@@ -16,8 +16,8 @@
 
 package models.pensions.charges
 
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class PensionContributions(pensionSchemeTaxReference: Seq[String],
                                 inExcessOfTheAnnualAllowance: BigDecimal,
@@ -32,5 +32,7 @@ case class EncryptedPensionContributions(pensionSchemeTaxReference: Seq[Encrypte
                                          annualAllowanceTaxPaid: EncryptedValue)
 
 object EncryptedPensionContributions {
-  implicit val format: OFormat[EncryptedPensionContributions] = Json.format[EncryptedPensionContributions]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedPensionContributions] = Json.format[EncryptedPensionContributions]
 }

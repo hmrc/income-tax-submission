@@ -16,7 +16,8 @@
 
 package models.pensions.statebenefits
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class StateBenefits(
                           incapacityBenefit: Option[Seq[StateBenefit]],
@@ -43,5 +44,7 @@ case class EncryptedStateBenefits(
                                  )
 
 object EncryptedStateBenefits {
-  implicit val format: OFormat[EncryptedStateBenefits] = Json.format[EncryptedStateBenefits]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedStateBenefits] = Json.format[EncryptedStateBenefits]
 }
