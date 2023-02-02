@@ -16,7 +16,8 @@
 
 package models.employment
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class EmploymentFinancialData(employmentData: Option[EmploymentData],
                                    employmentBenefits: Option[EmploymentBenefits]) {
@@ -31,5 +32,7 @@ object EmploymentFinancialData {
 case class EncryptedEmploymentFinancialData(employmentData: Option[EncryptedEmploymentData], employmentBenefits: Option[EncryptedEmploymentBenefits])
 
 object EncryptedEmploymentFinancialData {
-  implicit val format: OFormat[EncryptedEmploymentFinancialData] = Json.format[EncryptedEmploymentFinancialData]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedEmploymentFinancialData] = Json.format[EncryptedEmploymentFinancialData]
 }

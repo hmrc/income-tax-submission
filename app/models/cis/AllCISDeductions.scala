@@ -16,16 +16,16 @@
 
 package models.cis
 
-import models.mongo.TextAndKey
-import play.api.libs.json.{Json, OFormat}
-import utils.SecureGCMCipher
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
+import utils.AesGcmAdCrypto
 
 case class AllCISDeductions(customerCISDeductions: Option[CISSource],
                             contractorCISDeductions: Option[CISSource]) {
 
-  def encrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedAllCISDeductions = EncryptedAllCISDeductions(
-    customerCISDeductions = customerCISDeductions.map(_.encrypted),
-    contractorCISDeductions = contractorCISDeductions.map(_.encrypted)
+  def encrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): EncryptedAllCISDeductions = EncryptedAllCISDeductions(
+    customerCISDeductions = customerCISDeductions.map(_.encrypted()),
+    contractorCISDeductions = contractorCISDeductions.map(_.encrypted())
   )
 }
 
@@ -36,12 +36,14 @@ object AllCISDeductions {
 case class EncryptedAllCISDeductions(customerCISDeductions: Option[EncryptedCISSource],
                                      contractorCISDeductions: Option[EncryptedCISSource]) {
 
-  def decrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): AllCISDeductions = AllCISDeductions(
-    customerCISDeductions = customerCISDeductions.map(_.decrypted),
-    contractorCISDeductions = contractorCISDeductions.map(_.decrypted)
+  def decrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): AllCISDeductions = AllCISDeductions(
+    customerCISDeductions = customerCISDeductions.map(_.decrypted()),
+    contractorCISDeductions = contractorCISDeductions.map(_.decrypted())
   )
 }
 
 object EncryptedAllCISDeductions {
-  implicit val format: OFormat[EncryptedAllCISDeductions] = Json.format[EncryptedAllCISDeductions]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedAllCISDeductions] = Json.format[EncryptedAllCISDeductions]
 }

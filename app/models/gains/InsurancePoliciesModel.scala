@@ -14,10 +14,20 @@
  * limitations under the License.
  */
 
-package models
+package models.gains
 
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import models.{
+  CapitalRedemptionModel,
+  EncryptedCapitalRedemptionModel,
+  EncryptedForeignModel,
+  EncryptedLifeInsuranceModel,
+  EncryptedVoidedIsaModel,
+  ForeignModel,
+  LifeInsuranceModel,
+  VoidedIsaModel
+}
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class InsurancePoliciesModel(submittedOn: String,
                                   lifeInsurance: Seq[LifeInsuranceModel],
@@ -31,12 +41,14 @@ object InsurancePoliciesModel {
 }
 
 case class EncryptedInsurancePoliciesModel(submittedOn: EncryptedValue,
-                                  lifeInsurance: Seq[EncryptedLifeInsuranceModel],
-                                  capitalRedemption: Option[Seq[EncryptedCapitalRedemptionModel]],
-                                  lifeAnnuity: Option[Seq[EncryptedLifeAnnuityModel]],
-                                  voidedIsa: Option[Seq[EncryptedVoidedIsaModel]],
-                                  foreign: Option[Seq[EncryptedForeignModel]])
+                                           lifeInsurance: Seq[EncryptedLifeInsuranceModel],
+                                           capitalRedemption: Option[Seq[EncryptedCapitalRedemptionModel]],
+                                           lifeAnnuity: Option[Seq[EncryptedLifeAnnuityModel]],
+                                           voidedIsa: Option[Seq[EncryptedVoidedIsaModel]],
+                                           foreign: Option[Seq[EncryptedForeignModel]])
 
 object EncryptedInsurancePoliciesModel {
-  implicit val formats: OFormat[EncryptedInsurancePoliciesModel] = Json.format[EncryptedInsurancePoliciesModel]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val formats: Format[EncryptedInsurancePoliciesModel] = Json.format[EncryptedInsurancePoliciesModel]
 }

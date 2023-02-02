@@ -16,8 +16,8 @@
 
 package models.pensions.reliefs
 
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class PensionReliefs(submittedOn: String,
                           deletedOn: Option[String],
@@ -32,5 +32,7 @@ case class EncryptedPensionReliefs(submittedOn: EncryptedValue,
                                    pensionReliefs: EncryptedReliefs)
 
 object EncryptedPensionReliefs {
-  implicit val formats: OFormat[EncryptedPensionReliefs] = Json.format[EncryptedPensionReliefs]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val formats: Format[EncryptedPensionReliefs] = Json.format[EncryptedPensionReliefs]
 }

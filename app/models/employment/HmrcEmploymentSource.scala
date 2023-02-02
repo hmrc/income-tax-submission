@@ -17,9 +17,9 @@
 package models.employment
 
 import org.joda.time.DateTime
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import play.api.libs.json.{Format, Json, OFormat}
 import play.api.Logging
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class HmrcEmploymentSource(employmentId: String,
                                 employerName: String,
@@ -86,7 +86,9 @@ case class EncryptedHmrcEmploymentSource(employmentId: EncryptedValue,
                                          occupationalPension: Option[EncryptedValue])
 
 object EncryptedHmrcEmploymentSource {
-  implicit val format: OFormat[EncryptedHmrcEmploymentSource] = Json.format[EncryptedHmrcEmploymentSource]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedHmrcEmploymentSource] = Json.format[EncryptedHmrcEmploymentSource]
 }
 
 

@@ -16,10 +16,7 @@
 
 package builders.models.gains
 
-import builders.models.gifts.GiftAidPaymentsBuilder.aGiftAidPayments
-import builders.models.gifts.GiftsBuilder.aGifts
 import models.LifeInsuranceModel
-import models.gifts.GiftAid
 
 object LifeInsuranceBuilder {
 

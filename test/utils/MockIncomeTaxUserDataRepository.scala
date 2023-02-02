@@ -28,7 +28,7 @@ trait MockIncomeTaxUserDataRepository extends MockFactory {
 
   val mockRepository: IncomeTaxUserDataRepository = mock[IncomeTaxUserDataRepository]
 
-  def mockUpdate(response: Either[DatabaseError, Unit] = Right()): CallHandler1[UserData, Future[Either[DatabaseError, Unit]]] = {
+  def mockUpdate(response: Either[DatabaseError, Unit] = Right(())): CallHandler1[UserData, Future[Either[DatabaseError, Unit]]] = {
     (mockRepository.update(_: UserData))
       .expects(*)
       .returns(Future.successful(response))

@@ -24,9 +24,9 @@ import org.mongodb.scala.result.InsertOneResult
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.mvc.{AnyContent, AnyContentAsEmpty}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import uk.gov.hmrc.crypto.EncryptedValue
 import uk.gov.hmrc.http.SessionKeys.sessionId
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
-import utils.EncryptedValue
 
 class UserDataRepositoryISpec extends IntegrationSpec with FutureAwaits with DefaultAwaitTimeout {
 
@@ -135,11 +135,10 @@ class UserDataRepositoryISpec extends IntegrationSpec with FutureAwaits with Def
       dataAfter.get.exclusionModel mustBe Seq(ExcludeJourneyModel("interest", None), ExcludeJourneyModel("dividends", None))
     }
 
-    "return an dataNotFoundError" in{
+    "return an dataNotFoundError" in {
       await(excludedInvalidRepo.find(taxYear)(testUser)) mustBe
         Left(EncryptionDecryptionError(
-          "Key being used is not valid. It could be due to invalid encoding, wrong length or uninitialized for decrypt Invalid AES key length: 2 bytes")
-        )
+          "Failed encrypting data"))
     }
   }
 
@@ -162,7 +161,7 @@ class UserDataRepositoryISpec extends IntegrationSpec with FutureAwaits with Def
 
   "clear" must {
 
-    "clear the document for the current user" in new EmptyDatabase{
+    "clear the document for the current user" in new EmptyDatabase {
       count shouldBe 0
       await(excludedRepo.create(ExclusionUserDataModel(nino, taxYear, Seq(ExcludeJourneyModel("interest", None)))))
       count shouldBe 1

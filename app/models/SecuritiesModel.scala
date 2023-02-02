@@ -16,8 +16,8 @@
 
 package models
 
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class SecuritiesModel(
                             taxTakenOff: Option[BigDecimal],
@@ -36,5 +36,7 @@ case class EncryptedSecuritiesModel(
                           )
 
 object EncryptedSecuritiesModel{
-  implicit val formats: OFormat[EncryptedSecuritiesModel] = Json.format[EncryptedSecuritiesModel]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val formats: Format[EncryptedSecuritiesModel] = Json.format[EncryptedSecuritiesModel]
 }

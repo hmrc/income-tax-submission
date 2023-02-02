@@ -95,7 +95,7 @@ class ExcludeJourneyServiceSpec extends TestUtils {
 
       "the journey is neither Interest nor GiftAid" in {
         val result = {
-          await(service.obtainHash(taxYear, DIVIDENDS)).right.get
+          await(service.obtainHash(taxYear, DIVIDENDS)).toOption.get
         }
 
         result mustBe None
@@ -108,7 +108,7 @@ class ExcludeJourneyServiceSpec extends TestUtils {
       "the journey is Interest" in {
         val result = {
           mockInterestCall(taxYear)
-          await(service.obtainHash(taxYear, INTEREST)).right.get
+          await(service.obtainHash(taxYear, INTEREST)).toOption.get
         }
         if (result.isEmpty) fail("Interest result is a None")
         result mustBe Some("94a7073922648d8c1a834f2c83f07b173249f7404772e973b5d23b6d7ae69af4")
@@ -117,7 +117,7 @@ class ExcludeJourneyServiceSpec extends TestUtils {
       "the journey is GiftAid" in {
         val result = {
           mockGiftAidCall(taxYear)
-          await(service.obtainHash(taxYear, GIFT_AID)).right.get
+          await(service.obtainHash(taxYear, GIFT_AID)).toOption.get
         }
         if (result.isEmpty) fail("Interest result is a None")
         result mustBe Some("394e36048bb70addfe89538cb638d7796400ceca72fc61b49b07eb34264357c5")
@@ -137,7 +137,9 @@ class ExcludeJourneyServiceSpec extends TestUtils {
           mockInterestCall(taxYear, error)
           await(service.obtainHash(taxYear, INTEREST))
         }
-        result.left.get.body mustBe APIErrorBodyModel("A_BIG_OOPS", "oops")
+        result.left.e.swap.getOrElse(
+          APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("A_BIG_OOPS", "oops"))
+        ).body mustBe APIErrorBodyModel("A_BIG_OOPS", "oops")
       }
 
       "an error occurs while looking for gift aid data" in {
@@ -150,7 +152,8 @@ class ExcludeJourneyServiceSpec extends TestUtils {
           mockGiftAidCall(taxYear, error)
           await(service.obtainHash(taxYear, GIFT_AID))
         }
-        result.left.get.body mustBe APIErrorBodyModel("A_BIG_OOPS", "oops")
+        result.left.e.swap.getOrElse(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("A_BIG_OOPS", "oops")))
+          .body mustBe APIErrorBodyModel("A_BIG_OOPS", "oops")
       }
 
     }

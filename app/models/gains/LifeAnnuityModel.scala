@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package models
+package models.gains
 
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class LifeAnnuityModel(
                              customerReference: Option[String],
@@ -44,5 +44,7 @@ case class EncryptedLifeAnnuityModel(
                            )
 
 object EncryptedLifeAnnuityModel {
-  implicit val formats: OFormat[EncryptedLifeAnnuityModel] = Json.format[EncryptedLifeAnnuityModel]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val formats: Format[EncryptedLifeAnnuityModel] = Json.format[EncryptedLifeAnnuityModel]
 }

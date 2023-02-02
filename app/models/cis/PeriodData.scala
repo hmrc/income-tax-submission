@@ -16,11 +16,10 @@
 
 package models.cis
 
-import models.mongo.TextAndKey
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptableInstances._
-import utils.EncryptableSyntax._
-import utils.{EncryptedValue, SecureGCMCipher}
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
+import utils.AesGcmAdCrypto
+import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
 
 case class PeriodData(deductionFromDate: String,
                       deductionToDate: String,
@@ -31,7 +30,7 @@ case class PeriodData(deductionFromDate: String,
                       submissionId: Option[String],
                       source: String) {
 
-  def encrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedGetPeriodData = EncryptedGetPeriodData(
+  def encrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): EncryptedGetPeriodData = EncryptedGetPeriodData(
     deductionFromDate = deductionFromDate.encrypted,
     deductionToDate = deductionToDate.encrypted,
     deductionAmount = deductionAmount.map(_.encrypted),
@@ -56,7 +55,7 @@ case class EncryptedGetPeriodData(deductionFromDate: EncryptedValue,
                                   submissionId: Option[EncryptedValue],
                                   source: EncryptedValue) {
 
-  def decrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): PeriodData = PeriodData(
+  def decrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): PeriodData = PeriodData(
     deductionFromDate = deductionFromDate.decrypted[String],
     deductionToDate = deductionToDate.decrypted[String],
     deductionAmount = deductionAmount.map(ev => ev.decrypted[BigDecimal]),
@@ -69,5 +68,7 @@ case class EncryptedGetPeriodData(deductionFromDate: EncryptedValue,
 }
 
 object EncryptedGetPeriodData {
-  implicit val format: OFormat[EncryptedGetPeriodData] = Json.format[EncryptedGetPeriodData]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedGetPeriodData] = Json.format[EncryptedGetPeriodData]
 }

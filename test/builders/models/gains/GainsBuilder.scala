@@ -21,7 +21,7 @@ import builders.models.gains.ForeignBuilder.aForeign
 import builders.models.gains.LifeAnnuityBuilder.aLifeAnnuity
 import builders.models.gains.LifeInsuranceBuilder.aLifeInsurance
 import builders.models.gains.VoidedIsaBuilder.aVoidedIsa
-import models.InsurancePoliciesModel
+import models.gains.InsurancePoliciesModel
 
 
 object GainsBuilder {

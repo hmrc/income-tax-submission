@@ -16,8 +16,8 @@
 
 package models.employment
 
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class StudentLoans(uglDeductionAmount: Option[BigDecimal],
                         pglDeductionAmount: Option[BigDecimal])
@@ -30,6 +30,8 @@ case class EncryptedStudentLoans(uglDeductionAmount: Option[EncryptedValue],
                                  pglDeductionAmount: Option[EncryptedValue])
 
 object EncryptedStudentLoans {
-  implicit val formats: OFormat[EncryptedStudentLoans] = Json.format[EncryptedStudentLoans]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val formats: Format[EncryptedStudentLoans] = Json.format[EncryptedStudentLoans]
 }
 

@@ -17,7 +17,7 @@
 package connectors.parsers
 
 import models._
-import models.gifts.GiftAid
+import models.gains.InsurancePoliciesModel
 import play.api.Logging
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}

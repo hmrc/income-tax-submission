@@ -16,8 +16,8 @@
 
 package models
 
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class SavingsIncomeDataModel(submittedOn: Option[String], securities: Option[SecuritiesModel], foreignInterest: Option[Seq[ForeignInterestModel]])
 
@@ -28,5 +28,7 @@ object SavingsIncomeDataModel{
 case class EncryptedSavingsIncomeDataModel(submittedOn: Option[EncryptedValue], securities: Option[EncryptedSecuritiesModel], foreignInterest: Option[Seq[EncryptedForeignInterestModel]])
 
 object EncryptedSavingsIncomeDataModel{
-  implicit val formats: OFormat[EncryptedSavingsIncomeDataModel] = Json.format[EncryptedSavingsIncomeDataModel]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val formats: Format[EncryptedSavingsIncomeDataModel] = Json.format[EncryptedSavingsIncomeDataModel]
 }

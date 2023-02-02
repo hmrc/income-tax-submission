@@ -16,8 +16,8 @@
 
 package models
 
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 case class ForeignModel(
                          customerReference: Option[String],
@@ -38,5 +38,7 @@ case class EncryptedForeignModel(
                        )
 
 object EncryptedForeignModel {
-  implicit val formats: OFormat[EncryptedForeignModel] = Json.format[EncryptedForeignModel]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val formats: Format[EncryptedForeignModel] = Json.format[EncryptedForeignModel]
 }

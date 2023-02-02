@@ -66,14 +66,14 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
     "the user is an individual" must {
       "return the income sources for a user" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData))
-        res mustBe Right()
+        res mustBe Right(())
         count mustBe 1
 
         authorised()
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe 200
             Json.parse(result.body) mustBe Json.toJson(userData.toIncomeSourcesResponseModel)
@@ -82,14 +82,14 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
 
       "return the income sources for a user when the backup session header is available" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData))
-        res mustBe Right()
+        res mustBe Right(())
         count mustBe 1
 
         authorised()
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe 200
             Json.parse(result.body) mustBe Json.toJson(userData.toIncomeSourcesResponseModel)
@@ -99,7 +99,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
       "return 204 if a user has no recorded income sources" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData.copy(dividends = None, interest = None,
           giftAid = None, employment = None, pensions = None)))
-        res mustBe Right()
+        res mustBe Right(())
         count mustBe 1
 
         authorised()
@@ -107,7 +107,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe 204
             result.body mustBe ""
@@ -120,7 +120,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe 204
             result.body mustBe ""
@@ -133,7 +133,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe 401
             result.body mustBe ""
@@ -146,7 +146,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe 401
             result.body mustBe ""
@@ -157,7 +157,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
     "the user is an agent" must {
       "return the income sources for a user" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData))
-        res mustBe Right()
+        res mustBe Right(())
         count mustBe 1
 
         agentAuthorised()
@@ -166,7 +166,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
             .withQueryStringParameters("taxYear" -> taxYear)
             .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-            .get
+            .get()
         ) {
           result =>
             result.status mustBe 200
@@ -177,7 +177,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
       "return 204 if a user has no recorded income sources" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData.copy(dividends = None, interest = None,
           giftAid = None, employment = None, pensions = None)))
-        res mustBe Right()
+        res mustBe Right(())
         count mustBe 1
 
         agentAuthorised()
@@ -186,7 +186,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
             .withQueryStringParameters("taxYear" -> taxYear)
             .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-            .get
+            .get()
         ) {
           result =>
             result.status mustBe 204
@@ -202,7 +202,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
             .withQueryStringParameters("taxYear" -> taxYear)
             .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-            .get
+            .get()
         ) {
           result =>
             result.status mustBe 204
@@ -217,7 +217,7 @@ class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
             .withQueryStringParameters("taxYear" -> taxYear)
             .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-            .get
+            .get()
         ) {
           result =>
             result.status mustBe 401

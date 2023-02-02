@@ -16,11 +16,10 @@
 
 package models.statebenefits
 
-import models.mongo.TextAndKey
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptableInstances.{bigDecimalEncryptable, instantEncryptable, localDateEncryptable, uuidEncryptable}
-import utils.EncryptableSyntax.{DecryptableOps, EncryptableOps}
-import utils.{EncryptedValue, SecureGCMCipher}
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
+import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
+import utils.AesGcmAdCrypto
 
 import java.time.{Instant, LocalDate}
 import java.util.UUID
@@ -32,7 +31,7 @@ case class CustomerAddedStateBenefit(benefitId: UUID,
                                      amount: Option[BigDecimal] = None,
                                      taxPaid: Option[BigDecimal] = None) {
 
-  def encrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedCustomerAddedStateBenefit = EncryptedCustomerAddedStateBenefit(
+  def encrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): EncryptedCustomerAddedStateBenefit = EncryptedCustomerAddedStateBenefit(
     benefitId = benefitId.encrypted,
     startDate = startDate.encrypted,
     endDate = endDate.map(_.encrypted),
@@ -54,7 +53,7 @@ case class EncryptedCustomerAddedStateBenefit(benefitId: EncryptedValue,
                                               amount: Option[EncryptedValue] = None,
                                               taxPaid: Option[EncryptedValue] = None) {
 
-  def decrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): CustomerAddedStateBenefit = CustomerAddedStateBenefit(
+  def decrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): CustomerAddedStateBenefit = CustomerAddedStateBenefit(
     benefitId = benefitId.decrypted[UUID],
     startDate = startDate.decrypted[LocalDate],
     endDate = endDate.map(_.decrypted[LocalDate]),
@@ -65,5 +64,7 @@ case class EncryptedCustomerAddedStateBenefit(benefitId: EncryptedValue,
 }
 
 object EncryptedCustomerAddedStateBenefit {
-  implicit val format: OFormat[EncryptedCustomerAddedStateBenefit] = Json.format[EncryptedCustomerAddedStateBenefit]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedCustomerAddedStateBenefit] = Json.format[EncryptedCustomerAddedStateBenefit]
 }

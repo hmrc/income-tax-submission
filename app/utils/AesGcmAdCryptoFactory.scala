@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package builders.models.gains
+package utils
 
-import models.gains.LifeAnnuityModel
+import config.AppConfig
+import uk.gov.hmrc.crypto.{AdDecrypter, AdEncrypter, SymmetricCryptoFactory}
 
-object LifeAnnuityBuilder {
+import javax.inject.{Inject, Singleton}
 
-  val aLifeAnnuity: LifeAnnuityModel   = LifeAnnuityModel(
-    customerReference = Some("RefNo13254688"),
-    event = Some("life"),
-    gainAmount = 0,
-    taxPaid = Some(true),
-    yearsHeld = Some(2),
-    yearsHeldSinceLastGain = Some(22),
-    deficiencyRelief = Some(123.45)
-  )
+@Singleton
+class AesGcmAdCryptoFactory @Inject()(appConfig: AppConfig) {
+
+  private lazy val aesGcmAdCrypto = SymmetricCryptoFactory.aesGcmAdCrypto(appConfig.encryptionKey)
+
+  def instance(): AdEncrypter with AdDecrypter = aesGcmAdCrypto
 }

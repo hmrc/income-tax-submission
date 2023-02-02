@@ -72,7 +72,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
     "the user is an individual" must {
       "refresh the dividends income source for a user" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData))
-        res mustBe Right()
+        res mustBe Right(())
         count mustBe 1
 
         stubGetWithResponseBody(
@@ -94,7 +94,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe OK
 
@@ -105,7 +105,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
       "refresh the dividends income source for a user when there was no dividends to start with" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData.copy(dividends = None)))
-        res mustBe Right()
+        res mustBe Right(())
         count mustBe 1
 
         stubGetWithResponseBody(
@@ -127,7 +127,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe OK
 
@@ -138,7 +138,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
       "refresh the dividends income source for a user when there was no income source data to start with" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData.copy(dividends = None, interest = None, giftAid = None, employment = None)))
-        res mustBe Right()
+        res mustBe Right(())
         count mustBe 1
 
         stubGetWithResponseBody(
@@ -160,7 +160,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe OK
 
@@ -191,7 +191,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe OK
 
@@ -203,7 +203,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
       "return a not found when the user has no income source data and no dividends retrieved" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData.copy(dividends = None, interest = None,
           employment = None, giftAid = None, pensions = None)))
-        res mustBe Right()
+        res mustBe Right(())
         count mustBe 1
 
         stubGetWithResponseBody(
@@ -225,7 +225,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe NO_CONTENT
         }
@@ -245,7 +245,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
 
       "refresh the dividends income source for a user when there are no dividends after the update" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData))
-        res mustBe Right()
+        res mustBe Right(())
         count mustBe 1
 
         stubGetWithResponseBody(
@@ -267,7 +267,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe OK
 
@@ -304,7 +304,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
     "the user is an agent" must {
       "refresh the dividends income source for a user" in new Setup {
         val res: Either[DatabaseError, Unit] = await(repo.update(userData))
-        res mustBe Right()
+        res mustBe Right(())
         count mustBe 1
 
         agentAuthorised()
@@ -327,7 +327,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources/session")
           .withQueryStringParameters("taxYear" -> taxYear)
           .withHttpHeaders(mtditidHeader, sessionIdHeader, xSessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe OK
 

@@ -16,11 +16,11 @@
 
 package models.statebenefits
 
-import models.mongo.TextAndKey
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{JsPath, OWrites, Reads}
+import play.api.libs.json.{JsPath, Json, OFormat, OWrites, Reads}
+import uk.gov.hmrc.crypto.EncryptedValue
 import utils.JsonUtils.jsonObjNoNulls
-import utils.SecureGCMCipher
+import utils.AesGcmAdCrypto
 
 case class StateBenefitsData(incapacityBenefits: Option[Set[StateBenefit]] = None,
                              statePension: Option[StateBenefit] = None,
@@ -30,14 +30,14 @@ case class StateBenefitsData(incapacityBenefits: Option[Set[StateBenefit]] = Non
                              bereavementAllowance: Option[StateBenefit] = None,
                              other: Option[StateBenefit] = None) {
 
-  def encrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): EncryptedStateBenefitsData = EncryptedStateBenefitsData(
-    incapacityBenefits = incapacityBenefits.map(_.map(_.encrypted)),
-    statePension = statePension.map(_.encrypted),
-    statePensionLumpSum = statePensionLumpSum.map(_.encrypted),
-    employmentSupportAllowances = employmentSupportAllowances.map(_.map(_.encrypted)),
-    jobSeekersAllowances = jobSeekersAllowances.map(_.map(_.encrypted)),
-    bereavementAllowance = bereavementAllowance.map(_.encrypted),
-    other = other.map(_.encrypted)
+  def encrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): EncryptedStateBenefitsData = EncryptedStateBenefitsData(
+    incapacityBenefits = incapacityBenefits.map(_.map(_.encrypted())),
+    statePension = statePension.map(_.encrypted()),
+    statePensionLumpSum = statePensionLumpSum.map(_.encrypted()),
+    employmentSupportAllowances = employmentSupportAllowances.map(_.map(_.encrypted())),
+    jobSeekersAllowances = jobSeekersAllowances.map(_.map(_.encrypted())),
+    bereavementAllowance = bereavementAllowance.map(_.encrypted()),
+    other = other.map(_.encrypted())
   )
 }
 
@@ -74,18 +74,20 @@ case class EncryptedStateBenefitsData(incapacityBenefits: Option[Set[EncryptedSt
                                       bereavementAllowance: Option[EncryptedStateBenefit] = None,
                                       other: Option[EncryptedStateBenefit] = None) {
 
-  def decrypted()(implicit secureGCMCipher: SecureGCMCipher, textAndKey: TextAndKey): StateBenefitsData = StateBenefitsData(
-    incapacityBenefits = incapacityBenefits.map(_.map(_.decrypted)),
-    statePension = statePension.map(_.decrypted),
-    statePensionLumpSum = statePensionLumpSum.map(_.decrypted),
-    employmentSupportAllowances = employmentSupportAllowances.map(_.map(_.decrypted)),
-    jobSeekersAllowances = jobSeekersAllowances.map(_.map(_.decrypted)),
-    bereavementAllowance = bereavementAllowance.map(_.decrypted),
-    other = other.map(_.decrypted)
+  def decrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): StateBenefitsData = StateBenefitsData(
+    incapacityBenefits = incapacityBenefits.map(_.map(_.decrypted())),
+    statePension = statePension.map(_.decrypted()),
+    statePensionLumpSum = statePensionLumpSum.map(_.decrypted()),
+    employmentSupportAllowances = employmentSupportAllowances.map(_.map(_.decrypted())),
+    jobSeekersAllowances = jobSeekersAllowances.map(_.map(_.decrypted())),
+    bereavementAllowance = bereavementAllowance.map(_.decrypted()),
+    other = other.map(_.decrypted())
   )
 }
 
 object EncryptedStateBenefitsData {
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
   implicit val encryptedStateBenefitsDataWrites: OWrites[EncryptedStateBenefitsData] = (stateBenefitsData: EncryptedStateBenefitsData) => {
     jsonObjNoNulls(
       "incapacityBenefit" -> stateBenefitsData.incapacityBenefits,

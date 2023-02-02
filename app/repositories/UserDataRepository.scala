@@ -27,13 +27,11 @@ import org.mongodb.scala.model.{FindOneAndReplaceOptions, FindOneAndUpdateOption
 import uk.gov.hmrc.mongo.play.json.Codecs.{logger, toBson}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
-import utils.EncryptionDecryptionException
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
-import scala.Left
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Left, Try}
 
 trait UserDataRepository[C <: ExclusionUserDataTemplate, V] {
   self: PlayMongoRepository[C] =>
@@ -49,11 +47,13 @@ trait UserDataRepository[C <: ExclusionUserDataTemplate, V] {
     lazy val start = s"[$repoName][create]"
     Try {
       encryptionMethod(userData)
-    }.toEither match {
-      case Left(exception: Exception) => Future.successful(handleEncryptionDecryptionException(exception, start))
-      case Right(encryptedData) =>
+    }.toOption match {
+      case None => Future.failed(new Exception(DataNotUpdated.message))
+      case Some(exception: Exception) => Future.successful(handleEncryptionDecryptionException(exception, start))
+      case Some(encryptedData) =>
         collection.insertOne(encryptedData).toFutureOption().map {
           case Some(_) => Right(true)
+          case None => Left(DataNotUpdated)
         }.recover {
           case exception: Exception =>
             pagerDutyLog(FAILED_TO_CREATE_DATA, s"$start Failed to create user data. Exception: ${exception.getMessage}")
@@ -86,7 +86,7 @@ trait UserDataRepository[C <: ExclusionUserDataTemplate, V] {
         Try {
           data.map(decryptionMethod)
         }.toEither match {
-          case Left(value) => handleEncryptionDecryptionException(value, start)
+          case Left(value) => handleEncryptionDecryptionException(value.asInstanceOf[Exception], start)
           case Right(value) => Right(value)
         }
     }
@@ -98,15 +98,17 @@ trait UserDataRepository[C <: ExclusionUserDataTemplate, V] {
 
     Try {
       encryptionMethod.apply(userData)
-    }.toEither match {
-      case Left(exception: Exception) => Future.successful(handleEncryptionDecryptionException(exception, start))
-      case Right(encryptedData) =>
+    }.toOption match {
+      case None => Future.failed(new Exception(DataNotUpdated.message))
+      case Some(exception: Exception) => Future.successful(handleEncryptionDecryptionException(exception, start))
+      case Some(encryptedData) =>
         collection.findOneAndReplace(
           filter = filter(encryptedData.nino, encryptedData.taxYear),
           replacement = encryptedData,
           options = FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER)
         ).toFutureOption().map {
           case Some(_) => Right(true)
+          case None => Left(DataNotUpdated)
         }.recover {
           case exception: Exception =>
             pagerDutyLog(FAILED_TO_UPDATE_DATA, s"$start Failed to update user data. Exception: ${exception.getMessage}")
@@ -124,14 +126,9 @@ trait UserDataRepository[C <: ExclusionUserDataTemplate, V] {
     equal("taxYear", toBson(taxYear))
   )
 
-  def handleEncryptionDecryptionException[T](exception: Throwable, startOfMessage: String): Left[DatabaseError, T] = {
-    val message: String = exception match {
-      case exception: EncryptionDecryptionException => s"${exception.failureReason} ${exception.failureMessage}"
-      case _ => exception.getMessage
-    }
-
-    pagerDutyLog(ENCRYPTION_DECRYPTION_ERROR, s"$startOfMessage $message")
-    Left(EncryptionDecryptionError(message))
+  private def handleEncryptionDecryptionException[T](exception: Exception, startOfMessage: String): Left[DatabaseError, T] = {
+    pagerDutyLog(ENCRYPTION_DECRYPTION_ERROR, s"$startOfMessage ${exception.getMessage}")
+    Left(EncryptionDecryptionError(exception.getMessage))
   }
 
 

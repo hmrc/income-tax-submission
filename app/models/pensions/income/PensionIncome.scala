@@ -16,8 +16,8 @@
 
 package models.pensions.income
 
-import play.api.libs.json.{Json, OFormat}
-import utils.EncryptedValue
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 
 case class ForeignPension (
@@ -43,7 +43,9 @@ case class EncryptedForeignPension (
                           )
 
 object EncryptedForeignPension {
-  implicit val format: OFormat[EncryptedForeignPension] = Json.format[EncryptedForeignPension]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedForeignPension] = Json.format[EncryptedForeignPension]
 }
 
 case class OverseasPensionContribution (
@@ -74,7 +76,9 @@ case class EncryptedOverseasPensionContribution (
                                        )
 
 object EncryptedOverseasPensionContribution {
-  implicit val format: OFormat[EncryptedOverseasPensionContribution] = Json.format[EncryptedOverseasPensionContribution]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedOverseasPensionContribution] = Json.format[EncryptedOverseasPensionContribution]
 }
 
 case class PensionIncomeModel (
@@ -94,5 +98,7 @@ case class EncryptedPensionIncomeModel (
                                    overseasPensionContribution: Seq[EncryptedOverseasPensionContribution]
                                  )
 object EncryptedPensionIncomeModel {
-  implicit val format: OFormat[EncryptedPensionIncomeModel] = Json.format[EncryptedPensionIncomeModel]
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedPensionIncomeModel] = Json.format[EncryptedPensionIncomeModel]
 }
