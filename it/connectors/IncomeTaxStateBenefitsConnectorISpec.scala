@@ -45,13 +45,13 @@ class IncomeTaxStateBenefitsConnectorISpec extends ConnectorIntegrationTest {
     "return AllStateBenefitsData when successful result" in {
       val responseBody = Json.toJson(anAllStateBenefitsData).toString()
 
-      stubGetWithResponseBody(s"/income-tax-state-benefits/income-tax/nino/$nino/tax-year/$taxYear", OK, responseBody, headers)
+      stubGetWithResponseBody(s"/income-tax-state-benefits/benefits/nino/$nino/tax-year/$taxYear", OK, responseBody, headers)
 
       Await.result(underTest.getSubmittedStateBenefits(nino, taxYear), Duration.Inf) shouldBe Right(Some(anAllStateBenefitsData))
     }
 
     "return None when no content" in {
-      stubGetWithResponseBody(s"/income-tax-state-benefits/income-tax/nino/$nino/tax-year/$taxYear", NO_CONTENT, "{}", headers)
+      stubGetWithResponseBody(s"/income-tax-state-benefits/benefits/nino/$nino/tax-year/$taxYear", NO_CONTENT, "{}", headers)
 
       Await.result(underTest.getSubmittedStateBenefits(nino, taxYear), Duration.Inf) shouldBe Right(None)
     }
@@ -60,7 +60,7 @@ class IncomeTaxStateBenefitsConnectorISpec extends ConnectorIntegrationTest {
       val errorBody: APIErrorBodyModel = APIErrorBodyModel("BAD_REQUEST", "That request was bad")
       val expectedResult = APIErrorModel(BAD_REQUEST, errorBody)
 
-      stubGetWithResponseBody(s"/income-tax-state-benefits/income-tax/nino/$nino/tax-year/$taxYear", BAD_REQUEST, Json.toJson(errorBody).toString(), headers)
+      stubGetWithResponseBody(s"/income-tax-state-benefits/benefits/nino/$nino/tax-year/$taxYear", BAD_REQUEST, Json.toJson(errorBody).toString(), headers)
 
       Await.result(underTest.getSubmittedStateBenefits(nino, taxYear), Duration.Inf) shouldBe Left(expectedResult)
     }

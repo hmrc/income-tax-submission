@@ -100,7 +100,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         )
 
         stubGetWithResponseBody(
-          url = s"/income-tax-state-benefits/income-tax/nino/AA123123A/tax-year/2019",
+          url = s"/income-tax-state-benefits/benefits/nino/AA123123A/tax-year/2019",
           status = OK,
           response = Json.toJson(Some(anAllStateBenefitsData)).toString,
           requestHeaders
@@ -161,7 +161,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         )
 
         stubGetWithoutResponseBody(
-          url = s"/income-tax-state-benefits/income-tax/nino/AA123123A/tax-year/2019",
+          url = s"/income-tax-state-benefits/benefits/nino/AA123123A/tax-year/2019",
           status = NO_CONTENT,
           requestHeaders
         )
@@ -291,7 +291,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         )
 
         stubGetWithResponseBody(
-          url = s"/income-tax-state-benefits/income-tax/nino/AA123123A/tax-year/2019",
+          url = s"/income-tax-state-benefits/benefits/nino/AA123123A/tax-year/2019",
           status = OK,
           response = Json.toJson(Some(anAllStateBenefitsData)).toString,
           requestHeaders
@@ -350,7 +350,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           requestHeaders
         )
         stubGetWithoutResponseBody(
-          url = s"/income-tax-state-benefits/income-tax/nino/AA123123A/tax-year/2019",
+          url = s"/income-tax-state-benefits/benefits/nino/AA123123A/tax-year/2019",
           status = NO_CONTENT,
           requestHeaders
         )
