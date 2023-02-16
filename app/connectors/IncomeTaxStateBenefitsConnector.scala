@@ -27,7 +27,7 @@ class IncomeTaxStateBenefitsConnector @Inject()(val http: HttpClient, val config
                                                (implicit ec: ExecutionContext) extends Connector {
 
   def getSubmittedStateBenefits(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
-    val submittedStateBenefitsUrl: String = config.stateBenefitsBaseUrl + s"/income-tax-state-benefits/income-tax/nino/$nino/tax-year/$taxYear"
+    val submittedStateBenefitsUrl: String = config.stateBenefitsBaseUrl + s"/income-tax-state-benefits/benefits/nino/$nino/tax-year/$taxYear"
 
     http.GET[IncomeSourcesResponseModel](submittedStateBenefitsUrl)(SubmittedStateBenefitsHttpReads, addHeadersToHeaderCarrier(submittedStateBenefitsUrl), ec)
   }
