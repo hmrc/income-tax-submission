@@ -76,7 +76,7 @@ class IncomeSourcesControllerSpec extends TestUtils {
   }
   val gifts: Gifts = Gifts(Some(List("")), Some(12345.67), Some(12345.67), Some(12345.67))
 
-  val incomeSources: IncomeSources = IncomeSources(Some(Dividends(Some(12345.67), Some(12345.67))),
+  val incomeSources: IncomeSources = IncomeSources(None, Some(Dividends(Some(12345.67), Some(12345.67))),
     Some(Seq(Interest("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAid(Some(giftAidPayments), Some(gifts))),
     Some(anAllEmploymentData))
 

@@ -112,7 +112,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
                                           (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
 
     incomeTaxUserDataService.findUserData(user, taxYear).flatMap {
-      case Right(None) | Right(Some(IncomeSources(None, None, None, None, None, None, None, None, None))) =>
+      case Right(None) | Right(Some(IncomeSources(None, None, None, None, None, None, None, None, None, None))) =>
 
         logger.info(s"${log("updateCacheBasedOnNewData")} User doesn't have any cache data or doesn't have any income source data." +
           s" SessionId: ${user.sessionId}")
