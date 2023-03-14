@@ -22,18 +22,22 @@ import models.gains.InsurancePoliciesModel
 import models.gifts.GiftAid
 import models.pensions.Pensions
 import models.statebenefits.AllStateBenefitsData
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json, OFormat}
 
-case class IncomeSources(dividends: Option[Dividends] = None,
-                         interest: Option[Seq[Interest]] = None,
-                         giftAid: Option[GiftAid] = None,
-                         employment: Option[AllEmploymentData] = None,
-                         pensions: Option[Pensions] = None,
-                         cis: Option[AllCISDeductions] = None,
-                         stateBenefits: Option[AllStateBenefitsData] = None,
-                         interestSavings: Option[SavingsIncomeDataModel] = None,
-                         gains: Option[InsurancePoliciesModel] = None)
+case class IncomeSources(
+                          errors: Option[Seq[(String, APIErrorBody)]] = None,
+                          dividends: Option[Dividends] = None,
+                          interest: Option[Seq[Interest]] = None,
+                          giftAid: Option[GiftAid] = None,
+                          employment: Option[AllEmploymentData] = None,
+                          pensions: Option[Pensions] = None,
+                          cis: Option[AllCISDeductions] = None,
+                          stateBenefits: Option[AllStateBenefitsData] = None,
+                          interestSavings: Option[SavingsIncomeDataModel] = None,
+                          gains: Option[InsurancePoliciesModel] = None
+                        )
 
 object IncomeSources {
+  implicit val errorFormat: Format[APIErrorBody] = Json.format[APIErrorBody]
   implicit val format: OFormat[IncomeSources] = Json.format[IncomeSources]
 }

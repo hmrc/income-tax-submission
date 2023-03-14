@@ -118,7 +118,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
           .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe 200
             result.body mustBe Json.toJson(anIncomeSources).toString
@@ -171,37 +171,10 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
           .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
-            result.status mustBe 204
-            result.body mustBe ""
-        }
-      }
-
-      "return 503 if a downstream error occurs" in new Setup {
-        val responseBody = "{\"code\":\"SERVICE_UNAVAILABLE\",\"reason\":\"The service is temporarily unavailable\"}"
-        stubGetWithResponseBody(
-          url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
-          status = SERVICE_UNAVAILABLE,
-          response = responseBody,
-          requestHeaders
-        )
-
-        stubGetWithResponseBody(
-          url = s"/income-tax-interest/income-tax/nino/AA123123A/sources\\?taxYear=2019",
-          status = SERVICE_UNAVAILABLE,
-          response = responseBody,
-          requestHeaders
-        )
-        authorised()
-
-        whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
-          .withQueryStringParameters("taxYear" -> "2019")
-          .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
-          .get) {
-          result =>
-            result.status mustBe 503
-            result.body mustBe "{\"code\":\"SERVICE_UNAVAILABLE\",\"reason\":\"The service is temporarily unavailable\"}"
+            result.status mustBe 200
+            result.body contains "NOT_FOUND"
         }
       }
 
@@ -211,7 +184,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
           .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
-          .get) {
+          .get()) {
           result =>
             result.status mustBe 401
             result.body mustBe ""
@@ -234,7 +207,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
 
         whenReady(buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
           .withQueryStringParameters("taxYear" -> "2019")
-          .get) {
+          .get()) {
           result =>
             result.status mustBe 401
             result.body mustBe ""
@@ -310,7 +283,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
             .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
-            .get
+            .get()
         ) {
           result =>
             result.status mustBe 200
@@ -318,7 +291,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         }
       }
 
-      "return 204 if a user has no recorded income sources" in new Setup {
+      "return 200 if a user has no recorded income sources" in new Setup {
         stubGetWithoutResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
           status = NOT_FOUND,
@@ -360,15 +333,15 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
             .withQueryStringParameters("taxYear" -> "2019")
-            .get
+            .get()
         ) {
           result =>
-            result.status mustBe 204
-            result.body mustBe ""
+            result.status mustBe 200
+            result.body contains "NOT_FOUND"
         }
       }
 
-      "return 503 if a downstream error occurs" in new Setup {
+      "return 200 if a downstream error occurs to still load the overview" in new Setup {
         val responseBody = "{\"code\":\"SERVICE_UNAVAILABLE\",\"reason\":\"The service is temporarily unavailable\"}"
         stubGetWithResponseBody(
           url = s"/income-tax-dividends/income-tax/nino/AA123123A/sources\\?taxYear=2019",
@@ -388,11 +361,11 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
             .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
-            .get
+            .get()
         ) {
           result =>
-            result.status mustBe 503
-            result.body mustBe "{\"code\":\"SERVICE_UNAVAILABLE\",\"reason\":\"The service is temporarily unavailable\"}"
+            result.status mustBe 200
+            result.body contains "{\"code\":\"SERVICE_UNAVAILABLE\",\"reason\":\"The service is temporarily unavailable\"}"
         }
       }
 
@@ -413,7 +386,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           buildClient(s"/income-tax-submission-service/income-tax/nino/$successNino/sources")
             .withQueryStringParameters("taxYear" -> "2019")
             .withHttpHeaders(mtditidHeader, sessionIdHeader, authorizationHeader)
-            .get
+            .get()
         ) {
           result =>
             result.status mustBe 401

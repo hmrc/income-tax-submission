@@ -21,12 +21,16 @@ import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.{anAllEmploymentData, anAllEmploymentDataWithOccPen}
 import builders.models.gains.GainsBuilder.anGains
 import builders.models.pensions.PensionsBuilder.{aPensions, aPensionsWithEmployments}
+import builders.models.pensions.employmentPensions.EmploymentPensionsBuilder
 import builders.models.statebenefits.AllStateBenefitsDataBuilder.anAllStateBenefitsData
 import com.codahale.metrics.SharedMetricRegistries
 import connectors._
 import connectors.parsers.SubmittedDividendsParser.{IncomeSourcesResponseModel => IncomeSourceResponseDividends}
 import models._
+import models.gains.InsurancePoliciesModel
 import models.gifts.{GiftAid, GiftAidPayments, Gifts}
+import models.pensions.Pensions
+import models.pensions.employmentPensions.EmploymentPensions
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
@@ -72,7 +76,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           excludedIncomeSources = Seq("dividends", "interest", "gift-aid", "employment", "pensions", "cis", "state-benefits", "interest-savings", "gains")
         )
 
-        await(eventualResponse) mustBe Right(IncomeSources(None, None, None, None, None, None, None))
+        await(eventualResponse) mustBe Right(IncomeSources(Some(List()), None, None, None, None, None, None, None))
       }
     }
 
@@ -85,6 +89,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
         val gifts: Gifts = Gifts(Some(List("someName")), Some(12345.67), Some(12345.67), Some(12345.67))
 
         val incomeSourcesResult = Right(IncomeSources(
+          Some(List()),
           Some(Dividends(Some(12345.67), Some(12345.67))),
           Some(List(Interest("someName", "123", Some(1234.56), Some(1234.56)))),
           Some(GiftAid(Some(giftAidPayments), Some(gifts))),
@@ -114,7 +119,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
 
         (pensionsConnector.getSubmittedPensions(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
-          .returning(Future.successful(Right(Some(aPensions))))
+          .returning(Future.successful(Right(Some(aPensionsWithEmployments))))
 
         (cisConnector.getSubmittedCIS(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
@@ -142,15 +147,56 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
         val errorModel: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
         val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(Dividends(Some(12345.67), Some(12345.67))))
 
+        val incomeSourcesResult = Right(IncomeSources(
+          Some(List(("interest", errorModel.body), ("gift-aid", errorModel.body), ("pensions", errorModel.body), ("interest-savings", errorModel.body), ("gains", errorModel.body))),
+          Some(Dividends(Some(12345.67), Some(12345.67))),
+          Some(List(Interest("", "", Some(0), Some(0)))),
+          Some(GiftAid(None, None)),
+          Some(anAllEmploymentData),
+          Some(Pensions(None, None, None, Some(EmploymentPensions(Seq.empty)), None)),
+          Some(anAllCISDeductions),
+          Some(anAllStateBenefitsData),
+          Some(SavingsIncomeDataModel(None, None, None)),
+          Some(InsurancePoliciesModel("", Seq.empty, None, None, None, None))
+        ))
+
         (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
           .returning(Future.successful(expectedDividendsResult))
 
         (interestConnector.getSubmittedInterest(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
-          .returning(Future.successful(Left(errorModel)))
+          .returning(Future(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
 
-        await(underTest.getAllIncomeSources("12345678", taxYear, "87654321")) mustBe Left(errorModel)
+        (employmentConnector.getSubmittedEmployment(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Right(Some(anAllEmploymentDataWithOccPen))))
+
+        (giftsConnector.getSubmittedGiftAid(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
+
+        (pensionsConnector.getSubmittedPensions(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
+
+        (cisConnector.getSubmittedCIS(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Right(Some(anAllCISDeductions))))
+
+        (stateBenefitsConnector.getSubmittedStateBenefits(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Right(Some(anAllStateBenefitsData))))
+
+        (incomeTaxInterestSavingsConnector.getSubmittedInterestSavings(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
+
+        (gainsConnector.getSubmittedGains(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
+
+        await(underTest.getAllIncomeSources("12345678", taxYear, "87654321")) mustBe incomeSourcesResult
       }
     }
   }

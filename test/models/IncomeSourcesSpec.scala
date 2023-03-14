@@ -28,7 +28,7 @@ class IncomeSourcesSpec extends TestUtils {
   val giftAidPayments: GiftAidPayments = GiftAidPayments(Some(List("non uk charity name", "non uk charity name 2")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
   val gifts: Gifts = Gifts(Some(List("charity name")), Some(12345.67), Some(12345.67), Some(12345.67))
 
-  private val underTest = IncomeSources(Some(Dividends(Some(123456.78), Some(123456.78))),
+  private val underTest = IncomeSources(None, Some(Dividends(Some(123456.78), Some(123456.78))),
     Some(Seq(Interest("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAid(Some(giftAidPayments), Some(gifts))),
     Some(anAllEmploymentData))
 

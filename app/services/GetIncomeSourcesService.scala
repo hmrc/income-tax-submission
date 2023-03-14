@@ -19,14 +19,14 @@ package services
 import common.IncomeSources._
 import connectors._
 import models._
-import models.cis.AllCISDeductions
+import models.cis.{AllCISDeductions, CISSource}
 import models.employment.AllEmploymentData
 import models.gains.InsurancePoliciesModel
 import models.gifts.GiftAid
 import models.pensions.Pensions
+import models.pensions.employmentPensions.EmploymentPensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.Logging
-import services.util.FutureEitherOps
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
@@ -45,33 +45,54 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
 
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSources]
 
+
+  private def handleUnavailableService(service: String, data: Either[APIErrorModel, _]): (String, APIErrorBody) = {
+    data.fold(
+      error => (service, error.body),
+      _ => ("remove", APIErrorModel(0, APIErrorBodyModel.parsingError).body)
+    )
+  }
+
   def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                          (implicit hc: HeaderCarrier): Future[IncomeSourceResponse] = {
-    (for {
-      dividends <- FutureEitherOps[APIErrorModel, Option[Dividends]](getDividends(nino, taxYear, mtditid, excludedIncomeSources))
-      interest <- FutureEitherOps[APIErrorModel, Option[Seq[Interest]]](getInterest(nino, taxYear, mtditid, excludedIncomeSources))
-      giftAid <- FutureEitherOps[APIErrorModel, Option[GiftAid]](getGiftAid(nino, taxYear, mtditid, excludedIncomeSources))
-      employment <- FutureEitherOps[APIErrorModel, Option[AllEmploymentData]](getEmployment(nino, taxYear, mtditid, excludedIncomeSources))
-      pensions <- FutureEitherOps[APIErrorModel, Option[Pensions]](getPensions(nino, taxYear, mtditid, excludedIncomeSources))
-      cis <- FutureEitherOps[APIErrorModel, Option[AllCISDeductions]](getCIS(nino, taxYear, mtditid, excludedIncomeSources))
-      stateBenefits <- FutureEitherOps[APIErrorModel, Option[AllStateBenefitsData]](getStateBenefits(nino, taxYear, mtditid, excludedIncomeSources))
-      interestSavings <- FutureEitherOps[APIErrorModel, Option[SavingsIncomeDataModel]](getSavingsInterest(nino, taxYear, mtditid, excludedIncomeSources))
-      gains <- FutureEitherOps[APIErrorModel, Option[InsurancePoliciesModel]](getGains(nino, taxYear, mtditid, excludedIncomeSources))
+    for {
+      dividends <- getDividends(nino, taxYear, mtditid, excludedIncomeSources)
+      interest <- getInterest(nino, taxYear, mtditid, excludedIncomeSources)
+      giftAid <- getGiftAid(nino, taxYear, mtditid, excludedIncomeSources)
+      employment <- getEmployment(nino, taxYear, mtditid, excludedIncomeSources)
+      pensions <- getPensions(nino, taxYear, mtditid, excludedIncomeSources)
+      cis <- getCIS(nino, taxYear, mtditid, excludedIncomeSources)
+      stateBenefits <- getStateBenefits(nino, taxYear, mtditid, excludedIncomeSources)
+      interestSavings <- getSavingsInterest(nino, taxYear, mtditid, excludedIncomeSources)
+      gains <- getGains(nino, taxYear, mtditid, excludedIncomeSources)
     } yield {
-      IncomeSources(
-        dividends.map(res => Dividends(res.ukDividends, res.otherUkDividends)),
-        interest,
-        giftAid,
-        employment.map(_.excludePensionIncome()),
-        pensions.map(_.copy(
-          employmentPensions = employment.map(_.buildEmploymentPensions())
-        )),
-        cis,
-        stateBenefits,
-        interestSavings,
-        gains
+      Right(
+        IncomeSources(
+          Some(Seq(
+            handleUnavailableService(common.IncomeSources.DIVIDENDS, dividends),
+            handleUnavailableService(common.IncomeSources.INTEREST, interest),
+            handleUnavailableService(common.IncomeSources.GIFT_AID, giftAid),
+            handleUnavailableService(common.IncomeSources.EMPLOYMENT, employment),
+            handleUnavailableService(common.IncomeSources.PENSIONS, pensions),
+            handleUnavailableService(common.IncomeSources.CIS, cis),
+            handleUnavailableService(common.IncomeSources.STATE_BENEFITS, stateBenefits),
+            handleUnavailableService(common.IncomeSources.INTEREST_SAVINGS, interestSavings),
+            handleUnavailableService(common.IncomeSources.GAINS, gains)
+          ).filter(elem => elem._1 != "remove")),
+          dividends.fold(_ => Some(Dividends(None, None)), data => data),
+          interest.fold(_ => Some(Seq(Interest("", "", Some(0), Some(0)))), data => data),
+          giftAid.fold(_ => Some(GiftAid(None, None)), data => data),
+          employment.fold(_ => Some(AllEmploymentData(Seq.empty, None, Seq.empty, None)), data => data.map(_.excludePensionIncome())),
+          pensions.fold(_ => Some(Pensions(None, None, None, Some(EmploymentPensions(Seq.empty)), None)), data => data.map(_.copy(
+            employmentPensions = employment.fold(_ => Some(EmploymentPensions(Seq.empty)), data => data.map(_.buildEmploymentPensions()))
+          ))),
+          cis.fold(_ => Some(AllCISDeductions(Some(CISSource(None, None, None, Seq.empty)), None)), data => data),
+          stateBenefits.fold(_ => Some(AllStateBenefitsData(None)), data => data),
+          interestSavings.fold(_ => Some(SavingsIncomeDataModel(None, None, None)), data => data),
+          gains.fold(_ => Some(InsurancePoliciesModel("", Seq.empty, None, None, None, None)), data => data)
+        )
       )
-    }).value
+    }
   }
 
   def getGiftAid(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
@@ -149,8 +170,9 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       stateBenefitsConnector.getSubmittedStateBenefits(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
     }
   }
+
   def getSavingsInterest(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
-                      (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[SavingsIncomeDataModel]]] = {
+                        (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[SavingsIncomeDataModel]]] = {
     if (excludedIncomeSources.contains(INTEREST_SAVINGS)) {
       shutteredIncomeSourceLog(INTEREST_SAVINGS)
       Future(Right(None))
@@ -160,7 +182,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
   }
 
   def getGains(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
-                        (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[InsurancePoliciesModel]]] = {
+              (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[InsurancePoliciesModel]]] = {
     if (excludedIncomeSources.contains(GAINS)) {
       shutteredIncomeSourceLog(GAINS)
       Future(Right(None))

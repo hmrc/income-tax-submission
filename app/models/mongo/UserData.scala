@@ -43,7 +43,7 @@ case class UserData(sessionId: String,
                     lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)) {
 
   def toIncomeSourcesResponseModel: IncomeSources = {
-    IncomeSources(dividends, interest, giftAid, employment, pensions, cis, stateBenefits, interestSavings, gains)
+    IncomeSources(None, dividends, interest, giftAid, employment, pensions, cis, stateBenefits, interestSavings, gains)
   }
 }
 

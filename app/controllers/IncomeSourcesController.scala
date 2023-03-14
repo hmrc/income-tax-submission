@@ -40,7 +40,7 @@ class IncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSource
     val excludedIncomeSources: Seq[String] = user.headers.get("excluded-income-sources").fold(Seq[String]())(_.split(",").toIndexedSeq)
 
     getIncomeSourcesService.getAllIncomeSources(nino, taxYear, user.mtditid, excludedIncomeSources).flatMap {
-      case Right(IncomeSources(None, None, None, None, None, None, None, None, None)) =>
+      case Right(IncomeSources(None, None, None, None, None, None, None, None, None, None)) =>
         incomeTaxUserDataService.saveUserData(taxYear, None)(NoContent)
       case Right(responseModel) =>
         incomeTaxUserDataService.saveUserData(taxYear, Some(responseModel))(Ok(Json.toJson(responseModel)))
@@ -55,7 +55,7 @@ class IncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSource
       case Right(None) =>
         logger.info(noDataLog)
         NoContent
-      case Right(Some(IncomeSources(None, None, None, None, None, None, None, None, None))) =>
+      case Right(Some(IncomeSources(None, None, None, None, None, None, None, None, None, None))) =>
         logger.info(noDataLog)
         NoContent
       case Right(Some(responseModel)) => Ok(Json.toJson(responseModel))

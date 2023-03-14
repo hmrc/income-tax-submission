@@ -30,6 +30,7 @@ import models.IncomeSources
 object IncomeSourcesBuilder {
 
   val anIncomeSources: IncomeSources = IncomeSources(
+    errors = Some(Seq.empty),
     dividends = Some(aDividends),
     interest = Some(Seq(anInterest)),
     giftAid = Some(aGiftAid),
