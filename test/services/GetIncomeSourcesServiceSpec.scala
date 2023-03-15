@@ -20,8 +20,7 @@ import builders.models.SavingsIncomeBuilder.anSavingIncome
 import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.{anAllEmploymentData, anAllEmploymentDataWithOccPen}
 import builders.models.gains.GainsBuilder.anGains
-import builders.models.pensions.PensionsBuilder.{aPensions, aPensionsWithEmployments}
-import builders.models.pensions.employmentPensions.EmploymentPensionsBuilder
+import builders.models.pensions.PensionsBuilder.aPensionsWithEmployments
 import builders.models.statebenefits.AllStateBenefitsDataBuilder.anAllStateBenefitsData
 import com.codahale.metrics.SharedMetricRegistries
 import connectors._

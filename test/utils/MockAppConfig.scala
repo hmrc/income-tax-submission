@@ -30,6 +30,7 @@ class MockAppConfig(isEncrypted: Boolean = true) extends AppConfig with MockFact
   override val pensionsBaseUrl: String = "http://localhost:11111"
   override val cisBaseUrl: String = "http://localhost:11111"
   override val stateBenefitsBaseUrl: String = "http://localhost:11111"
+  override val additionalInfoBaseUrl: String = "http://localhost:11111"
 
   override val auditingEnabled: Boolean = true
   override val graphiteHost: String = "/graphite"

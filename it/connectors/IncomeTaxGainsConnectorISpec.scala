@@ -22,7 +22,6 @@ import models.gains.{InsurancePoliciesModel, LifeAnnuityModel}
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId}
-import utils.TaxYearUtil.convertStringTaxYear
 import utils.{ConnectorIntegrationTest, MockAppConfig}
 
 import scala.concurrent.Await
@@ -37,8 +36,7 @@ class IncomeTaxGainsConnectorISpec extends ConnectorIntegrationTest {
   private val mtditidHeader = ("mtditid", "123123123")
   private val requestHeaders = Seq(new HttpHeader("mtditid", "123123123"))
 
-  val taxYearParameter = convertStringTaxYear(taxYear)
-  val url = s"/income-tax/insurance-policies/income/$nino/$taxYearParameter"
+  val url = s"/income-tax-additional-information/income-tax/insurance-policies/income/$nino/$taxYear"
 
   val ifReturned: InsurancePoliciesModel = InsurancePoliciesModel(
     submittedOn = "2020-01-04T05:01:01Z",
