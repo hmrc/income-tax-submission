@@ -18,9 +18,9 @@ package builders.models.pensions
 
 import builders.models.pensions.charges.PensionChargesBuilder.aPensionCharges
 import builders.models.pensions.reliefs.PensionReliefsBuilder.aPensionReliefs
-import builders.models.pensions.statebenefits.StateBenefitsModelBuilder.aStateBenefitsModel
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentDataWithOccPen
 import builders.models.pensions.income.PensionIncome.aPensionIncome
+import builders.models.statebenefits.AllStateBenefitsDataBuilder.anAllStateBenefitsData
 import models.pensions.Pensions
 import models.pensions.employmentPensions.EmploymentPensions
 
@@ -29,7 +29,7 @@ object PensionsBuilder {
   val aPensions: Pensions = Pensions(
     pensionReliefs = Some(aPensionReliefs),
     pensionCharges = Some(aPensionCharges),
-    stateBenefits = Some(aStateBenefitsModel),
+    stateBenefits = Some(anAllStateBenefitsData),
     employmentPensions = None,
     pensionIncome = Some(aPensionIncome)
   )
@@ -40,7 +40,7 @@ object PensionsBuilder {
   val aPensionsWithEmployments: Pensions = Pensions(
     pensionReliefs = Some(aPensionReliefs),
     pensionCharges = Some(aPensionCharges),
-    stateBenefits = Some(aStateBenefitsModel),
+    stateBenefits = Some(anAllStateBenefitsData),
     employmentPensions = Some(anAllEmploymentDataWithOccPen.buildEmploymentPensions()),
     pensionIncome = Some(aPensionIncome)
   )

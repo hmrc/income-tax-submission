@@ -27,6 +27,7 @@ import models.pensions.income._
 import models.pensions.reliefs.{EncryptedPensionReliefs, EncryptedReliefs, PensionReliefs, Reliefs}
 import models.pensions.statebenefits._
 import models._
+import models.statebenefits.{AllStateBenefitsData, EncryptedAllStateBenefitsData}
 import utils.AesGcmAdCrypto
 import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
 
@@ -592,12 +593,12 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       }
     }
 
-    val eStateBenefitsModel: Option[EncryptedStateBenefitsModel] = {
+    val eStateBenefitsModel: Option[EncryptedAllStateBenefitsData] = {
       pensions.stateBenefits.map {
         s =>
-          EncryptedStateBenefitsModel(
-            stateBenefits = s.stateBenefits.map(encryptStateBenefits),
-            customerAddedStateBenefits = s.customerAddedStateBenefits.map(encryptStateBenefits)
+          EncryptedAllStateBenefitsData(
+            stateBenefitsData = s.stateBenefitsData.map(_.encrypted()),
+            customerAddedStateBenefitsData = s.customerAddedStateBenefitsData.map(_.encrypted())
           )
       }
     }
@@ -939,11 +940,11 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
         )
     }
 
-    val stateBenefitsModel: Option[StateBenefitsModel] = pensions.stateBenefits.map {
-      s =>
-        StateBenefitsModel(
-          stateBenefits = s.stateBenefits.map(decryptStateBenefits),
-          customerAddedStateBenefits = s.customerAddedStateBenefits.map(decryptStateBenefits)
+    val stateBenefitsModel: Option[AllStateBenefitsData] = pensions.stateBenefits.map {
+      s: EncryptedAllStateBenefitsData =>
+        AllStateBenefitsData(
+          stateBenefitsData = s.stateBenefitsData.map(_.decrypted()),
+          customerAddedStateBenefitsData = s.customerAddedStateBenefitsData.map(_.decrypted())
         )
     }
 
