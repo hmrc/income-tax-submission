@@ -18,10 +18,164 @@ package models
 
 import builders.models.pensions.PensionsBuilder.aPensions
 import models.pensions._
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
+import utils.TaxYearUtils.taxYearEOY
 import utils.TestUtils
 
 class PensionsSpec extends TestUtils {
+
+
+  val aStateBenefitsDataJsValue: JsValue = Json.parse(
+    s"""
+       |{
+       |  "incapacityBenefit": [
+       |    {
+       |      "dateIgnored": "${taxYearEOY - 1}-07-08T05:23:00Z",
+       |      "submittedOn": "$taxYearEOY-03-13T19:23:00Z",
+       |      "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c936",
+       |      "startDate": "${taxYearEOY - 1}-04-23",
+       |      "endDate": "${taxYearEOY}-08-13",
+       |      "amount": 300.00,
+       |      "taxPaid": 400.00
+       |    }
+       |  ],
+       |  "statePension": {
+       |      "dateIgnored": "${taxYearEOY - 1}-07-08T05:23:00Z",
+       |      "submittedOn": "$taxYearEOY-03-13T19:23:00Z",
+       |      "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c936",
+       |      "startDate": "${taxYearEOY - 1}-04-23",
+       |      "endDate": "${taxYearEOY}-08-13",
+       |      "amount": 300.00,
+       |      "taxPaid": 400.00
+       |    },
+       |  "statePensionLumpSum": {
+       |      "dateIgnored": "${taxYearEOY - 1}-07-08T05:23:00Z",
+       |      "submittedOn": "$taxYearEOY-03-13T19:23:00Z",
+       |      "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c936",
+       |      "startDate": "${taxYearEOY - 1}-04-23",
+       |      "endDate": "${taxYearEOY}-08-13",
+       |      "amount": 300.00,
+       |      "taxPaid": 400.00
+       |    },
+       |  "employmentSupportAllowance": [
+       |{
+       |      "dateIgnored": "${taxYearEOY - 1}-07-08T05:23:00Z",
+       |      "submittedOn": "$taxYearEOY-03-13T19:23:00Z",
+       |      "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c936",
+       |      "startDate": "${taxYearEOY - 1}-04-23",
+       |      "endDate": "${taxYearEOY}-08-13",
+       |      "amount": 300.00,
+       |      "taxPaid": 400.00
+       |    }
+       |  ],
+       |  "jobSeekersAllowance": [
+       |{
+       |      "dateIgnored": "${taxYearEOY - 1}-07-08T05:23:00Z",
+       |      "submittedOn": "$taxYearEOY-03-13T19:23:00Z",
+       |      "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c936",
+       |      "startDate": "${taxYearEOY - 1}-04-23",
+       |      "endDate": "${taxYearEOY}-08-13",
+       |      "amount": 300.00,
+       |      "taxPaid": 400.00
+       |    }
+       |  ],
+       |  "bereavementAllowance": {
+       |      "dateIgnored": "${taxYearEOY - 1}-07-08T05:23:00Z",
+       |      "submittedOn": "$taxYearEOY-03-13T19:23:00Z",
+       |      "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c936",
+       |      "startDate": "${taxYearEOY - 1}-04-23",
+       |      "endDate": "${taxYearEOY}-08-13",
+       |      "amount": 300.00,
+       |      "taxPaid": 400.00
+       |    },
+       |  "otherStateBenefits": {
+       |      "dateIgnored": "${taxYearEOY - 1}-07-08T05:23:00Z",
+       |      "submittedOn": "$taxYearEOY-03-13T19:23:00Z",
+       |      "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c936",
+       |      "startDate": "${taxYearEOY - 1}-04-23",
+       |      "endDate": "${taxYearEOY}-08-13",
+       |      "amount": 300.00,
+       |      "taxPaid": 400.00
+       |    }
+       |}
+       |""".stripMargin)
+
+  val aCustomerAddedStateBenefitsDataJsValue: JsValue = Json.parse(
+    s"""
+      |{
+      |  "incapacityBenefit": [
+      |      {
+      |        "submittedOn": "${taxYearEOY}-03-13T19:23:00Z",
+      |        "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c941",
+      |        "startDate": "${taxYearEOY - 1}-04-23",
+      |        "endDate": "${taxYearEOY}-08-13",
+      |        "amount": 100.00,
+      |        "taxPaid": 200.00
+      |      }
+      |  ],
+      |  "statePension": [
+      |      {
+      |        "submittedOn": "${taxYearEOY}-03-13T19:23:00Z",
+      |        "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c941",
+      |        "startDate": "${taxYearEOY - 1}-04-23",
+      |        "endDate": "${taxYearEOY}-08-13",
+      |        "amount": 100.00,
+      |        "taxPaid": 200.00
+      |      }
+      |  ],
+      |  "statePensionLumpSum": [
+      |      {
+      |        "submittedOn": "${taxYearEOY}-03-13T19:23:00Z",
+      |        "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c941",
+      |        "startDate": "${taxYearEOY - 1}-04-23",
+      |        "endDate": "${taxYearEOY}-08-13",
+      |        "amount": 100.00,
+      |        "taxPaid": 200.00
+      |      }
+      |  ],
+      |  "employmentSupportAllowance": [
+      |      {
+      |        "submittedOn": "${taxYearEOY}-03-13T19:23:00Z",
+      |        "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c941",
+      |        "startDate": "${taxYearEOY - 1}-04-23",
+      |        "endDate": "${taxYearEOY}-08-13",
+      |        "amount": 100.00,
+      |        "taxPaid": 200.00
+      |      }
+      |  ],
+      |  "jobSeekersAllowance": [
+      |      {
+      |        "submittedOn": "${taxYearEOY}-03-13T19:23:00Z",
+      |        "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c941",
+      |        "startDate": "${taxYearEOY - 1}-04-23",
+      |        "endDate": "${taxYearEOY}-08-13",
+      |        "amount": 100.00,
+      |        "taxPaid": 200.00
+      |      }
+      |  ],
+      |  "bereavementAllowance": [
+      |      {
+      |        "submittedOn": "${taxYearEOY}-03-13T19:23:00Z",
+      |        "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c941",
+      |        "startDate": "${taxYearEOY - 1}-04-23",
+      |        "endDate": "${taxYearEOY}-08-13",
+      |        "amount": 100.00,
+      |        "taxPaid": 200.00
+      |      }
+      |  ],
+      |  "otherStateBenefits": [
+      |      {
+      |        "submittedOn": "${taxYearEOY}-03-13T19:23:00Z",
+      |        "benefitId": "a1e8057e-fbbc-47a8-a8b4-78d9f015c941",
+      |        "startDate": "${taxYearEOY - 1}-04-23",
+      |        "endDate": "${taxYearEOY}-08-13",
+      |        "amount": 100.00,
+      |        "taxPaid": 200.00
+      |      }
+      |  ]
+      |}
+      |""".stripMargin)
+
 
   val fullJson: JsObject = Json.obj(
     "pensionReliefs" -> Json.obj(
@@ -88,136 +242,9 @@ class PensionsSpec extends TestUtils {
       )
     ),
     "stateBenefits" -> Json.obj(
-      "stateBenefits" -> Json.obj(
-        "incapacityBenefit" -> Json.arr(Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        )),
-        "statePension" -> Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        ),
-        "statePensionLumpSum" -> Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        ),
-        "employmentSupportAllowance" -> Json.arr(Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        )),
-        "jobSeekersAllowance" -> Json.arr(Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        )),
-        "bereavementAllowance" -> Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        ),
-        "otherStateBenefits" -> Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        )
-      ),
-      "customerAddedStateBenefits" -> Json.obj(
-        "incapacityBenefit" -> Json.arr(Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        )),
-        "statePension" -> Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        ),
-        "statePensionLumpSum" -> Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        ),
-        "employmentSupportAllowance" -> Json.arr(Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        )),
-        "jobSeekersAllowance" -> Json.arr(Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        )),
-        "bereavementAllowance" -> Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        ),
-        "otherStateBenefits" -> Json.obj(
-          "benefitId" -> "a1e8057e-fbbc-47a8-a8b4-78d9f015c934",
-          "startDate" -> "2019-11-13",
-          "dateIgnored" -> "2019-04-11T16:22:00Z",
-          "submittedOn" -> "2020-09-11T17:23:00Z",
-          "endDate" -> "2020-08-23",
-          "amount" -> 100.0,
-          "taxPaid" -> 200.0
-        )
-      )),
+      "stateBenefits" -> aStateBenefitsDataJsValue,
+      "customerAddedStateBenefits" -> aCustomerAddedStateBenefitsDataJsValue
+    ),
     "pensionIncome" -> Json.obj(
       "submittedOn" -> "2022-07-28T07:59:39.041Z",
       "deletedOn" -> "2022-07-28T07:59:39.041Z",
