@@ -152,7 +152,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           Some(List(Interest("", "", Some(0), Some(0)))),
           Some(GiftAid(None, None)),
           Some(anAllEmploymentData),
-          Some(Pensions(None, None, None, Some(EmploymentPensions(Seq.empty)), None)),
+          Some(Pensions(None, None, None, None, None)),
           Some(anAllCISDeductions),
           Some(anAllStateBenefitsData),
           Some(SavingsIncomeDataModel(None, None, None)),

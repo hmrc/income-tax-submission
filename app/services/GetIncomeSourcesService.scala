@@ -83,8 +83,8 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
           interest.fold(_ => Some(Seq(Interest("", "", Some(0), Some(0)))), data => data),
           giftAid.fold(_ => Some(GiftAid(None, None)), data => data),
           employment.fold(_ => Some(AllEmploymentData(Seq.empty, None, Seq.empty, None)), data => data.map(_.excludePensionIncome())),
-          pensions.fold(_ => Some(Pensions(None, None, None, Some(EmploymentPensions(Seq.empty)), None)), data => data.map(_.copy(
-            employmentPensions = employment.fold(_ => Some(EmploymentPensions(Seq.empty)), data => data.map(_.buildEmploymentPensions()))
+          pensions.fold(_ => Some(Pensions(None, None, None, None, None)), data => data.map(_.copy(
+            employmentPensions = employment.fold(_ => None, data => data.map(_.buildEmploymentPensions()))
           ))),
           cis.fold(_ => Some(AllCISDeductions(Some(CISSource(None, None, None, Seq.empty)), None)), data => data),
           stateBenefits.fold(_ => Some(AllStateBenefitsData(None)), data => data),
