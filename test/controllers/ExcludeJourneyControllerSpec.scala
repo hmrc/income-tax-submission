@@ -20,6 +20,7 @@ import common.IncomeSources._
 import controllers.predicates.AuthorisedAction
 import models.mongo.{DatabaseError, ExclusionUserDataModel, MongoError}
 import models.{APIErrorBodyModel, APIErrorModel, ExcludeJourneyModel, GetExclusionsDataModel, User}
+import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsEmpty
@@ -343,6 +344,8 @@ class ExcludeJourneyControllerSpec extends TestUtils {
       }
 
       "the create/update database action returns an error" in {
+
+        val dt = DateTime.now(DateTimeZone.UTC)
         lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/clear-excluded-journeys/$taxYear")
           .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
           .withJsonBody(Json.obj("journeys" -> Json.arr(
@@ -353,9 +356,9 @@ class ExcludeJourneyControllerSpec extends TestUtils {
         lazy val result = {
           mockAuth()
           mockFind(Right(Some(ExclusionUserDataModel(
-            nino, taxYear, Seq.empty
+            nino, taxYear, Seq.empty, dt
           ))))
-          mockCreateOrUpdateMultiple(ExclusionUserDataModel(nino, taxYear, Seq.empty), Left(MongoError("eh")))
+          mockCreateOrUpdateMultiple(ExclusionUserDataModel(nino, taxYear, Seq.empty, dt), Left(MongoError("eh")))
           controller.clearJourneys(taxYear, nino)(request)
         }
 
