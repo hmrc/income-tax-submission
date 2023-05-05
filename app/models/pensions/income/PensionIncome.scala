@@ -84,8 +84,8 @@ object EncryptedOverseasPensionContribution {
 case class PensionIncomeModel (
                                    submittedOn: String,
                                    deletedOn: Option[String],
-                                   foreignPension: Seq[ForeignPension],
-                                   overseasPensionContribution: Seq[OverseasPensionContribution]
+                                   foreignPension: Option[Seq[ForeignPension]],
+                                   overseasPensionContribution: Option[Seq[OverseasPensionContribution]]
                                  )
 object PensionIncomeModel {
   implicit val format: OFormat[PensionIncomeModel] = Json.format[PensionIncomeModel]
@@ -94,8 +94,8 @@ object PensionIncomeModel {
 case class EncryptedPensionIncomeModel (
                                    submittedOn: EncryptedValue,
                                    deletedOn: Option[EncryptedValue],
-                                   foreignPension: Seq[EncryptedForeignPension],
-                                   overseasPensionContribution: Seq[EncryptedOverseasPensionContribution]
+                                   foreignPension: Option[Seq[EncryptedForeignPension]],
+                                   overseasPensionContribution: Option[Seq[EncryptedOverseasPensionContribution]]
                                  )
 object EncryptedPensionIncomeModel {
   implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]

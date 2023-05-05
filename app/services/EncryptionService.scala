@@ -618,8 +618,8 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
           EncryptedPensionIncomeModel(
             submittedOn = pI.submittedOn.encrypted,
             deletedOn = pI.deletedOn.map(_.encrypted),
-            foreignPension = pI.foreignPension.map(encryptForeignPension),
-            overseasPensionContribution = pI.overseasPensionContribution.map(encryptOverseasPensionContribution)
+            foreignPension = pI.foreignPension.map(_.map(encryptForeignPension)),
+            overseasPensionContribution = pI.overseasPensionContribution.map(_.map(encryptOverseasPensionContribution))
           )
       }
     }
@@ -720,7 +720,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
   private def encryptPensionSchemeUnauthorisedPayments(p: PensionSchemeUnauthorisedPayments)
                                                       (implicit associatedText: String): EncryptedPensionSchemeUnauthorisedPayments = {
     EncryptedPensionSchemeUnauthorisedPayments(
-      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.encrypted),
+      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.map(_.encrypted)),
       surcharge = p.surcharge.map(encryptCharge),
       noSurcharge = p.noSurcharge.map(encryptCharge)
     )
@@ -737,7 +737,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
 
   private def encryptPensionSavingsTaxCharges(p: PensionSavingsTaxCharges)(implicit associatedText: String): EncryptedPensionSavingsTaxCharges = {
     EncryptedPensionSavingsTaxCharges(
-      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.encrypted),
+      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.map(_.encrypted)),
       lumpSumBenefitTakenInExcessOfLifetimeAllowance = p.lumpSumBenefitTakenInExcessOfLifetimeAllowance.map(encryptLifeTimeAllowance),
       benefitInExcessOfLifetimeAllowance = p.benefitInExcessOfLifetimeAllowance.map(encryptLifeTimeAllowance),
       isAnnualAllowanceReduced = p.isAnnualAllowanceReduced.encrypted,
@@ -801,7 +801,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
 
   private def decryptPensionSavingsTaxCharges(p: EncryptedPensionSavingsTaxCharges)(implicit associatedText: String): PensionSavingsTaxCharges = {
     PensionSavingsTaxCharges(
-      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.decrypted[String]),
+      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.map(_.decrypted[String])),
       lumpSumBenefitTakenInExcessOfLifetimeAllowance = p.lumpSumBenefitTakenInExcessOfLifetimeAllowance.map(decryptLifeTimeAllowance),
       benefitInExcessOfLifetimeAllowance = p.benefitInExcessOfLifetimeAllowance.map(decryptLifeTimeAllowance),
       isAnnualAllowanceReduced =  p.isAnnualAllowanceReduced.decrypted[Boolean],
@@ -841,7 +841,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
   private def decryptPensionSchemeUnauthorisedPayments(p: EncryptedPensionSchemeUnauthorisedPayments)
                                                       (implicit associatedText: String): PensionSchemeUnauthorisedPayments = {
     PensionSchemeUnauthorisedPayments(
-      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.decrypted[String]),
+      pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.map(_.decrypted[String])),
       surcharge = p.surcharge.map(decryptCharge),
       noSurcharge = p.noSurcharge.map(decryptCharge)
     )
@@ -960,8 +960,8 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
         PensionIncomeModel(
           submittedOn = s.submittedOn.decrypted[String],
           deletedOn = s.deletedOn.map(_.decrypted[String]),
-          foreignPension = s.foreignPension.map(decryptForeignPension),
-          overseasPensionContribution = s.overseasPensionContribution.map(decryptOverseasPensionContribution)
+          foreignPension = s.foreignPension.map(_.map(decryptForeignPension)),
+          overseasPensionContribution = s.overseasPensionContribution.map(_.map(decryptOverseasPensionContribution))
         )
     }
 

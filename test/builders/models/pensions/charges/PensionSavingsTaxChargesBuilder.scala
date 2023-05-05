@@ -22,7 +22,7 @@ import models.pensions.charges.PensionSavingsTaxCharges
 object PensionSavingsTaxChargesBuilder {
 
   val aPensionSavingsTaxCharges: PensionSavingsTaxCharges = PensionSavingsTaxCharges(
-    pensionSchemeTaxReference = Seq("00123456RA", "00123456RB"),
+    pensionSchemeTaxReference = Some(Seq("00123456RA", "00123456RB")),
     lumpSumBenefitTakenInExcessOfLifetimeAllowance = Some(aLifetimeAllowance),
     benefitInExcessOfLifetimeAllowance = Some(aLifetimeAllowance),
     isAnnualAllowanceReduced = false,

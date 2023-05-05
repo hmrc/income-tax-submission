@@ -19,7 +19,7 @@ package models.pensions.charges
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
 
-case class PensionSchemeUnauthorisedPayments(pensionSchemeTaxReference: Seq[String],
+case class PensionSchemeUnauthorisedPayments(pensionSchemeTaxReference: Option[Seq[String]],
                                              surcharge: Option[Charge],
                                              noSurcharge: Option[Charge])
 
@@ -27,7 +27,7 @@ object PensionSchemeUnauthorisedPayments {
   implicit val format: OFormat[PensionSchemeUnauthorisedPayments] = Json.format[PensionSchemeUnauthorisedPayments]
 }
 
-case class EncryptedPensionSchemeUnauthorisedPayments(pensionSchemeTaxReference: Seq[EncryptedValue],
+case class EncryptedPensionSchemeUnauthorisedPayments(pensionSchemeTaxReference: Option[Seq[EncryptedValue]],
                                                       surcharge: Option[EncryptedCharge],
                                                       noSurcharge: Option[EncryptedCharge])
 
