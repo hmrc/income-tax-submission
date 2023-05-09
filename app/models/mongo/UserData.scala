@@ -40,10 +40,11 @@ case class UserData(sessionId: String,
                     stateBenefits: Option[AllStateBenefitsData] = None,
                     interestSavings: Option[SavingsIncomeDataModel] = None,
                     gains: Option[InsurancePoliciesModel] = None,
+                    stockDividends: Option[StockDividends] = None,
                     lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)) {
 
   def toIncomeSourcesResponseModel: IncomeSources = {
-    IncomeSources(None, dividends, interest, giftAid, employment, pensions, cis, stateBenefits, interestSavings, gains)
+    IncomeSources(None, dividends, interest, giftAid, employment, pensions, cis, stateBenefits, interestSavings, gains, stockDividends)
   }
 }
 
@@ -67,6 +68,7 @@ case class EncryptedUserData(sessionId: String,
                              stateBenefits: Option[EncryptedAllStateBenefitsData] = None,
                              interestSavings: Option[EncryptedSavingsIncomeDataModel] = None,
                              gains: Option[EncryptedInsurancePoliciesModel] = None,
+                             stockDividends: Option[EncryptedStockDividends] = None,
                              lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC))
 
 object EncryptedUserData extends MongoJodaFormats {
