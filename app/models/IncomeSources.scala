@@ -34,7 +34,8 @@ case class IncomeSources(
                           cis: Option[AllCISDeductions] = None,
                           stateBenefits: Option[AllStateBenefitsData] = None,
                           interestSavings: Option[SavingsIncomeDataModel] = None,
-                          gains: Option[InsurancePoliciesModel] = None
+                          gains: Option[InsurancePoliciesModel] = None,
+                          stockDividends: Option[StockDividends] = None
                         )
 
 object IncomeSources {

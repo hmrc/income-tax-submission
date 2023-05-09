@@ -41,6 +41,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
                                         stateBenefitsConnector: IncomeTaxStateBenefitsConnector,
                                         interestSavingsConnector: IncomeTaxInterestSavingsConnector,
                                         gainsConnector: IncomeTaxGainsConnector,
+                                        stockDividendsConnector: IncomeTaxStockDividendsConnector,
                                         implicit val ec: ExecutionContext) extends Logging {
 
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSources]
@@ -65,6 +66,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       stateBenefits <- getStateBenefits(nino, taxYear, mtditid, excludedIncomeSources)
       interestSavings <- getSavingsInterest(nino, taxYear, mtditid, excludedIncomeSources)
       gains <- getGains(nino, taxYear, mtditid, excludedIncomeSources)
+      stockDividends <- getStockDividends(nino, taxYear, mtditid, excludedIncomeSources)
     } yield {
       Right(
         IncomeSources(
@@ -77,7 +79,8 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
             handleUnavailableService(common.IncomeSources.CIS, cis),
             handleUnavailableService(common.IncomeSources.STATE_BENEFITS, stateBenefits),
             handleUnavailableService(common.IncomeSources.INTEREST_SAVINGS, interestSavings),
-            handleUnavailableService(common.IncomeSources.GAINS, gains)
+            handleUnavailableService(common.IncomeSources.GAINS, gains),
+            handleUnavailableService(common.IncomeSources.STOCK_DIVIDENDS, stockDividends)
           ).filter(elem => elem._1 != "remove")),
           dividends.fold(_ => Some(Dividends(None, None)), data => data),
           interest.fold(_ => Some(Seq(Interest("", "", Some(0), Some(0)))), data => data),
@@ -89,7 +92,8 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
           cis.fold(_ => Some(AllCISDeductions(Some(CISSource(None, None, None, Seq.empty)), None)), data => data),
           stateBenefits.fold(_ => Some(AllStateBenefitsData(None)), data => data),
           interestSavings.fold(_ => Some(SavingsIncomeDataModel(None, None, None)), data => data),
-          gains.fold(_ => Some(InsurancePoliciesModel("", Seq.empty, None, None, None, None)), data => data)
+          gains.fold(_ => Some(InsurancePoliciesModel("", Seq.empty, None, None, None, None)), data => data),
+          stockDividends.fold(_ => Some(StockDividends(None, None, None, None)), data => data)
         )
       )
     }
@@ -188,6 +192,17 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       Future(Right(None))
     } else {
       gainsConnector.getSubmittedGains(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
+    }
+  }
+
+  def getStockDividends(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+                  (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[StockDividends]]] = {
+
+    if (excludedIncomeSources.contains(STOCK_DIVIDENDS)) {
+      shutteredIncomeSourceLog(STOCK_DIVIDENDS)
+      Future(Right(None))
+    } else {
+      stockDividendsConnector.getSubmittedStockDividends(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
     }
   }
 

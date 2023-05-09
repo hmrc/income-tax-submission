@@ -27,4 +27,5 @@ object IncomeSources {
   val CIS = "cis"
   val STATE_BENEFITS = "state-benefits"
   val GAINS = "gains"
+  val STOCK_DIVIDENDS = "stock-dividends"
 }

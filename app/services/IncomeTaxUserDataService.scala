@@ -63,7 +63,8 @@ class IncomeTaxUserDataService @Inject()(incomeTaxUserDataRepository: IncomeTaxU
       cis = incomeSourcesModel.flatMap(_.cis),
       stateBenefits = incomeSourcesModel.flatMap(_.stateBenefits),
       interestSavings = incomeSourcesModel.flatMap(_.interestSavings),
-      gains = incomeSourcesModel.flatMap(_.gains)
+      gains = incomeSourcesModel.flatMap(_.gains),
+      stockDividends = incomeSourcesModel.flatMap(_.stockDividends)
     )
 
     incomeTaxUserDataRepository.update(userData)
