@@ -22,7 +22,7 @@ import models.pensions.charges.PensionSchemeUnauthorisedPayments
 object PensionSchemeUnauthorisedPaymentsBuilder {
 
   val aPensionSchemeUnauthorisedPayments: PensionSchemeUnauthorisedPayments = PensionSchemeUnauthorisedPayments(
-    pensionSchemeTaxReference = Seq("00123456RA"),
+    pensionSchemeTaxReference = Some(Seq("00123456RA")),
     surcharge = Some(aCharge),
     noSurcharge = Some(aCharge)
   )
