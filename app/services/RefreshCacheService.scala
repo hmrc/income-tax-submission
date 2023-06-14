@@ -80,15 +80,15 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
 
   private def createModelFromNewData[A](newData: Option[A], currentData: IncomeSources, incomeSource: String): IncomeSources = {
     newData match {
-      case Some(model: Dividends) => currentData.copy(dividends = Some(model))
-      case Some(model: AllEmploymentData) => currentData.copy(employment = Some(model))
-      case Some(model: GiftAid) => currentData.copy(giftAid = Some(model))
-      case Some(model: List[Interest]) => currentData.copy(interest = Some(model))
-      case Some(model: Pensions) => currentData.copy(pensions = Some(model))
-      case Some(model: AllCISDeductions) => currentData.copy(cis = Some(model))
-      case Some(model: AllStateBenefitsData) => currentData.copy(stateBenefits = Some(model))
-      case Some(model: SavingsIncomeDataModel) => currentData.copy(interestSavings = Some(model))
-      case Some(model: InsurancePoliciesModel) => currentData.copy(gains = Some(model))
+      case Some(model: Dividends) => currentData.copy(dividends = Some(model), otherEmploymentIncome = None)
+      case Some(model: AllEmploymentData) => currentData.copy(employment = Some(model), otherEmploymentIncome = None)
+      case Some(model: GiftAid) => currentData.copy(giftAid = Some(model), otherEmploymentIncome = None)
+      case Some(model: List[Interest]) => currentData.copy(interest = Some(model), otherEmploymentIncome = None)
+      case Some(model: Pensions) => currentData.copy(pensions = Some(model), otherEmploymentIncome = None)
+      case Some(model: AllCISDeductions) => currentData.copy(cis = Some(model), otherEmploymentIncome = None)
+      case Some(model: AllStateBenefitsData) => currentData.copy(stateBenefits = Some(model), otherEmploymentIncome = None)
+      case Some(model: SavingsIncomeDataModel) => currentData.copy(interestSavings = Some(model), otherEmploymentIncome = None)
+      case Some(model: InsurancePoliciesModel) => currentData.copy(gains = Some(model), otherEmploymentIncome = None)
       case _ => defaultCurrentData(currentData, incomeSource)
 
     }
@@ -96,15 +96,15 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
 
   private def defaultCurrentData(currentData: IncomeSources, incomeSource: String): IncomeSources = {
     incomeSource match {
-      case DIVIDENDS => currentData.copy(dividends = None)
-      case INTEREST => currentData.copy(interest = None)
-      case GIFT_AID => currentData.copy(giftAid = None)
-      case EMPLOYMENT => currentData.copy(employment = None)
-      case PENSIONS => currentData.copy(pensions = None)
-      case CIS => currentData.copy(cis = None)
-      case STATE_BENEFITS => currentData.copy(stateBenefits = None)
-      case INTEREST_SAVINGS => currentData.copy(interestSavings = None)
-      case GAINS => currentData.copy(gains = None)
+      case DIVIDENDS => currentData.copy(dividends = None, otherEmploymentIncome = None)
+      case INTEREST => currentData.copy(interest = None, otherEmploymentIncome = None)
+      case GIFT_AID => currentData.copy(giftAid = None, otherEmploymentIncome = None)
+      case EMPLOYMENT => currentData.copy(employment = None, otherEmploymentIncome = None)
+      case PENSIONS => currentData.copy(pensions = None, otherEmploymentIncome = None)
+      case CIS => currentData.copy(cis = None, otherEmploymentIncome = None)
+      case STATE_BENEFITS => currentData.copy(stateBenefits = None, otherEmploymentIncome = None)
+      case INTEREST_SAVINGS => currentData.copy(interestSavings = None, otherEmploymentIncome = None)
+      case GAINS => currentData.copy(gains = None, otherEmploymentIncome = None)
     }
   }
 
@@ -112,7 +112,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
                                           (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
 
     incomeTaxUserDataService.findUserData(user, taxYear).flatMap {
-      case Right(None) | Right(Some(IncomeSources(None, None, None, None, None, None, None, None, None, None, None))) =>
+      case Right(None) | Right(Some(IncomeSources(None, None, None, None, None, None, None, None, None, None, None, None))) =>
 
         logger.info(s"${log("updateCacheBasedOnNewData")} User doesn't have any cache data or doesn't have any income source data." +
           s" SessionId: ${user.sessionId}")
@@ -120,7 +120,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
         newData match {
           case data@Some(_) =>
 
-            val model = createModelFromNewData(data, IncomeSources(), incomeSource)
+            val model = createModelFromNewData(data, IncomeSources(otherEmploymentIncome = None), incomeSource)
             incomeTaxUserDataService.saveUserData(taxYear, Some(model))(NoContent)
 
           case None =>

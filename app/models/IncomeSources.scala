@@ -17,7 +17,7 @@
 package models
 
 import models.cis.AllCISDeductions
-import models.employment.AllEmploymentData
+import models.employment.{AllEmploymentData, OtherEmploymentIncome}
 import models.gains.InsurancePoliciesModel
 import models.gifts.GiftAid
 import models.pensions.Pensions
@@ -35,7 +35,8 @@ case class IncomeSources(
                           stateBenefits: Option[AllStateBenefitsData] = None,
                           interestSavings: Option[SavingsIncomeDataModel] = None,
                           gains: Option[InsurancePoliciesModel] = None,
-                          stockDividends: Option[StockDividends] = None
+                          stockDividends: Option[StockDividends] = None,
+                          otherEmploymentIncome: Option[OtherEmploymentIncome] = None
                         )
 
 object IncomeSources {

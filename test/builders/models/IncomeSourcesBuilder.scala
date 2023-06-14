@@ -29,16 +29,5 @@ import models.IncomeSources
 
 object IncomeSourcesBuilder {
 
-  val anIncomeSources: IncomeSources = IncomeSources(
-    errors = Some(Seq.empty),
-    dividends = Some(aDividends),
-    interest = Some(Seq(anInterest)),
-    giftAid = Some(aGiftAid),
-    employment = Some(anAllEmploymentData),
-    pensions = Some(aPensionsAlternative),
-    cis = Some(anAllCISDeductions),
-    stateBenefits = Some(anAllStateBenefitsData),
-    interestSavings = Some(anSavingIncome),
-    gains = Some(anGains)
-  )
+  val anIncomeSources: IncomeSources = IncomeSources(errors = Some(Seq.empty), dividends = Some(aDividends), interest = Some(Seq(anInterest)), giftAid = Some(aGiftAid), employment = Some(anAllEmploymentData), pensions = Some(aPensionsAlternative), cis = Some(anAllCISDeductions), stateBenefits = Some(anAllStateBenefitsData), interestSavings = Some(anSavingIncome), gains = Some(anGains), otherEmploymentIncome = None)
 }

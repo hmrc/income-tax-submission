@@ -75,10 +75,10 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           nino = "12345678",
           taxYear = taxYear,
           mtditid = "87654321",
-          excludedIncomeSources = Seq("dividends", "interest", "gift-aid", "employment", "pensions", "cis", "state-benefits", "interest-savings", "gains", "stock-dividends")
+          excludedIncomeSources = Seq("dividends", "interest", "gift-aid", "employment", "pensions", "cis", "state-benefits", "interest-savings", "gains", "stock-dividends", "other-employment-income")
         )
 
-        await(eventualResponse) mustBe Right(IncomeSources(Some(List()), None, None, None, None, None, None, None))
+        await(eventualResponse) mustBe Right(IncomeSources(Some(List()), None, None, None, None, None, None, None, otherEmploymentIncome = None))
       }
     }
 
@@ -90,19 +90,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
         val giftAidPayments = GiftAidPayments(Some(List("")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
         val gifts: Gifts = Gifts(Some(List("someName")), Some(12345.67), Some(12345.67), Some(12345.67))
 
-        val incomeSourcesResult = Right(IncomeSources(
-          Some(List()),
-          Some(Dividends(Some(12345.67), Some(12345.67))),
-          Some(List(Interest("someName", "123", Some(1234.56), Some(1234.56)))),
-          Some(GiftAid(Some(giftAidPayments), Some(gifts))),
-          Some(anAllEmploymentData),
-          Some(aPensionsWithEmployments),
-          Some(anAllCISDeductions),
-          Some(anAllStateBenefitsData),
-          Some(anSavingIncome),
-          Some(anGains),
-          Some(anStockDividends)
-        ))
+        val incomeSourcesResult = Right(IncomeSources(Some(List()), Some(Dividends(Some(12345.67), Some(12345.67))), Some(List(Interest("someName", "123", Some(1234.56), Some(1234.56)))), Some(GiftAid(Some(giftAidPayments), Some(gifts))), Some(anAllEmploymentData), Some(aPensionsWithEmployments), Some(anAllCISDeductions), Some(anAllStateBenefitsData), Some(anSavingIncome), Some(anGains), Some(anStockDividends), None))
 
         (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
@@ -144,6 +132,10 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           .expects("12345678", taxYear, mockHeaderCarrier)
           .returning(Future.successful(Right(Some(anStockDividends))))
 
+        (employmentConnector.getOtherEmploymentIncome(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Right(None)))
+
         await(underTest.getAllIncomeSources("12345678", taxYear, "87654321")) mustBe incomeSourcesResult
       }
     }
@@ -153,19 +145,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
         val errorModel: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
         val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(Dividends(Some(12345.67), Some(12345.67))))
 
-        val incomeSourcesResult = Right(IncomeSources(
-          Some(List(("interest", errorModel.body), ("gift-aid", errorModel.body), ("pensions", errorModel.body), ("interest-savings", errorModel.body), ("gains", errorModel.body), ("stock-dividends", errorModel.body))),
-          Some(Dividends(Some(12345.67), Some(12345.67))),
-          Some(List(Interest("", "", Some(0), Some(0)))),
-          Some(GiftAid(None, None)),
-          Some(anAllEmploymentData),
-          Some(Pensions(None, None, None, None, None)),
-          Some(anAllCISDeductions),
-          Some(anAllStateBenefitsData),
-          Some(SavingsIncomeDataModel(None, None, None)),
-          Some(InsurancePoliciesModel("", Seq.empty, None, None, None, None)),
-          Some(StockDividends(None, None, None, None, None, None))
-        ))
+        val incomeSourcesResult = Right(IncomeSources(Some(List(("interest", errorModel.body), ("gift-aid", errorModel.body), ("pensions", errorModel.body), ("interest-savings", errorModel.body), ("gains", errorModel.body), ("stock-dividends", errorModel.body))), Some(Dividends(Some(12345.67), Some(12345.67))), Some(List(Interest("", "", Some(0), Some(0)))), Some(GiftAid(None, None)), Some(anAllEmploymentData), Some(Pensions(None, None, None, None, None)), Some(anAllCISDeductions), Some(anAllStateBenefitsData), Some(SavingsIncomeDataModel(None, None, None)), Some(InsurancePoliciesModel("", Seq.empty, None, None, None, None)), Some(StockDividends(None, None, None, None, None, None)), None))
 
         (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
@@ -204,6 +184,10 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           .returning(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
 
         (stockDividendsConnector.getSubmittedStockDividends(_: String, _: Int)(_: HeaderCarrier))
+          .expects("12345678", taxYear, mockHeaderCarrier)
+          .returning(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
+
+        (employmentConnector.getOtherEmploymentIncome(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
           .returning(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
 
