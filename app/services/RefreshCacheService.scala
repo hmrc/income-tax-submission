@@ -54,6 +54,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case Right(Some(model: AllStateBenefitsData)) => updateCacheBasedOnNewData[AllStateBenefitsData](taxYear, incomeSource, Some(model))
       case Right(Some(model: SavingsIncomeDataModel)) => updateCacheBasedOnNewData[SavingsIncomeDataModel](taxYear, incomeSource, Some(model))
       case Right(Some(model: InsurancePoliciesModel)) => updateCacheBasedOnNewData[InsurancePoliciesModel](taxYear, incomeSource, Some(model))
+      case Right(Some(model: OtherEmploymentIncome)) => updateCacheBasedOnNewData[OtherEmploymentIncome](taxYear, incomeSource, Some(model))
       case Left(error) => Future.successful(Status(error.status)(error.toJson))
       case _ => Future.successful(Status(INTERNAL_SERVER_ERROR)(Json.toJson(APIErrorBodyModel.parsingError)))
     }
@@ -73,6 +74,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case STATE_BENEFITS => getIncomeSourcesService.getStateBenefits(nino, taxYear, user.mtditid)
       case INTEREST_SAVINGS => getIncomeSourcesService.getSavingsInterest(nino, taxYear, user.mtditid)
       case GAINS => getIncomeSourcesService.getGains(nino, taxYear, user.mtditid)
+      case OTHER_EMPLOYMENT_INCOME =>getIncomeSourcesService.getOtherEmploymentIncome(nino, taxYear, user.mtditid)
     }
   }
 
@@ -158,6 +160,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case INTEREST_SAVINGS => noDataLog(data.interestSavings.isEmpty)
       case GAINS => noDataLog(data.gains.isEmpty)
       case STOCK_DIVIDENDS => noDataLog(data.stockDividends.isEmpty)
+      case OTHER_EMPLOYMENT_INCOME => noDataLog(data.otherEmploymentIncome.isEmpty)
     }
   }
 }

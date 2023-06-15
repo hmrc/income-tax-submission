@@ -25,8 +25,10 @@ import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import builders.models.gains.GainsBuilder
 import builders.models.gifts.GiftAidBuilder.aGiftAid
 import builders.models.gifts.GiftsBuilder.aGifts
+import builders.models.otheremployment.OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
 import builders.models.pensions.PensionsBuilder.aPensions
 import builders.models.statebenefits.AllStateBenefitsDataBuilder
+import common.IncomeSources.OTHER_EMPLOYMENT_INCOME
 import models.{APIErrorBodyModel, APIErrorModel, IncomeSources, User}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.mvc.Results.{InternalServerError, NoContent}
@@ -542,5 +544,25 @@ class RefreshCacheServiceSpec extends TestUtils {
 
       await(underTest.getLatestDataAndRefreshCache(taxYear, "gains")) mustBe NoContent
     }
+
+
+    "get the latest other employment income and update the data when no other employment income data in session or in the get" in {
+      (getIncomeSourcesService.getOtherEmploymentIncome(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+        .expects("AA123456A", taxYear, "1234567890", *, *)
+        .returning(Future.successful(Right(None)))
+
+      (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
+        .expects(user, taxYear, *)
+        .returning(Future.successful(Right(Some(anIncomeSources.copy(otherEmploymentIncome = None)))))
+
+      val expected = Some(anIncomeSources.copy(otherEmploymentIncome = None))
+
+      (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
+        .expects(taxYear, expected, NoContent, user, *)
+        .returning(Future.successful(NoContent))
+
+      await(underTest.getLatestDataAndRefreshCache(taxYear, incomeSource = OTHER_EMPLOYMENT_INCOME)) mustBe NoContent
+    }
+
   }
 }
