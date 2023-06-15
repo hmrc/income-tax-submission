@@ -62,7 +62,8 @@ class IncomeTaxUserDataServiceSpec extends TestUtils with MockIncomeTaxUserDataR
     }
 
     "return the repo response when saving all income sources" in {
-      val incomeData = IncomeSources(None, Some(aDividends), Some(Seq(anInterest)), Some(aGiftAid), Some(anAllEmploymentData), Some(aPensions), otherEmploymentIncome = None)
+      val incomeData = IncomeSources(None, Some(aDividends), Some(Seq(anInterest)),
+        Some(aGiftAid), Some(anAllEmploymentData), Some(aPensions))
 
       mockUpdate()
 

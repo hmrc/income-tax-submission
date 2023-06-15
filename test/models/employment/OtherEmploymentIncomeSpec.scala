@@ -16,6 +16,7 @@
 
 package models.employment
 
+import models.otheremployment.LumpSum
 import play.api.libs.json.Json
 import utils.TestUtils
 

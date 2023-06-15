@@ -20,7 +20,7 @@ import common.IncomeSources._
 import config.AppConfig
 import models._
 import models.cis.AllCISDeductions
-import models.employment.AllEmploymentData
+import models.employment.{AllEmploymentData, OtherEmploymentIncome}
 import models.gains.InsurancePoliciesModel
 import models.gifts.GiftAid
 import models.pensions.Pensions
@@ -80,31 +80,32 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
 
   private def createModelFromNewData[A](newData: Option[A], currentData: IncomeSources, incomeSource: String): IncomeSources = {
     newData match {
-      case Some(model: Dividends) => currentData.copy(dividends = Some(model), otherEmploymentIncome = None)
-      case Some(model: AllEmploymentData) => currentData.copy(employment = Some(model), otherEmploymentIncome = None)
-      case Some(model: GiftAid) => currentData.copy(giftAid = Some(model), otherEmploymentIncome = None)
-      case Some(model: List[Interest]) => currentData.copy(interest = Some(model), otherEmploymentIncome = None)
-      case Some(model: Pensions) => currentData.copy(pensions = Some(model), otherEmploymentIncome = None)
-      case Some(model: AllCISDeductions) => currentData.copy(cis = Some(model), otherEmploymentIncome = None)
-      case Some(model: AllStateBenefitsData) => currentData.copy(stateBenefits = Some(model), otherEmploymentIncome = None)
-      case Some(model: SavingsIncomeDataModel) => currentData.copy(interestSavings = Some(model), otherEmploymentIncome = None)
-      case Some(model: InsurancePoliciesModel) => currentData.copy(gains = Some(model), otherEmploymentIncome = None)
+      case Some(model: Dividends) => currentData.copy(dividends = Some(model))
+      case Some(model: AllEmploymentData) => currentData.copy(employment = Some(model))
+      case Some(model: GiftAid) => currentData.copy(giftAid = Some(model))
+      case Some(model: List[Interest]) => currentData.copy(interest = Some(model))
+      case Some(model: Pensions) => currentData.copy(pensions = Some(model))
+      case Some(model: AllCISDeductions) => currentData.copy(cis = Some(model))
+      case Some(model: AllStateBenefitsData) => currentData.copy(stateBenefits = Some(model))
+      case Some(model: SavingsIncomeDataModel) => currentData.copy(interestSavings = Some(model))
+      case Some(model: InsurancePoliciesModel) => currentData.copy(gains = Some(model))
+      case Some(model: OtherEmploymentIncome) => currentData.copy(otherEmploymentIncome = Some(model))
       case _ => defaultCurrentData(currentData, incomeSource)
-
     }
   }
 
   private def defaultCurrentData(currentData: IncomeSources, incomeSource: String): IncomeSources = {
     incomeSource match {
-      case DIVIDENDS => currentData.copy(dividends = None, otherEmploymentIncome = None)
-      case INTEREST => currentData.copy(interest = None, otherEmploymentIncome = None)
-      case GIFT_AID => currentData.copy(giftAid = None, otherEmploymentIncome = None)
-      case EMPLOYMENT => currentData.copy(employment = None, otherEmploymentIncome = None)
-      case PENSIONS => currentData.copy(pensions = None, otherEmploymentIncome = None)
-      case CIS => currentData.copy(cis = None, otherEmploymentIncome = None)
-      case STATE_BENEFITS => currentData.copy(stateBenefits = None, otherEmploymentIncome = None)
-      case INTEREST_SAVINGS => currentData.copy(interestSavings = None, otherEmploymentIncome = None)
-      case GAINS => currentData.copy(gains = None, otherEmploymentIncome = None)
+      case DIVIDENDS => currentData.copy(dividends = None)
+      case INTEREST => currentData.copy(interest = None)
+      case GIFT_AID => currentData.copy(giftAid = None)
+      case EMPLOYMENT => currentData.copy(employment = None)
+      case PENSIONS => currentData.copy(pensions = None)
+      case CIS => currentData.copy(cis = None)
+      case STATE_BENEFITS => currentData.copy(stateBenefits = None)
+      case INTEREST_SAVINGS => currentData.copy(interestSavings = None)
+      case GAINS => currentData.copy(gains = None)
+      case OTHER_EMPLOYMENT_INCOME => currentData.copy(otherEmploymentIncome = None)
     }
   }
 
@@ -120,7 +121,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
         newData match {
           case data@Some(_) =>
 
-            val model = createModelFromNewData(data, IncomeSources(otherEmploymentIncome = None), incomeSource)
+            val model = createModelFromNewData(data, IncomeSources(), incomeSource)
             incomeTaxUserDataService.saveUserData(taxYear, Some(model))(NoContent)
 
           case None =>

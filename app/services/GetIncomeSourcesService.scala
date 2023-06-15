@@ -24,7 +24,6 @@ import models.employment.{AllEmploymentData, OtherEmploymentIncome}
 import models.gains.InsurancePoliciesModel
 import models.gifts.GiftAid
 import models.pensions.Pensions
-import models.pensions.employmentPensions.EmploymentPensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -70,21 +69,34 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       otherEmploymentIncome <- getOtherEmploymentIncome(nino, taxYear, mtditid, excludedIncomeSources)
     } yield {
       Right(
-        IncomeSources(Some(Seq(
-                    handleUnavailableService(common.IncomeSources.DIVIDENDS, dividends),
-                    handleUnavailableService(common.IncomeSources.INTEREST, interest),
-                    handleUnavailableService(common.IncomeSources.GIFT_AID, giftAid),
-                    handleUnavailableService(common.IncomeSources.EMPLOYMENT, employment),
-                    handleUnavailableService(common.IncomeSources.PENSIONS, pensions),
-                    handleUnavailableService(common.IncomeSources.CIS, cis),
-                    handleUnavailableService(common.IncomeSources.STATE_BENEFITS, stateBenefits),
-                    handleUnavailableService(common.IncomeSources.INTEREST_SAVINGS, interestSavings),
-                    handleUnavailableService(common.IncomeSources.GAINS, gains),
-                    handleUnavailableService(common.IncomeSources.STOCK_DIVIDENDS, stockDividends),
-                    handleUnavailableService(common.IncomeSources.OTHER_EMPLOYMENT_INCOME, otherEmploymentIncome)
-                  ).filter(elem => elem._1 != "remove")), dividends.fold(_ => Some(Dividends(None, None)), data => data), interest.fold(_ => Some(Seq(Interest("", "", Some(0), Some(0)))), data => data), giftAid.fold(_ => Some(GiftAid(None, None)), data => data), employment.fold(_ => Some(AllEmploymentData(Seq.empty, None, Seq.empty, None)), data => data.map(_.excludePensionIncome())), pensions.fold(_ => Some(Pensions(None, None, None, None, None)), data => data.map(_.copy(
-                    employmentPensions = employment.fold(_ => None, data => data.map(_.buildEmploymentPensions()))
-                  ))), cis.fold(_ => Some(AllCISDeductions(Some(CISSource(None, None, None, Seq.empty)), None)), data => data), stateBenefits.fold(_ => Some(AllStateBenefitsData(None)), data => data), interestSavings.fold(_ => Some(SavingsIncomeDataModel(None, None, None)), data => data), gains.fold(_ => Some(InsurancePoliciesModel("", Seq.empty, None, None, None, None)), data => data), stockDividends.fold(_ => Some(StockDividends(None, None, None, None)), data => data), None)
+        IncomeSources(
+          Some(Seq(
+            handleUnavailableService(common.IncomeSources.DIVIDENDS, dividends),
+            handleUnavailableService(common.IncomeSources.INTEREST, interest),
+            handleUnavailableService(common.IncomeSources.GIFT_AID, giftAid),
+            handleUnavailableService(common.IncomeSources.EMPLOYMENT, employment),
+            handleUnavailableService(common.IncomeSources.PENSIONS, pensions),
+            handleUnavailableService(common.IncomeSources.CIS, cis),
+            handleUnavailableService(common.IncomeSources.STATE_BENEFITS, stateBenefits),
+            handleUnavailableService(common.IncomeSources.INTEREST_SAVINGS, interestSavings),
+            handleUnavailableService(common.IncomeSources.GAINS, gains),
+            handleUnavailableService(common.IncomeSources.STOCK_DIVIDENDS, stockDividends),
+            handleUnavailableService(common.IncomeSources.OTHER_EMPLOYMENT_INCOME, otherEmploymentIncome)
+          ).filter(elem => elem._1 != "remove")),
+          dividends.fold(_ => Some(Dividends(None, None)), data => data),
+          interest.fold(_ => Some(Seq(Interest("", "", Some(0), Some(0)))), data => data),
+          giftAid.fold(_ => Some(GiftAid(None, None)), data => data),
+          employment.fold(_ => Some(AllEmploymentData(Seq.empty, None, Seq.empty, None)), data => data.map(_.excludePensionIncome())),
+          pensions.fold(_ => Some(Pensions(None, None, None, None, None)), data => data.map(_.copy(
+            employmentPensions = employment.fold(_ => None, data => data.map(_.buildEmploymentPensions()))
+          ))),
+          cis.fold(_ => Some(AllCISDeductions(Some(CISSource(None, None, None, Seq.empty)), None)), data => data),
+          stateBenefits.fold(_ => Some(AllStateBenefitsData(None)), data => data),
+          interestSavings.fold(_ => Some(SavingsIncomeDataModel(None, None, None)), data => data),
+          gains.fold(_ => Some(InsurancePoliciesModel("", Seq.empty, None, None, None, None)), data => data),
+          stockDividends.fold(_ => Some(StockDividends(None, None, None, None)), data => data),
+          otherEmploymentIncome.fold(_ => Some(OtherEmploymentIncome()), data => data)
+        )
       )
     }
   }
@@ -186,7 +198,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
   }
 
   def getStockDividends(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
-                  (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[StockDividends]]] = {
+                       (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[StockDividends]]] = {
 
     if (excludedIncomeSources.contains(STOCK_DIVIDENDS)) {
       shutteredIncomeSourceLog(STOCK_DIVIDENDS)
@@ -196,8 +208,8 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
     }
   }
 
-    def getOtherEmploymentIncome(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
-                  (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[OtherEmploymentIncome]]] = {
+  def getOtherEmploymentIncome(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+                              (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[OtherEmploymentIncome]]] = {
 
     if (excludedIncomeSources.contains(OTHER_EMPLOYMENT_INCOME)) {
       shutteredIncomeSourceLog(OTHER_EMPLOYMENT_INCOME)

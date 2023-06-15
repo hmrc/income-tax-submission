@@ -16,7 +16,9 @@
 
 package models.employment
 
-import play.api.libs.json.{Json, OFormat}
+import models.otheremployment._
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.crypto.EncryptedValue
 
 import java.time.Instant
 
@@ -29,5 +31,18 @@ case class OtherEmploymentIncome(submittedOn: Option[Instant] = None,
 
 object OtherEmploymentIncome {
   implicit val otherEmploymentIncomeFormat: OFormat[OtherEmploymentIncome] = Json.format[OtherEmploymentIncome]
+}
+
+case class EncryptedOtherEmploymentIncome(submittedOn: Option[EncryptedValue],
+                                          shareOptions: Option[Set[EncryptedShareOption]],
+                                          sharesAwardedOrReceived: Option[Set[EncryptedSharesAwardedOrReceived]],
+                                          lumpSums: Option[Set[EncryptedLumpSum]],
+                                          disability: Option[EncryptedDisability],
+                                          foreignService: Option[EncryptedForeignService])
+
+object EncryptedOtherEmploymentIncome {
+  implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
+
+  implicit val format: Format[EncryptedOtherEmploymentIncome] = Json.format[EncryptedOtherEmploymentIncome]
 }
 

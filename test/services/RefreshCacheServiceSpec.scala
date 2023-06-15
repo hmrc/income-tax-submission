@@ -82,7 +82,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(dividends = Some(aDividends), otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(dividends = Some(aDividends)))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -102,7 +102,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(dividends = Some(aDividends), otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(dividends = Some(aDividends)))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -120,7 +120,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(interest = Some(Seq(anInterest)), otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(interest = Some(Seq(anInterest))))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -138,7 +138,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(interest = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(interest = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -154,9 +154,9 @@ class RefreshCacheServiceSpec extends TestUtils {
 
       (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
         .expects(user, taxYear, *)
-        .returning(Future.successful(Right(Some(anIncomeSources.copy(interest = None, otherEmploymentIncome = None)))))
+        .returning(Future.successful(Right(Some(anIncomeSources.copy(interest = None)))))
 
-      val expected = Some(anIncomeSources.copy(interest = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(interest = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -174,7 +174,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(giftAid = Some(aGiftAid.copy(gifts = Some(aGifts.copy(sharesOrSecurities = Some(43534555.56))))), otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(giftAid = Some(aGiftAid.copy(gifts = Some(aGifts.copy(sharesOrSecurities = Some(43534555.56)))))))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -192,7 +192,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(giftAid = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(giftAid = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -208,9 +208,9 @@ class RefreshCacheServiceSpec extends TestUtils {
 
       (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
         .expects(user, taxYear, *)
-        .returning(Future.successful(Right(Some(anIncomeSources.copy(giftAid = None, otherEmploymentIncome = None)))))
+        .returning(Future.successful(Right(Some(anIncomeSources.copy(giftAid = None)))))
 
-      val expected = Some(anIncomeSources.copy(giftAid = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(giftAid = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -228,7 +228,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(employment = Some(anAllEmploymentData.copy(customerEmploymentData = Seq())), otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(employment = Some(anAllEmploymentData.copy(customerEmploymentData = Seq()))))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -246,7 +246,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(employment = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(employment = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -262,9 +262,9 @@ class RefreshCacheServiceSpec extends TestUtils {
 
       (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
         .expects(user, taxYear, *)
-        .returning(Future.successful(Right(Some(anIncomeSources.copy(employment = None, otherEmploymentIncome = None)))))
+        .returning(Future.successful(Right(Some(anIncomeSources.copy(employment = None)))))
 
-      val expected = Some(anIncomeSources.copy(employment = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(employment = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -282,7 +282,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(pensions = Some(aPensions.copy(pensionCharges = None)), otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(pensions = Some(aPensions.copy(pensionCharges = None))))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -300,7 +300,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(pensions = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(pensions = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -316,9 +316,9 @@ class RefreshCacheServiceSpec extends TestUtils {
 
       (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
         .expects(user, taxYear, *)
-        .returning(Future.successful(Right(Some(anIncomeSources.copy(pensions = None, otherEmploymentIncome = None)))))
+        .returning(Future.successful(Right(Some(anIncomeSources.copy(pensions = None)))))
 
-      val expected = Some(anIncomeSources.copy(pensions = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(pensions = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -336,7 +336,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(cis = Some(AllCISDeductionsBuilder.anAllCISDeductions), otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(cis = Some(AllCISDeductionsBuilder.anAllCISDeductions)))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -354,7 +354,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(cis = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(cis = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -370,9 +370,9 @@ class RefreshCacheServiceSpec extends TestUtils {
 
       (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
         .expects(user, taxYear, *)
-        .returning(Future.successful(Right(Some(anIncomeSources.copy(cis = None, otherEmploymentIncome = None)))))
+        .returning(Future.successful(Right(Some(anIncomeSources.copy(cis = None)))))
 
-      val expected = Some(anIncomeSources.copy(cis = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(cis = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -390,7 +390,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(stateBenefits = Some(AllStateBenefitsDataBuilder.anAllStateBenefitsData), otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(stateBenefits = Some(AllStateBenefitsDataBuilder.anAllStateBenefitsData)))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -408,7 +408,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(stateBenefits = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(stateBenefits = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -424,9 +424,9 @@ class RefreshCacheServiceSpec extends TestUtils {
 
       (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
         .expects(user, taxYear, *)
-        .returning(Future.successful(Right(Some(anIncomeSources.copy(stateBenefits = None, otherEmploymentIncome = None)))))
+        .returning(Future.successful(Right(Some(anIncomeSources.copy(stateBenefits = None)))))
 
-      val expected = Some(anIncomeSources.copy(stateBenefits = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(stateBenefits = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -444,7 +444,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(interestSavings = Some(SavingsIncomeBuilder.anSavingIncome), otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(interestSavings = Some(SavingsIncomeBuilder.anSavingIncome)))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -462,7 +462,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(interestSavings = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(interestSavings = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -478,9 +478,9 @@ class RefreshCacheServiceSpec extends TestUtils {
 
       (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
         .expects(user, taxYear, *)
-        .returning(Future.successful(Right(Some(anIncomeSources.copy(interestSavings = None, otherEmploymentIncome = None)))))
+        .returning(Future.successful(Right(Some(anIncomeSources.copy(interestSavings = None)))))
 
-      val expected = Some(anIncomeSources.copy(interestSavings = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(interestSavings = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -498,7 +498,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(gains = Some(GainsBuilder.anGains), otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(gains = Some(GainsBuilder.anGains)))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -516,7 +516,7 @@ class RefreshCacheServiceSpec extends TestUtils {
         .expects(user, taxYear, *)
         .returning(Future.successful(Right(Some(anIncomeSources))))
 
-      val expected = Some(anIncomeSources.copy(gains = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(gains = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
@@ -532,9 +532,9 @@ class RefreshCacheServiceSpec extends TestUtils {
 
       (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
         .expects(user, taxYear, *)
-        .returning(Future.successful(Right(Some(anIncomeSources.copy(gains = None, otherEmploymentIncome = None)))))
+        .returning(Future.successful(Right(Some(anIncomeSources.copy(gains = None)))))
 
-      val expected = Some(anIncomeSources.copy(gains = None, otherEmploymentIncome = None))
+      val expected = Some(anIncomeSources.copy(gains = None))
 
       (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
         .expects(taxYear, expected, NoContent, user, *)
