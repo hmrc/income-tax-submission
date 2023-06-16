@@ -18,11 +18,22 @@ package models.otheremployment
 
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
+import utils.AesGcmAdCrypto
+import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
 
 case class BenefitFromEmployerFinancedRetirementScheme(amount: BigDecimal,
                                                        exemptAmount: Option[BigDecimal] = None,
                                                        taxPaid: Option[BigDecimal] = None,
-                                                       taxTakenOffInEmployment: Option[Boolean] = None)
+                                                       taxTakenOffInEmployment: Option[Boolean] = None) {
+
+  def encrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): EncryptedBenefitFromEmployerFinancedRetirementScheme =
+    EncryptedBenefitFromEmployerFinancedRetirementScheme(
+      amount = amount.encrypted,
+      exemptAmount = exemptAmount.map(_.encrypted),
+      taxPaid = taxPaid.map(_.encrypted),
+      taxTakenOffInEmployment = taxTakenOffInEmployment.map(_.encrypted)
+    )
+}
 
 object BenefitFromEmployerFinancedRetirementScheme {
   implicit val format: OFormat[BenefitFromEmployerFinancedRetirementScheme] = Json.format[BenefitFromEmployerFinancedRetirementScheme]
@@ -31,7 +42,16 @@ object BenefitFromEmployerFinancedRetirementScheme {
 case class EncryptedBenefitFromEmployerFinancedRetirementScheme(amount: EncryptedValue,
                                                                 exemptAmount: Option[EncryptedValue] = None,
                                                                 taxPaid: Option[EncryptedValue] = None,
-                                                                taxTakenOffInEmployment: Option[EncryptedValue] = None)
+                                                                taxTakenOffInEmployment: Option[EncryptedValue] = None) {
+
+  def decrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): BenefitFromEmployerFinancedRetirementScheme =
+    BenefitFromEmployerFinancedRetirementScheme(
+      amount = amount.decrypted[BigDecimal],
+      exemptAmount = exemptAmount.map(_.decrypted[BigDecimal]),
+      taxPaid = taxPaid.map(_.decrypted[BigDecimal]),
+      taxTakenOffInEmployment = taxTakenOffInEmployment.map(_.decrypted[Boolean])
+    )
+}
 
 object EncryptedBenefitFromEmployerFinancedRetirementScheme {
   implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]

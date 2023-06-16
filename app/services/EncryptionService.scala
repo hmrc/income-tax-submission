@@ -53,6 +53,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       stateBenefits = userData.stateBenefits.map(_.encrypted()),
       interestSavings = userData.interestSavings.map(encryptSavingsIncome),
       gains = userData.gains.map(encryptGains),
+      otherEmploymentIncome = userData.otherEmploymentIncome.map(_.encrypted()),
       lastUpdated = userData.lastUpdated
     )
   }
@@ -482,6 +483,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       stateBenefits = userData.stateBenefits.map(_.decrypted()),
       interestSavings = userData.interestSavings.map(decryptSavingsIncome),
       gains = userData.gains.map(decryptGains),
+      otherEmploymentIncome = userData.otherEmploymentIncome.map(_.decrypted()),
       lastUpdated = userData.lastUpdated
     )
   }

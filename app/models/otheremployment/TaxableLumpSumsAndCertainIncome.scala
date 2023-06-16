@@ -18,18 +18,34 @@ package models.otheremployment
 
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
+import utils.AesGcmAdCrypto
+import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
 
 case class TaxableLumpSumsAndCertainIncome(amount: BigDecimal,
                                            taxPaid: Option[BigDecimal] = None,
-                                           taxTakenOffInEmployment: Option[Boolean] = None)
+                                           taxTakenOffInEmployment: Option[Boolean] = None) {
+  def encrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): EncryptedTaxableLumpSumsAndCertainIncome =
+    EncryptedTaxableLumpSumsAndCertainIncome(
+      amount = amount.encrypted,
+      taxPaid = taxPaid.map(_.encrypted),
+      taxTakenOffInEmployment = taxTakenOffInEmployment.map(_.encrypted)
+    )
+}
 
 object TaxableLumpSumsAndCertainIncome {
   implicit val format: OFormat[TaxableLumpSumsAndCertainIncome] = Json.format[TaxableLumpSumsAndCertainIncome]
 }
 
 case class EncryptedTaxableLumpSumsAndCertainIncome(amount: EncryptedValue,
-                                             taxPaid: Option[EncryptedValue] = None,
-                                             taxTakenOffInEmployment: Option[EncryptedValue] = None)
+                                                    taxPaid: Option[EncryptedValue] = None,
+                                                    taxTakenOffInEmployment: Option[EncryptedValue] = None) {
+
+  def decrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): TaxableLumpSumsAndCertainIncome = TaxableLumpSumsAndCertainIncome(
+    amount = amount.decrypted[BigDecimal],
+    taxPaid = taxPaid.map(_.decrypted[BigDecimal]),
+    taxTakenOffInEmployment = taxTakenOffInEmployment.map(_.decrypted[Boolean])
+  )
+}
 
 object EncryptedTaxableLumpSumsAndCertainIncome {
   implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]

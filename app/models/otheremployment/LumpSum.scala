@@ -18,13 +18,25 @@ package models.otheremployment
 
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
+import utils.AesGcmAdCrypto
+import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
 
 case class LumpSum(employerName: String,
                    employerRef: String,
                    taxableLumpSumsAndCertainIncome: Option[TaxableLumpSumsAndCertainIncome],
                    benefitFromEmployerFinancedRetirementScheme: Option[BenefitFromEmployerFinancedRetirementScheme],
                    redundancyCompensationPaymentsOverExemption: Option[RedundancyCompensationPaymentsOverExemption],
-                   redundancyCompensationPaymentsUnderExemption: Option[RedundancyCompensationPaymentsUnderExemption])
+                   redundancyCompensationPaymentsUnderExemption: Option[RedundancyCompensationPaymentsUnderExemption]) {
+
+  def encrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): EncryptedLumpSum = EncryptedLumpSum(
+    employerName = employerName.encrypted,
+    employerRef = employerRef.encrypted,
+    taxableLumpSumsAndCertainIncome = taxableLumpSumsAndCertainIncome.map(_.encrypted()),
+    benefitFromEmployerFinancedRetirementScheme = benefitFromEmployerFinancedRetirementScheme.map(_.encrypted()),
+    redundancyCompensationPaymentsOverExemption = redundancyCompensationPaymentsOverExemption.map(_.encrypted()),
+    redundancyCompensationPaymentsUnderExemption = redundancyCompensationPaymentsUnderExemption.map(_.encrypted())
+  )
+}
 
 object LumpSum {
   implicit val format: OFormat[LumpSum] = Json.format[LumpSum]
@@ -35,7 +47,17 @@ case class EncryptedLumpSum(employerName: EncryptedValue,
                             taxableLumpSumsAndCertainIncome: Option[EncryptedTaxableLumpSumsAndCertainIncome],
                             benefitFromEmployerFinancedRetirementScheme: Option[EncryptedBenefitFromEmployerFinancedRetirementScheme],
                             redundancyCompensationPaymentsOverExemption: Option[EncryptedRedundancyCompensationPaymentsOverExemption],
-                            redundancyCompensationPaymentsUnderExemption: Option[EncryptedRedundancyCompensationPaymentsUnderExemption])
+                            redundancyCompensationPaymentsUnderExemption: Option[EncryptedRedundancyCompensationPaymentsUnderExemption]) {
+
+  def decrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): LumpSum = LumpSum(
+    employerName = employerName.decrypted[String],
+    employerRef = employerRef.decrypted[String],
+    taxableLumpSumsAndCertainIncome = taxableLumpSumsAndCertainIncome.map(_.decrypted()),
+    benefitFromEmployerFinancedRetirementScheme = benefitFromEmployerFinancedRetirementScheme.map(_.decrypted()),
+    redundancyCompensationPaymentsOverExemption = redundancyCompensationPaymentsOverExemption.map(_.decrypted()),
+    redundancyCompensationPaymentsUnderExemption = redundancyCompensationPaymentsUnderExemption.map(_.decrypted())
+  )
+}
 
 object EncryptedLumpSum {
   implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]

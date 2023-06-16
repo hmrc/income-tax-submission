@@ -18,9 +18,17 @@ package models.otheremployment
 
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
+import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
+import utils.AesGcmAdCrypto
 
 case class ForeignService(customerReference: Option[String] = None,
-                          amountDeducted: BigDecimal)
+                          amountDeducted: BigDecimal) {
+
+  def encrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): EncryptedForeignService = EncryptedForeignService(
+    customerReference = customerReference.map(_.encrypted),
+    amountDeducted = amountDeducted.encrypted
+  )
+}
 
 object ForeignService {
   implicit val format: OFormat[ForeignService] = Json.format[ForeignService]
@@ -28,7 +36,13 @@ object ForeignService {
 
 
 case class EncryptedForeignService(customerReference: Option[EncryptedValue] = None,
-                                   amountDeducted: EncryptedValue)
+                                   amountDeducted: EncryptedValue) {
+
+  def decrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): ForeignService = ForeignService(
+    customerReference = customerReference.map(_.decrypted[String]),
+    amountDeducted = amountDeducted.decrypted[BigDecimal]
+  )
+}
 
 object EncryptedForeignService {
   implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]

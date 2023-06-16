@@ -18,16 +18,30 @@ package models.otheremployment
 
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
+import utils.AesGcmAdCrypto
+import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
 
 case class Disability(customerReference: Option[String] = None,
-                      amountDeducted: BigDecimal)
+                      amountDeducted: BigDecimal) {
+
+  def encrypted()(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): EncryptedDisability = EncryptedDisability(
+    customerReference = customerReference.map(_.encrypted),
+    amountDeducted = amountDeducted.encrypted
+  )
+}
 
 object Disability {
   implicit val format: OFormat[Disability] = Json.format[Disability]
 }
 
 case class EncryptedDisability(customerReference: Option[EncryptedValue] = None,
-                               amountDeducted: EncryptedValue)
+                               amountDeducted: EncryptedValue) {
+
+  def decrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): Disability = Disability(
+    customerReference = customerReference.map(_.decrypted[String]),
+    amountDeducted = amountDeducted.decrypted[BigDecimal]
+  )
+}
 
 object EncryptedDisability {
   implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]

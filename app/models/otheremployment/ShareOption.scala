@@ -19,6 +19,8 @@ package models.otheremployment
 import models.otheremployment.ShareOptionSchemePlanType.SchemePlanType
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
+import utils.AesGcmAdCrypto
+import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
 
 import java.time.LocalDate
 
@@ -36,7 +38,26 @@ case class ShareOption(employerName: String,
                        marketValueOfSharesOnExcise: BigDecimal,
                        profitOnOptionExercised: BigDecimal,
                        employersNicPaid: BigDecimal,
-                       taxableAmount: BigDecimal)
+                       taxableAmount: BigDecimal){
+
+  def encrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): EncryptedShareOption = EncryptedShareOption(
+    employerName = employerName.encrypted,
+    employerRef = employerRef.map(_.encrypted),
+    schemePlanType = schemePlanType.toString.encrypted,
+    dateOfOptionGrant = dateOfOptionGrant.encrypted,
+    dateOfEvent = dateOfEvent.encrypted,
+    optionNotExercisedButConsiderationReceived = optionNotExercisedButConsiderationReceived.map(_.encrypted),
+    amountOfConsiderationReceived = amountOfConsiderationReceived.encrypted,
+    noOfSharesAcquired = noOfSharesAcquired.encrypted,
+    classOfSharesAcquired = classOfSharesAcquired.map(_.encrypted),
+    exercisePrice = exercisePrice.encrypted,
+    amountPaidForOption = amountPaidForOption.encrypted,
+    marketValueOfSharesOnExcise = marketValueOfSharesOnExcise.encrypted,
+    profitOnOptionExercised = profitOnOptionExercised.encrypted,
+    employersNicPaid = employersNicPaid.encrypted,
+    taxableAmount = taxableAmount.encrypted
+  )
+}
 
 
 object ShareOption {
@@ -57,7 +78,26 @@ case class EncryptedShareOption(employerName: EncryptedValue,
                                 marketValueOfSharesOnExcise: EncryptedValue,
                                 profitOnOptionExercised: EncryptedValue,
                                 employersNicPaid: EncryptedValue,
-                                taxableAmount: EncryptedValue)
+                                taxableAmount: EncryptedValue) {
+
+  def decrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): ShareOption = ShareOption(
+    employerName = employerName.decrypted[String],
+    employerRef = employerRef.map(_.decrypted[String]),
+    schemePlanType = ShareOptionSchemePlanType.withName(schemePlanType.decrypted[String]),
+    dateOfOptionGrant = dateOfOptionGrant.decrypted[LocalDate],
+    dateOfEvent = dateOfEvent.decrypted[LocalDate],
+    optionNotExercisedButConsiderationReceived = optionNotExercisedButConsiderationReceived.map(_.decrypted[Boolean]),
+    amountOfConsiderationReceived = amountOfConsiderationReceived.decrypted[BigDecimal],
+    noOfSharesAcquired = noOfSharesAcquired.decrypted[Int],
+    classOfSharesAcquired = classOfSharesAcquired.map(_.decrypted[String]),
+    exercisePrice = exercisePrice.decrypted[BigDecimal],
+    amountPaidForOption = amountPaidForOption.decrypted[BigDecimal],
+    marketValueOfSharesOnExcise = marketValueOfSharesOnExcise.decrypted[BigDecimal],
+    profitOnOptionExercised = profitOnOptionExercised.decrypted[BigDecimal],
+    employersNicPaid = employersNicPaid.decrypted[BigDecimal],
+    taxableAmount = taxableAmount.decrypted[BigDecimal]
+  )
+}
 
 object EncryptedShareOption {
   implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]

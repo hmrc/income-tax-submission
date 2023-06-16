@@ -18,14 +18,27 @@ package models.otheremployment
 
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
+import utils.AesGcmAdCrypto
+import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
 
-case class RedundancyCompensationPaymentsUnderExemption(amount: BigDecimal)
+case class RedundancyCompensationPaymentsUnderExemption(amount: BigDecimal) {
+  def encrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): EncryptedRedundancyCompensationPaymentsUnderExemption =
+    EncryptedRedundancyCompensationPaymentsUnderExemption(
+      amount = amount.encrypted
+    )
+}
 
 object RedundancyCompensationPaymentsUnderExemption {
   implicit val format: OFormat[RedundancyCompensationPaymentsUnderExemption] = Json.format[RedundancyCompensationPaymentsUnderExemption]
 }
 
-case class EncryptedRedundancyCompensationPaymentsUnderExemption(amount: EncryptedValue)
+case class EncryptedRedundancyCompensationPaymentsUnderExemption(amount: EncryptedValue) {
+
+  def decrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): RedundancyCompensationPaymentsUnderExemption =
+    RedundancyCompensationPaymentsUnderExemption(
+      amount = amount.decrypted[BigDecimal]
+    )
+}
 
 object EncryptedRedundancyCompensationPaymentsUnderExemption {
   implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
