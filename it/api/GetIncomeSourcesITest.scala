@@ -24,6 +24,7 @@ import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import builders.models.gains.GainsBuilder.anGains
 import builders.models.gifts.GiftAidBuilder.aGiftAid
+import builders.models.otheremployment.OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
 import builders.models.pensions.PensionsBuilder.aPensions
 import builders.models.statebenefits.AllStateBenefitsDataBuilder.anAllStateBenefitsData
 import com.github.tomakehurst.wiremock.http.HttpHeader
@@ -110,6 +111,13 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           url = s"/income-tax-additional-information/income-tax/insurance-policies/income/AA123123A/2019",
           status = OK,
           response = Json.toJson(Some(anGains)).toString,
+          requestHeaders
+        )
+
+        stubGetWithResponseBody(
+          url = s"/income-tax-employment/income-tax/nino/AA123123A/income/other/employments\\?taxYear=2019",
+          status = OK,
+          response = Json.toJson(anOtherEmploymentIncome).toString,
           requestHeaders
         )
 
@@ -274,6 +282,13 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
           url = s"/income-tax-additional-information/income-tax/insurance-policies/income/AA123123A/2019",
           status = OK,
           response = Json.toJson(anGains).toString,
+          requestHeaders
+        )
+
+        stubGetWithResponseBody(
+          url = s"/income-tax-employment/income-tax/nino/AA123123A/income/other/employments\\?taxYear=2019",
+          status = OK,
+          response = Json.toJson(anOtherEmploymentIncome).toString,
           requestHeaders
         )
 
