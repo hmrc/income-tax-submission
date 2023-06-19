@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package models.employment
+package models.otheremployment
 
-import models.otheremployment._
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
 import utils.AesGcmAdCrypto
@@ -24,7 +23,7 @@ import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
 
 import java.time.Instant
 
-case class OtherEmploymentIncome(submittedOn: Option[Instant] = None,
+  case class OtherEmploymentIncome(submittedOn: Option[Instant] = None,
                                  shareOptions: Option[Set[ShareOption]] = None,
                                  sharesAwardedOrReceived: Option[Set[SharesAwardedOrReceived]] = None,
                                  lumpSums: Option[Set[LumpSum]] = None,

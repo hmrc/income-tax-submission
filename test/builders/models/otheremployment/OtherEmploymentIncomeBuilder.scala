@@ -21,7 +21,7 @@ import builders.models.otheremployment.ForeignServiceBuilder.aForeignService
 import builders.models.otheremployment.LumpSumBuilder.aLumpSum
 import builders.models.otheremployment.ShareAwardedOrReceivedBuilder.aSharesAwardedOrReceived
 import builders.models.otheremployment.ShareOptionBuilder.aShareOption
-import models.employment.OtherEmploymentIncome
+import models.otheremployment.OtherEmploymentIncome
 import utils.TaxYearUtils.taxYearEOY
 
 import java.time.Instant

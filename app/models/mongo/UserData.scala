@@ -18,9 +18,10 @@ package models.mongo
 
 import models._
 import models.cis.{AllCISDeductions, EncryptedAllCISDeductions}
-import models.employment.{AllEmploymentData, EncryptedAllEmploymentData, EncryptedOtherEmploymentIncome, OtherEmploymentIncome}
+import models.employment.{AllEmploymentData, EncryptedAllEmploymentData}
 import models.gains.{EncryptedInsurancePoliciesModel, InsurancePoliciesModel}
 import models.gifts.{EncryptedGiftAid, GiftAid}
+import models.otheremployment.{EncryptedOtherEmploymentIncome, OtherEmploymentIncome}
 import models.pensions.{EncryptedPensions, Pensions}
 import models.statebenefits.{AllStateBenefitsData, EncryptedAllStateBenefitsData}
 import org.joda.time.{DateTime, DateTimeZone}

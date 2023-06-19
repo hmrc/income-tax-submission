@@ -25,7 +25,6 @@ import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import builders.models.gains.GainsBuilder
 import builders.models.gifts.GiftAidBuilder.aGiftAid
 import builders.models.gifts.GiftsBuilder.aGifts
-import builders.models.otheremployment.OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
 import builders.models.pensions.PensionsBuilder.aPensions
 import builders.models.statebenefits.AllStateBenefitsDataBuilder
 import common.IncomeSources.OTHER_EMPLOYMENT_INCOME

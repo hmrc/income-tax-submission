@@ -28,11 +28,9 @@ import com.codahale.metrics.SharedMetricRegistries
 import connectors._
 import connectors.parsers.SubmittedDividendsParser.{IncomeSourcesResponseModel => IncomeSourceResponseDividends}
 import models._
-import models.employment.OtherEmploymentIncome
 import models.gains.InsurancePoliciesModel
 import models.gifts.{GiftAid, GiftAidPayments, Gifts}
 import models.pensions.Pensions
-import models.pensions.employmentPensions.EmploymentPensions
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
@@ -77,7 +75,18 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           nino = "12345678",
           taxYear = taxYear,
           mtditid = "87654321",
-          excludedIncomeSources = Seq("dividends", "interest", "gift-aid", "employment", "pensions", "cis", "state-benefits", "interest-savings", "gains", "stock-dividends", "other-employment-income")
+          excludedIncomeSources = Seq(
+            "dividends",
+            "interest",
+            "gift-aid",
+            "employment",
+            "pensions",
+            "cis",
+            "state-benefits",
+            "interest-savings",
+            "gains",
+            "stock-dividends",
+            "other-employment-income")
         )
 
         await(eventualResponse) mustBe Right(IncomeSources(Some(List()), None, None, None, None, None, None, None, otherEmploymentIncome = None))
@@ -92,10 +101,19 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
         val giftAidPayments = GiftAidPayments(Some(List("")), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67), Some(12345.67))
         val gifts: Gifts = Gifts(Some(List("someName")), Some(12345.67), Some(12345.67), Some(12345.67))
 
-        val incomeSourcesResult = Right(IncomeSources(Some(List()), Some(Dividends(Some(12345.67), Some(12345.67))),
-          Some(List(Interest("someName", "123", Some(1234.56), Some(1234.56)))), Some(GiftAid(Some(giftAidPayments), Some(gifts))),
-          Some(anAllEmploymentData), Some(aPensionsWithEmployments), Some(anAllCISDeductions), Some(anAllStateBenefitsData), Some(anSavingIncome),
-          Some(anGains), Some(anStockDividends), Some(anOtherEmploymentIncome)))
+        val incomeSourcesResult = Right(IncomeSources(
+          Some(List()),
+          Some(Dividends(Some(12345.67), Some(12345.67))),
+          Some(List(Interest("someName", "123", Some(1234.56), Some(1234.56)))),
+          Some(GiftAid(Some(giftAidPayments), Some(gifts))),
+          Some(anAllEmploymentData),
+          Some(aPensionsWithEmployments),
+          Some(anAllCISDeductions),
+          Some(anAllStateBenefitsData),
+          Some(anSavingIncome),
+          Some(anGains),
+          Some(anStockDividends),
+          Some(anOtherEmploymentIncome)))
 
         (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)

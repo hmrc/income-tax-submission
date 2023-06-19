@@ -17,7 +17,7 @@
 package connectors.parsers
 
 import models.APIErrorModel
-import models.employment.OtherEmploymentIncome
+import models.otheremployment.OtherEmploymentIncome
 import play.api.Logging
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}

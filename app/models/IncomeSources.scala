@@ -17,9 +17,10 @@
 package models
 
 import models.cis.AllCISDeductions
-import models.employment.{AllEmploymentData, OtherEmploymentIncome}
+import models.employment.AllEmploymentData
 import models.gains.InsurancePoliciesModel
 import models.gifts.GiftAid
+import models.otheremployment.OtherEmploymentIncome
 import models.pensions.Pensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.libs.json.{Format, Json, OFormat}
