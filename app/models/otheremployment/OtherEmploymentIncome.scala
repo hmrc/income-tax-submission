@@ -23,7 +23,7 @@ import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
 
 import java.time.Instant
 
-  case class OtherEmploymentIncome(submittedOn: Option[Instant] = None,
+case class OtherEmploymentIncome(submittedOn: Option[Instant] = None,
                                  shareOptions: Option[Set[ShareOption]] = None,
                                  sharesAwardedOrReceived: Option[Set[SharesAwardedOrReceived]] = None,
                                  lumpSums: Option[Set[LumpSum]] = None,
