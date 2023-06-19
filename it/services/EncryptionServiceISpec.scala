@@ -44,6 +44,7 @@ class EncryptionServiceISpec extends IntegrationSpec {
         stateBenefits = result.stateBenefits,
         interestSavings = result.interestSavings,
         gains = result.gains,
+        otherEmploymentIncome = result.otherEmploymentIncome,
         lastUpdated = data.lastUpdated
       )
     }

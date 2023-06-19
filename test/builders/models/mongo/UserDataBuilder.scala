@@ -23,6 +23,7 @@ import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import builders.models.gains.GainsBuilder.anGains
 import builders.models.gifts.GiftAidBuilder.aGiftAid
+import builders.models.otheremployment.OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
 import builders.models.pensions.PensionsBuilder.aPensions
 import builders.models.statebenefits.AllStateBenefitsDataBuilder.anAllStateBenefitsData
 import models.mongo.UserData
@@ -42,6 +43,7 @@ object UserDataBuilder {
     cis = Some(anAllCISDeductions),
     stateBenefits = Some(anAllStateBenefitsData),
     interestSavings = Some(anSavingIncome),
-    gains = Some(anGains)
+    gains = Some(anGains),
+    otherEmploymentIncome = Some(anOtherEmploymentIncome)
   )
 }
