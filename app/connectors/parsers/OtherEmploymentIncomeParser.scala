@@ -33,27 +33,27 @@ object OtherEmploymentIncomeParser extends APIParser with Logging {
   implicit object OtherEmploymentIncomeHttpReads extends HttpReads[OtherEmploymentIncomeResponseModel] {
     override def read(method: String, url: String, response: HttpResponse): OtherEmploymentIncomeResponseModel = {
       response.status match {
-        case OK                                 =>
+        case OK =>
           response.json.validate[OtherEmploymentIncome].fold[OtherEmploymentIncomeResponseModel](
             _ => badSuccessJsonFromAPI,
             {
               case otherEmploymentsModel => Right(Some(otherEmploymentsModel))
-              case _                     => Right(None)
+              case _ => Right(None)
             }
           )
-        case NO_CONTENT                         =>
+        case NO_CONTENT =>
           logger.info(logMessage(response))
           Right(None)
         case BAD_REQUEST | UNPROCESSABLE_ENTITY =>
           pagerDutyLog(FOURXX_RESPONSE_FROM_API, logMessage(response))
           handleAPIError(response)
-        case INTERNAL_SERVER_ERROR              =>
+        case INTERNAL_SERVER_ERROR =>
           pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_API, logMessage(response))
           handleAPIError(response)
-        case SERVICE_UNAVAILABLE                =>
+        case SERVICE_UNAVAILABLE =>
           pagerDutyLog(SERVICE_UNAVAILABLE_FROM_API, logMessage(response))
           handleAPIError(response)
-        case _                                  =>
+        case _ =>
           pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, logMessage(response))
           handleAPIError(response, Some(INTERNAL_SERVER_ERROR))
       }
