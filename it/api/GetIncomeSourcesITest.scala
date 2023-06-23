@@ -115,7 +115,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         )
 
         stubGetWithResponseBody(
-          url = s"/income-tax-employment/income-tax/nino/AA123123A/income/other/employments\\?taxYear=2019",
+          url = "/income-tax-employment/income-tax/nino/AA123123A/income/other/employments\\?taxYear=2019",
           status = OK,
           response = Json.toJson(anOtherEmploymentIncome).toString,
           requestHeaders
@@ -286,7 +286,7 @@ class GetIncomeSourcesITest extends IntegrationSpec with ScalaFutures {
         )
 
         stubGetWithResponseBody(
-          url = s"/income-tax-employment/income-tax/nino/AA123123A/income/other/employments\\?taxYear=2019",
+          url = "/income-tax-employment/income-tax/nino/AA123123A/income/other/employments\\?taxYear=2019",
           status = OK,
           response = Json.toJson(anOtherEmploymentIncome).toString,
           requestHeaders

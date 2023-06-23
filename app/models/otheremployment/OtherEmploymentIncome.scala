@@ -66,4 +66,3 @@ object EncryptedOtherEmploymentIncome {
 
   implicit val format: Format[EncryptedOtherEmploymentIncome] = Json.format[EncryptedOtherEmploymentIncome]
 }
-

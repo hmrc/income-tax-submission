@@ -54,5 +54,3 @@ object EncryptedRedundancyCompensationPaymentsOverExemption {
 
   implicit val format: Format[EncryptedRedundancyCompensationPaymentsOverExemption] = Json.format[EncryptedRedundancyCompensationPaymentsOverExemption]
 }
-
-
