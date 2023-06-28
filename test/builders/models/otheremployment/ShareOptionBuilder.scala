@@ -23,12 +23,17 @@ import java.time.LocalDate
 
 object ShareOptionBuilder {
 
+  val year = 2019
+  val month = 11
+  val dayOfMonth = 20
+
+
   val aShareOption: ShareOption = ShareOption(
     employerName = "Company Ltd",
     employerRef = Some("321/AB123"),
     schemePlanType = EMI,
-    dateOfOptionGrant = LocalDate.parse("2019-11-20"),
-    dateOfEvent = LocalDate.parse("2019-10-20"),
+    dateOfOptionGrant =  LocalDate.of(year,month,dayOfMonth),
+    dateOfEvent = LocalDate.of(year, month-1, dayOfMonth),
     optionNotExercisedButConsiderationReceived = Some(true),
     amountOfConsiderationReceived = BigDecimal(23445.78),
     noOfSharesAcquired = 1,

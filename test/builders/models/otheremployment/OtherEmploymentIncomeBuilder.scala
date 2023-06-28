@@ -24,12 +24,20 @@ import builders.models.otheremployment.ShareOptionBuilder.aShareOption
 import models.otheremployment.OtherEmploymentIncome
 import utils.TaxYearUtils.taxYearEOY
 
-import java.time.Instant
+import java.time.{LocalDateTime, ZoneOffset}
 
 object OtherEmploymentIncomeBuilder {
 
+  val month = 1
+  val dayOfMonth = 4
+  val hour = 5
+  val minute = 1
+  val second = 1
+
+  val instant = LocalDateTime.of(taxYearEOY, month, dayOfMonth, hour, minute, second).toInstant(ZoneOffset.UTC)
+
   val anOtherEmploymentIncome: OtherEmploymentIncome = OtherEmploymentIncome(
-    submittedOn = Some(Instant.parse(s"$taxYearEOY-01-04T05:01:01Z")),
+    submittedOn = Some(instant),
     shareOptions = Some(Set(aShareOption)),
     sharesAwardedOrReceived = Some(Set(aSharesAwardedOrReceived)),
     lumpSums = Some(Set(aLumpSum)),

@@ -23,14 +23,18 @@ import java.time.LocalDate
 
 object ShareAwardedOrReceivedBuilder {
 
+  val year = 2019
+  val month = 10
+  val dayOfMonth = 20
+
   val aSharesAwardedOrReceived: SharesAwardedOrReceived = SharesAwardedOrReceived(
     employerName = "ABC Ltd",
     employerRef = Some("321/AB156"),
     schemePlanType = SIP,
-    dateSharesCeasedToBeSubjectToPlan = LocalDate.parse("2019-10-20"),
+    dateSharesCeasedToBeSubjectToPlan = LocalDate.of(year,month,dayOfMonth),
     noOfShareSecuritiesAwarded = 2,
     classOfShareAwarded = "FIRST",
-    dateSharesAwarded = LocalDate.parse("2019-09-20"),
+    dateSharesAwarded = LocalDate.of(year, month-1, dayOfMonth),
     sharesSubjectToRestrictions = true,
     electionEnteredIgnoreRestrictions = true,
     actualMarketValueOfSharesOnAward = BigDecimal(35345.67),
