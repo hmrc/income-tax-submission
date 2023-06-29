@@ -19,7 +19,6 @@ package controllers
 
 import builders.models.IncomeSourcesBuilder.anIncomeSources
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
-import builders.models.otheremployment.OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
 import models._
 import models.gifts.{GiftAid, GiftAidPayments, Gifts}
 import org.scalamock.handlers.{CallHandler3, CallHandler5}
@@ -78,8 +77,7 @@ class IncomeSourcesControllerSpec extends TestUtils {
   val gifts: Gifts = Gifts(Some(List("")), Some(12345.67), Some(12345.67), Some(12345.67))
 
   val incomeSources: IncomeSources = IncomeSources(None, Some(Dividends(Some(12345.67), Some(12345.67))),
-    Some(Seq(Interest("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAid(Some(giftAidPayments), Some(gifts))), Some(anAllEmploymentData),
-    otherEmploymentIncome = Some(anOtherEmploymentIncome))
+    Some(Seq(Interest("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAid(Some(giftAidPayments), Some(gifts))), Some(anAllEmploymentData))
 
   def mockGetIncomeSourcesValid(): CallHandler5[String, Int, String, Seq[String], HeaderCarrier, Future[getIncomeSourcesService.IncomeSourceResponse]] = {
     (getIncomeSourcesService.getAllIncomeSources(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))

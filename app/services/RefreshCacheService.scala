@@ -23,7 +23,6 @@ import models.cis.AllCISDeductions
 import models.employment.AllEmploymentData
 import models.gains.InsurancePoliciesModel
 import models.gifts.GiftAid
-import models.otheremployment.OtherEmploymentIncome
 import models.pensions.Pensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.Logging
@@ -55,7 +54,6 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case Right(Some(model: AllStateBenefitsData)) => updateCacheBasedOnNewData[AllStateBenefitsData](taxYear, incomeSource, Some(model))
       case Right(Some(model: SavingsIncomeDataModel)) => updateCacheBasedOnNewData[SavingsIncomeDataModel](taxYear, incomeSource, Some(model))
       case Right(Some(model: InsurancePoliciesModel)) => updateCacheBasedOnNewData[InsurancePoliciesModel](taxYear, incomeSource, Some(model))
-      case Right(Some(model: OtherEmploymentIncome)) => updateCacheBasedOnNewData[OtherEmploymentIncome](taxYear, incomeSource, Some(model))
       case Left(error) => Future.successful(Status(error.status)(error.toJson))
       case _ => Future.successful(Status(INTERNAL_SERVER_ERROR)(Json.toJson(APIErrorBodyModel.parsingError)))
     }
@@ -75,7 +73,6 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case STATE_BENEFITS => getIncomeSourcesService.getStateBenefits(nino, taxYear, user.mtditid)
       case INTEREST_SAVINGS => getIncomeSourcesService.getSavingsInterest(nino, taxYear, user.mtditid)
       case GAINS => getIncomeSourcesService.getGains(nino, taxYear, user.mtditid)
-      case OTHER_EMPLOYMENT_INCOME =>getIncomeSourcesService.getOtherEmploymentIncome(nino, taxYear, user.mtditid)
     }
   }
 
@@ -92,8 +89,8 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case Some(model: AllStateBenefitsData) => currentData.copy(stateBenefits = Some(model))
       case Some(model: SavingsIncomeDataModel) => currentData.copy(interestSavings = Some(model))
       case Some(model: InsurancePoliciesModel) => currentData.copy(gains = Some(model))
-      case Some(model: OtherEmploymentIncome) => currentData.copy(otherEmploymentIncome = Some(model))
       case _ => defaultCurrentData(currentData, incomeSource)
+
     }
   }
 
@@ -108,7 +105,6 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case STATE_BENEFITS => currentData.copy(stateBenefits = None)
       case INTEREST_SAVINGS => currentData.copy(interestSavings = None)
       case GAINS => currentData.copy(gains = None)
-      case OTHER_EMPLOYMENT_INCOME => currentData.copy(otherEmploymentIncome = None)
     }
   }
 
@@ -116,7 +112,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
                                           (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
 
     incomeTaxUserDataService.findUserData(user, taxYear).flatMap {
-      case Right(None) | Right(Some(IncomeSources(None, None, None, None, None, None, None, None, None, None, None, None))) =>
+      case Right(None) | Right(Some(IncomeSources(None, None, None, None, None, None, None, None, None, None, None))) =>
 
         logger.info(s"${log("updateCacheBasedOnNewData")} User doesn't have any cache data or doesn't have any income source data." +
           s" SessionId: ${user.sessionId}")
@@ -161,7 +157,6 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case INTEREST_SAVINGS => noDataLog(data.interestSavings.isEmpty)
       case GAINS => noDataLog(data.gains.isEmpty)
       case STOCK_DIVIDENDS => noDataLog(data.stockDividends.isEmpty)
-      case OTHER_EMPLOYMENT_INCOME => noDataLog(data.otherEmploymentIncome.isEmpty)
     }
   }
 }

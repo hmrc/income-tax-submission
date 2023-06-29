@@ -21,7 +21,6 @@ import builders.models.StockDividendsBuilder.anStockDividends
 import builders.models.cis.AllCISDeductionsBuilder.anAllCISDeductions
 import builders.models.employment.AllEmploymentDataBuilder.{anAllEmploymentData, anAllEmploymentDataWithOccPen}
 import builders.models.gains.GainsBuilder.anGains
-import builders.models.otheremployment.OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
 import builders.models.pensions.PensionsBuilder.aPensionsWithEmployments
 import builders.models.statebenefits.AllStateBenefitsDataBuilder.anAllStateBenefitsData
 import com.codahale.metrics.SharedMetricRegistries
@@ -85,11 +84,10 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
             "state-benefits",
             "interest-savings",
             "gains",
-            "stock-dividends",
-            "other-employment-income")
+            "stock-dividends")
         )
 
-        await(eventualResponse) mustBe Right(IncomeSources(Some(List()), None, None, None, None, None, None, None, otherEmploymentIncome = None))
+        await(eventualResponse) mustBe Right(IncomeSources(Some(List()), None, None, None, None, None, None, None))
       }
     }
 
@@ -112,8 +110,8 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           Some(anAllStateBenefitsData),
           Some(anSavingIncome),
           Some(anGains),
-          Some(anStockDividends),
-          Some(anOtherEmploymentIncome)))
+          Some(anStockDividends)
+        ))
 
         (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
@@ -155,10 +153,6 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           .expects("12345678", taxYear, mockHeaderCarrier)
           .returning(Future.successful(Right(Some(anStockDividends))))
 
-        (employmentConnector.getOtherEmploymentIncome(_: String, _: Int)(_: HeaderCarrier))
-          .expects("12345678", taxYear, mockHeaderCarrier)
-          .returning(Future.successful(Right(Some(anOtherEmploymentIncome))))
-
         await(underTest.getAllIncomeSources("12345678", taxYear, "87654321")) mustBe incomeSourcesResult
       }
     }
@@ -180,8 +174,7 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           Some(anAllStateBenefitsData),
           Some(SavingsIncomeDataModel(None, None, None)),
           Some(InsurancePoliciesModel("", Seq.empty, None, None, None, None)),
-          Some(StockDividends(None, None, None, None, None, None)),
-          Some(anOtherEmploymentIncome)
+          Some(StockDividends(None, None, None, None, None, None))
         ))
 
         (dividendsConnector.getSubmittedDividends(_: String, _: Int)(_: HeaderCarrier))
@@ -223,10 +216,6 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
         (stockDividendsConnector.getSubmittedStockDividends(_: String, _: Int)(_: HeaderCarrier))
           .expects("12345678", taxYear, mockHeaderCarrier)
           .returning(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
-
-        (employmentConnector.getOtherEmploymentIncome(_: String, _: Int)(_: HeaderCarrier))
-          .expects("12345678", taxYear, mockHeaderCarrier)
-          .returning(Future.successful(Right(Some(anOtherEmploymentIncome))))
 
         await(underTest.getAllIncomeSources("12345678", taxYear, "87654321")) mustBe incomeSourcesResult
       }

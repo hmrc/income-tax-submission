@@ -20,7 +20,6 @@ import models.cis.AllCISDeductions
 import models.employment.AllEmploymentData
 import models.gains.InsurancePoliciesModel
 import models.gifts.GiftAid
-import models.otheremployment.OtherEmploymentIncome
 import models.pensions.Pensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.libs.json.{Format, Json, OFormat}
@@ -36,8 +35,7 @@ case class IncomeSources(
                           stateBenefits: Option[AllStateBenefitsData] = None,
                           interestSavings: Option[SavingsIncomeDataModel] = None,
                           gains: Option[InsurancePoliciesModel] = None,
-                          stockDividends: Option[StockDividends] = None,
-                          otherEmploymentIncome: Option[OtherEmploymentIncome] = None
+                          stockDividends: Option[StockDividends] = None
                         )
 
 object IncomeSources {

@@ -23,7 +23,6 @@ import models.cis.{AllCISDeductions, CISSource}
 import models.employment.AllEmploymentData
 import models.gains.InsurancePoliciesModel
 import models.gifts.GiftAid
-import models.otheremployment.OtherEmploymentIncome
 import models.pensions.Pensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.Logging
@@ -67,7 +66,6 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       interestSavings <- getSavingsInterest(nino, taxYear, mtditid, excludedIncomeSources)
       gains <- getGains(nino, taxYear, mtditid, excludedIncomeSources)
       stockDividends <- getStockDividends(nino, taxYear, mtditid, excludedIncomeSources)
-      otherEmploymentIncome <- getOtherEmploymentIncome(nino, taxYear, mtditid, excludedIncomeSources)
     } yield {
       Right(
         IncomeSources(
@@ -81,13 +79,12 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
             handleUnavailableService(common.IncomeSources.STATE_BENEFITS, stateBenefits),
             handleUnavailableService(common.IncomeSources.INTEREST_SAVINGS, interestSavings),
             handleUnavailableService(common.IncomeSources.GAINS, gains),
-            handleUnavailableService(common.IncomeSources.STOCK_DIVIDENDS, stockDividends),
-            handleUnavailableService(common.IncomeSources.OTHER_EMPLOYMENT_INCOME, otherEmploymentIncome)
+            handleUnavailableService(common.IncomeSources.STOCK_DIVIDENDS, stockDividends)
           ).filter(elem => elem._1 != "remove")),
           dividends.fold(_ => Some(Dividends(None, None)), data => data),
           interest.fold(_ => Some(Seq(Interest("", "", Some(0), Some(0)))), data => data),
           giftAid.fold(_ => Some(GiftAid(None, None)), data => data),
-          employment.fold(_ => Some(AllEmploymentData(Seq.empty, None, Seq.empty, None)), data => data.map(_.excludePensionIncome())),
+          employment.fold(_ => Some(AllEmploymentData(Seq.empty, None, Seq.empty, None, None)), data => data.map(_.excludePensionIncome())),
           pensions.fold(_ => Some(Pensions(None, None, None, None, None)), data => data.map(_.copy(
             employmentPensions = employment.fold(_ => None, data => data.map(_.buildEmploymentPensions()))
           ))),
@@ -95,8 +92,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
           stateBenefits.fold(_ => Some(AllStateBenefitsData(None)), data => data),
           interestSavings.fold(_ => Some(SavingsIncomeDataModel(None, None, None)), data => data),
           gains.fold(_ => Some(InsurancePoliciesModel("", Seq.empty, None, None, None, None)), data => data),
-          stockDividends.fold(_ => Some(StockDividends(None, None, None, None)), data => data),
-          otherEmploymentIncome.fold(_ => Some(OtherEmploymentIncome()), data => data)
+          stockDividends.fold(_ => Some(StockDividends(None, None, None, None)), data => data)
         )
       )
     }
@@ -199,24 +195,13 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
   }
 
   def getStockDividends(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
-                       (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[StockDividends]]] = {
+                  (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[StockDividends]]] = {
 
     if (excludedIncomeSources.contains(STOCK_DIVIDENDS)) {
       shutteredIncomeSourceLog(STOCK_DIVIDENDS)
       Future(Right(None))
     } else {
       stockDividendsConnector.getSubmittedStockDividends(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
-    }
-  }
-
-  def getOtherEmploymentIncome(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
-                              (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[OtherEmploymentIncome]]] = {
-
-    if (excludedIncomeSources.contains(OTHER_EMPLOYMENT_INCOME)) {
-      shutteredIncomeSourceLog(OTHER_EMPLOYMENT_INCOME)
-      Future(Right(None))
-    } else {
-      employmentConnector.getOtherEmploymentIncome(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
     }
   }
 

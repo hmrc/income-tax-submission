@@ -17,7 +17,6 @@
 package connectors
 
 import config.AppConfig
-import connectors.parsers.OtherEmploymentIncomeParser.{OtherEmploymentIncomeHttpReads, OtherEmploymentIncomeResponseModel}
 import connectors.parsers.SubmittedEmploymentParser.{IncomeSourcesResponseModel, SubmittedEmploymentHttpReads}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
@@ -31,12 +30,5 @@ class IncomeTaxEmploymentConnector @Inject()(val http: HttpClient, val config: A
     val submittedEmploymentUrl: String = config.employmentBaseUrl + s"/income-tax-employment/income-tax/nino/$nino/sources?taxYear=$taxYear"
 
     http.GET[IncomeSourcesResponseModel](submittedEmploymentUrl)(SubmittedEmploymentHttpReads, addHeadersToHeaderCarrier(submittedEmploymentUrl), ec)
-  }
-
-  def getOtherEmploymentIncome(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[OtherEmploymentIncomeResponseModel] = {
-    val otherEmploymentIncomeUrl: String = config.employmentBaseUrl + s"/income-tax-employment/income-tax/nino/$nino/income/other/employments?taxYear=$taxYear"
-
-    http.GET[OtherEmploymentIncomeResponseModel](otherEmploymentIncomeUrl)(rds = OtherEmploymentIncomeHttpReads,
-      hc = addHeadersToHeaderCarrier(otherEmploymentIncomeUrl), ec = ec)
   }
 }

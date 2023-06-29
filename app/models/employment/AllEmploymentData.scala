@@ -16,13 +16,15 @@
 
 package models.employment
 
+import models.otheremployment.{EncryptedOtherEmploymentIncome, OtherEmploymentIncome}
 import models.pensions.employmentPensions.{EmploymentPensionModel, EmploymentPensions}
 import play.api.libs.json.{Json, OFormat}
 
 case class AllEmploymentData(hmrcEmploymentData: Seq[HmrcEmploymentSource],
                              hmrcExpenses: Option[EmploymentExpenses],
                              customerEmploymentData: Seq[EmploymentSource],
-                             customerExpenses: Option[EmploymentExpenses]) {
+                             customerExpenses: Option[EmploymentExpenses],
+                             otherEmploymentIncome: Option[OtherEmploymentIncome]) {
 
   def excludePensionIncome(): AllEmploymentData = this.copy(
     hmrcEmploymentData = hmrcEmploymentData.filterNot(_.hasOccupationalPension),
@@ -79,7 +81,8 @@ object AllEmploymentData {
 case class EncryptedAllEmploymentData(hmrcEmploymentData: Seq[EncryptedHmrcEmploymentSource],
                                       hmrcExpenses: Option[EncryptedEmploymentExpenses],
                                       customerEmploymentData: Seq[EncryptedEmploymentSource],
-                                      customerExpenses: Option[EncryptedEmploymentExpenses])
+                                      customerExpenses: Option[EncryptedEmploymentExpenses],
+                                      otherEmploymentIncome: Option[EncryptedOtherEmploymentIncome])
 
 object EncryptedAllEmploymentData {
   implicit val format: OFormat[EncryptedAllEmploymentData] = Json.format[EncryptedAllEmploymentData]

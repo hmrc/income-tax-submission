@@ -16,17 +16,18 @@
 
 package services
 
+import models._
 import models.employment._
 import models.gains.{EncryptedInsurancePoliciesModel, EncryptedLifeAnnuityModel, InsurancePoliciesModel, LifeAnnuityModel}
 import models.gifts._
 import models.mongo.{EncryptedUserData, UserData}
+import models.otheremployment.EncryptedOtherEmploymentIncome
 import models.pensions._
 import models.pensions.charges._
 import models.pensions.employmentPensions.{EmploymentPensionModel, EmploymentPensions, EncryptedEmploymentPensionModel, EncryptedEmploymentPensions}
 import models.pensions.income._
 import models.pensions.reliefs.{EncryptedPensionReliefs, EncryptedReliefs, PensionReliefs, Reliefs}
 import models.pensions.statebenefits._
-import models._
 import models.statebenefits.{AllStateBenefitsData, EncryptedAllStateBenefitsData}
 import utils.AesGcmAdCrypto
 import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
@@ -53,7 +54,6 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       stateBenefits = userData.stateBenefits.map(_.encrypted()),
       interestSavings = userData.interestSavings.map(encryptSavingsIncome),
       gains = userData.gains.map(encryptGains),
-      otherEmploymentIncome = userData.otherEmploymentIncome.map(_.encrypted()),
       lastUpdated = userData.lastUpdated
     )
   }
@@ -198,13 +198,16 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
     }
 
     val hmrcEmploymentData = employment.hmrcEmploymentData.map(encryptHmrcEmploymentSource)
-    val customerEmploymentData = employment.customerEmploymentData.map(encryptEmploymentSource)
+    val customerEmploymentData: Seq[EncryptedEmploymentSource] = employment.customerEmploymentData.map(encryptEmploymentSource)
+
+    val otherEmploymentIncome: Option[EncryptedOtherEmploymentIncome] = employment.otherEmploymentIncome.map(_.encrypted)
 
     EncryptedAllEmploymentData(
       hmrcEmploymentData = hmrcEmploymentData,
       hmrcExpenses = hmrcExpenses,
       customerEmploymentData = customerEmploymentData,
-      customerExpenses = customerExpenses
+      customerExpenses = customerExpenses,
+      otherEmploymentIncome = otherEmploymentIncome
     )
   }
 
@@ -483,7 +486,6 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       stateBenefits = userData.stateBenefits.map(_.decrypted()),
       interestSavings = userData.interestSavings.map(decryptSavingsIncome),
       gains = userData.gains.map(decryptGains),
-      otherEmploymentIncome = userData.otherEmploymentIncome.map(_.decrypted()),
       lastUpdated = userData.lastUpdated
     )
   }
@@ -561,11 +563,14 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
     val hmrcEmploymentData = employment.hmrcEmploymentData.map(decryptHmrcEmploymentSource)
     val customerEmploymentData = employment.customerEmploymentData.map(decryptEmploymentSource)
 
+    val otherEmploymentIncome = employment.otherEmploymentIncome.map(_.decrypted())
+
     AllEmploymentData(
       hmrcEmploymentData = hmrcEmploymentData,
       hmrcExpenses = hmrcExpenses,
       customerEmploymentData = customerEmploymentData,
-      customerExpenses = customerExpenses
+      customerExpenses = customerExpenses,
+      otherEmploymentIncome = otherEmploymentIncome
     )
   }
 
@@ -687,29 +692,6 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
     )
   }
 
-  private def encryptStateBenefits(s: StateBenefits)(implicit associatedText: String): EncryptedStateBenefits = {
-    EncryptedStateBenefits(
-      incapacityBenefit = s.incapacityBenefit.map(_.map(encryptStateBenefit)),
-      statePension = s.statePension.map(encryptStateBenefit),
-      statePensionLumpSum = s.statePensionLumpSum.map(encryptStateBenefit),
-      employmentSupportAllowance = s.employmentSupportAllowance.map(_.map(encryptStateBenefit)),
-      jobSeekersAllowance = s.jobSeekersAllowance.map(_.map(encryptStateBenefit)),
-      bereavementAllowance = s.bereavementAllowance.map(encryptStateBenefit),
-      otherStateBenefits = s.otherStateBenefits.map(encryptStateBenefit)
-    )
-  }
-
-  private def encryptStateBenefit(s: StateBenefit)(implicit associatedText: String): EncryptedStateBenefit = {
-    EncryptedStateBenefit(
-      benefitId = s.benefitId.encrypted,
-      startDate = s.startDate.encrypted,
-      dateIgnored = s.dateIgnored.map(_.encrypted),
-      submittedOn = s.submittedOn.map(_.encrypted),
-      endDate = s.endDate.map(_.encrypted),
-      amount = s.amount.map(_.encrypted),
-      taxPaid = s.taxPaid.map(_.encrypted)
-    )
-  }
 
   private def encryptPensionContributions(p: PensionContributions)(implicit associatedText: String): EncryptedPensionContributions = {
     EncryptedPensionContributions(
@@ -872,29 +854,6 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
     )
   }
 
-  private def decryptStateBenefits(s: EncryptedStateBenefits)(implicit associatedText: String): StateBenefits = {
-    StateBenefits(
-      incapacityBenefit = s.incapacityBenefit.map(_.map(decryptStateBenefit)),
-      statePension = s.statePension.map(decryptStateBenefit),
-      statePensionLumpSum = s.statePensionLumpSum.map(decryptStateBenefit),
-      employmentSupportAllowance = s.employmentSupportAllowance.map(_.map(decryptStateBenefit)),
-      jobSeekersAllowance = s.jobSeekersAllowance.map(_.map(decryptStateBenefit)),
-      bereavementAllowance = s.bereavementAllowance.map(decryptStateBenefit),
-      otherStateBenefits = s.otherStateBenefits.map(decryptStateBenefit)
-    )
-  }
-
-  private def decryptStateBenefit(s: EncryptedStateBenefit)(implicit associatedText: String): StateBenefit = {
-    StateBenefit(
-      benefitId = s.benefitId.decrypted[String],
-      startDate = s.startDate.decrypted[String],
-      dateIgnored = s.dateIgnored.map(_.decrypted[String]),
-      submittedOn = s.submittedOn.map(_.decrypted[String]),
-      endDate = s.endDate.map(_.decrypted[String]),
-      amount = s.amount.map(_.decrypted[BigDecimal]),
-      taxPaid = s.taxPaid.map(_.decrypted[BigDecimal])
-    )
-  }
 
   private def decryptForeignPension(f: EncryptedForeignPension)(implicit associatedText: String): ForeignPension = {
     ForeignPension(

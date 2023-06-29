@@ -75,7 +75,7 @@ class IncomeTaxEmploymentConnectorISpec extends ConnectorIntegrationTest {
     }
 
     "return a none when no employment info found" in {
-      val response = Json.toJson(AllEmploymentData(Seq(), None, Seq(), None)).toString()
+      val response = Json.toJson(AllEmploymentData(Seq(), None, Seq(), None, None)).toString()
       stubGetWithResponseBody(s"/income-tax-employment/income-tax/nino/$nino/sources\\?taxYear=$taxYear", OK, response, requestHeaders)
 
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtditidHeader)
