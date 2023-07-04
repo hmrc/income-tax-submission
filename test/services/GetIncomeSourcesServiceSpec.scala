@@ -30,7 +30,6 @@ import models._
 import models.gains.InsurancePoliciesModel
 import models.gifts.{GiftAid, GiftAidPayments, Gifts}
 import models.pensions.Pensions
-import models.pensions.employmentPensions.EmploymentPensions
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
@@ -75,7 +74,17 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           nino = "12345678",
           taxYear = taxYear,
           mtditid = "87654321",
-          excludedIncomeSources = Seq("dividends", "interest", "gift-aid", "employment", "pensions", "cis", "state-benefits", "interest-savings", "gains", "stock-dividends")
+          excludedIncomeSources = Seq(
+            "dividends",
+            "interest",
+            "gift-aid",
+            "employment",
+            "pensions",
+            "cis",
+            "state-benefits",
+            "interest-savings",
+            "gains",
+            "stock-dividends")
         )
 
         await(eventualResponse) mustBe Right(IncomeSources(Some(List()), None, None, None, None, None, None, None))
@@ -154,7 +163,8 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
         val expectedDividendsResult: IncomeSourceResponseDividends = Right(Some(Dividends(Some(12345.67), Some(12345.67))))
 
         val incomeSourcesResult = Right(IncomeSources(
-          Some(List(("interest", errorModel.body), ("gift-aid", errorModel.body), ("pensions", errorModel.body), ("interest-savings", errorModel.body), ("gains", errorModel.body), ("stock-dividends", errorModel.body))),
+          Some(List(("interest", errorModel.body), ("gift-aid", errorModel.body), ("pensions", errorModel.body),
+            ("interest-savings", errorModel.body), ("gains", errorModel.body), ("stock-dividends", errorModel.body))),
           Some(Dividends(Some(12345.67), Some(12345.67))),
           Some(List(Interest("", "", Some(0), Some(0)))),
           Some(GiftAid(None, None)),

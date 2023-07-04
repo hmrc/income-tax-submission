@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package utils
+package builders.models.otheremployment
 
-import java.time.LocalDate
+import models.otheremployment.BenefitFromEmployerFinancedRetirementScheme
 
-object TaxYearUtils {
+object BenefitFromEmployerFinancedRetirementSchemeBuilder {
 
-  private val dateNow: LocalDate = LocalDate.now()
-  val month = 4
-  val dayOfMonth = 5
-
-  private val taxYearCutoffDate: LocalDate = LocalDate.of(dateNow.getYear, month, dayOfMonth)
-
-  val taxYear: Int = if (dateNow.isAfter(taxYearCutoffDate)) LocalDate.now().getYear + 1 else LocalDate.now().getYear
-  val taxYearEOY: Int = taxYear - 1
+  val aBenefitFromEmployerFinancedRetirementScheme: BenefitFromEmployerFinancedRetirementScheme = BenefitFromEmployerFinancedRetirementScheme(
+    amount = BigDecimal(300.00),
+    exemptAmount = Some(BigDecimal(100.00)),
+    taxPaid = Some(BigDecimal(30.00)),
+    taxTakenOffInEmployment = Some(true)
+  )
 }

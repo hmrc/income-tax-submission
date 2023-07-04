@@ -24,7 +24,6 @@ import models.employment.AllEmploymentData
 import models.gains.InsurancePoliciesModel
 import models.gifts.GiftAid
 import models.pensions.Pensions
-import models.pensions.employmentPensions.EmploymentPensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -85,7 +84,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
           dividends.fold(_ => Some(Dividends(None, None)), data => data),
           interest.fold(_ => Some(Seq(Interest("", "", Some(0), Some(0)))), data => data),
           giftAid.fold(_ => Some(GiftAid(None, None)), data => data),
-          employment.fold(_ => Some(AllEmploymentData(Seq.empty, None, Seq.empty, None)), data => data.map(_.excludePensionIncome())),
+          employment.fold(_ => Some(AllEmploymentData(Seq.empty, None, Seq.empty, None, None)), data => data.map(_.excludePensionIncome())),
           pensions.fold(_ => Some(Pensions(None, None, None, None, None)), data => data.map(_.copy(
             employmentPensions = employment.fold(_ => None, data => data.map(_.buildEmploymentPensions()))
           ))),

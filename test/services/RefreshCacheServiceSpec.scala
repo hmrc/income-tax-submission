@@ -542,5 +542,6 @@ class RefreshCacheServiceSpec extends TestUtils {
 
       await(underTest.getLatestDataAndRefreshCache(taxYear, "gains")) mustBe NoContent
     }
+
   }
 }

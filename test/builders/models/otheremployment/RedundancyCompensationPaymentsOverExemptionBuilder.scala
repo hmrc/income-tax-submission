@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package utils
+package builders.models.otheremployment
 
-import java.time.LocalDate
+import models.otheremployment.RedundancyCompensationPaymentsOverExemption
 
-object TaxYearUtils {
+object RedundancyCompensationPaymentsOverExemptionBuilder {
 
-  private val dateNow: LocalDate = LocalDate.now()
-  val month = 4
-  val dayOfMonth = 5
-
-  private val taxYearCutoffDate: LocalDate = LocalDate.of(dateNow.getYear, month, dayOfMonth)
-
-  val taxYear: Int = if (dateNow.isAfter(taxYearCutoffDate)) LocalDate.now().getYear + 1 else LocalDate.now().getYear
-  val taxYearEOY: Int = taxYear - 1
+  val aRedundancyCompensationPaymentsOverExemption: RedundancyCompensationPaymentsOverExemption = RedundancyCompensationPaymentsOverExemption(
+    amount = BigDecimal(200),
+    taxPaid = Some(BigDecimal(20.00)),
+    taxTakenOffInEmployment = Some(true)
+  )
 }

@@ -19,6 +19,7 @@ package builders.models.employment
 import builders.models.employment.EmploymentExpensesBuilder.anEmploymentExpenses
 import builders.models.employment.EmploymentSourceBuilder.anEmploymentSource
 import builders.models.employment.HmrcEmploymentSourceBuilder.{aHmrcEmploymentSource, aHmrcEmploymentSourceOccPen}
+import builders.models.otheremployment.OtherEmploymentIncomeBuilder.anOtherEmploymentIncome
 import models.employment.AllEmploymentData
 
 object AllEmploymentDataBuilder {
@@ -27,13 +28,15 @@ object AllEmploymentDataBuilder {
     hmrcEmploymentData = Seq(aHmrcEmploymentSource),
     hmrcExpenses = Some(anEmploymentExpenses),
     customerEmploymentData = Seq(anEmploymentSource),
-    customerExpenses = Some(anEmploymentExpenses)
+    customerExpenses = Some(anEmploymentExpenses),
+    otherEmploymentIncome = Some(anOtherEmploymentIncome)
   )
 
   val anAllEmploymentDataWithOccPen: AllEmploymentData = AllEmploymentData(
     hmrcEmploymentData = Seq(aHmrcEmploymentSource, aHmrcEmploymentSourceOccPen),
     hmrcExpenses = Some(anEmploymentExpenses),
     customerEmploymentData = Seq(anEmploymentSource),
-    customerExpenses = Some(anEmploymentExpenses)
+    customerExpenses = Some(anEmploymentExpenses),
+    otherEmploymentIncome = Some(anOtherEmploymentIncome)
   )
 }
