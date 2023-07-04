@@ -16,7 +16,6 @@
 
 package models.otheremployment
 
-import models.otheremployment.ShareOptionSchemePlanType.SchemePlanType
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
 import utils.AesGcmAdCrypto
@@ -26,7 +25,7 @@ import java.time.LocalDate
 
 case class ShareOption(employerName: String,
                        employerRef: Option[String] = None,
-                       schemePlanType: SchemePlanType,
+                       schemePlanType: ShareOptionSchemePlanType,
                        dateOfOptionGrant: LocalDate,
                        dateOfEvent: LocalDate,
                        optionNotExercisedButConsiderationReceived: Option[Boolean] = None,
@@ -83,7 +82,7 @@ case class EncryptedShareOption(employerName: EncryptedValue,
   def decrypted()(implicit secureGCMCipher: AesGcmAdCrypto, associatedText: String): ShareOption = ShareOption(
     employerName = employerName.decrypted[String],
     employerRef = employerRef.map(_.decrypted[String]),
-    schemePlanType = ShareOptionSchemePlanType.withName(schemePlanType.decrypted[String]),
+    schemePlanType = ShareOptionSchemePlanType.fromString(schemePlanType.decrypted[String]).get,
     dateOfOptionGrant = dateOfOptionGrant.decrypted[LocalDate],
     dateOfEvent = dateOfEvent.decrypted[LocalDate],
     optionNotExercisedButConsiderationReceived = optionNotExercisedButConsiderationReceived.map(_.decrypted[Boolean]),

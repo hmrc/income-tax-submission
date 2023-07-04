@@ -16,16 +16,39 @@
 
 package models.otheremployment
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json._
 
-object ShareOptionSchemePlanType extends Enumeration {
-  type SchemePlanType = Value
+sealed abstract class ShareOptionSchemePlanType
 
-  val EMI = Value("EMI")
-  val CSOP = Value("CSOP")
-  val SAYE = Value("SAYE")
-  val Other = Value("Other")
+object ShareOptionSchemePlanType {
 
-  implicit val format: Format[SchemePlanType] = Json.formatEnum(this)
+  case object EMI extends ShareOptionSchemePlanType
+  case object CSOP extends ShareOptionSchemePlanType
+  case object SAYE extends ShareOptionSchemePlanType
+  case object Other extends ShareOptionSchemePlanType
 
+  def fromString(str: String): Option[ShareOptionSchemePlanType] = str match {
+    case "EMI" => Some(EMI)
+    case "CSOP" => Some(CSOP)
+    case "SAYE" => Some(SAYE)
+    case "Other" => Some(Other)
+    case _ => None
+  }
+
+  implicit val format: Format[ShareOptionSchemePlanType] = new Format[ShareOptionSchemePlanType] {
+    def writes(schemePlanType: ShareOptionSchemePlanType): JsValue = schemePlanType match {
+      case EMI => JsString("EMI")
+      case CSOP => JsString("CSOP")
+      case SAYE => JsString("SAYE")
+      case Other => JsString("Other")
+    }
+
+    def reads(json: JsValue): JsResult[ShareOptionSchemePlanType] = json match {
+      case JsString("EMI") => JsSuccess(EMI)
+      case JsString("CSOP") => JsSuccess(CSOP)
+      case JsString("SAYE") => JsSuccess(SAYE)
+      case JsString("Other") => JsSuccess(Other)
+      case other => JsError(s"Invalid ShareOptionSchemePlanType: $other")
+    }
+  }
 }

@@ -16,13 +16,31 @@
 
 package models.otheremployment
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json._
 
-object ShareAwardedShareSchemePlanType extends Enumeration {
-  type SchemePlanType = Value
+sealed abstract class ShareAwardedShareSchemePlanType
 
-  val SIP = Value("SIP")
-  val Other = Value("Other")
+object ShareAwardedShareSchemePlanType {
 
-  implicit val format: Format[SchemePlanType] = Json.formatEnum(this)
+  case object SIP extends ShareAwardedShareSchemePlanType
+  case object Other extends ShareAwardedShareSchemePlanType
+
+  def fromString(str: String): Option[ShareAwardedShareSchemePlanType] = str match {
+    case "SIP" => Some(SIP)
+    case "Other" => Some(Other)
+    case _ => None
+  }
+
+  implicit val format: Format[ShareAwardedShareSchemePlanType] = new Format[ShareAwardedShareSchemePlanType] {
+    def writes(schemePlanType: ShareAwardedShareSchemePlanType): JsValue = schemePlanType match {
+      case SIP => JsString("SIP")
+      case Other => JsString("Other")
+    }
+
+    def reads(json: JsValue): JsResult[ShareAwardedShareSchemePlanType] = json match {
+      case JsString("SIP") => JsSuccess(SIP)
+      case JsString("Other") => JsSuccess(Other)
+      case other => JsError(s"Invalid ShareAwardedShareSchemePlanType: $other")
+    }
+  }
 }
