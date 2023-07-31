@@ -25,7 +25,7 @@ object PensionSavingsTaxChargesBuilder {
     pensionSchemeTaxReference = Some(Seq("00123456RA", "00123456RB")),
     lumpSumBenefitTakenInExcessOfLifetimeAllowance = Some(aLifetimeAllowance),
     benefitInExcessOfLifetimeAllowance = Some(aLifetimeAllowance),
-    isAnnualAllowanceReduced = false,
+    isAnnualAllowanceReduced = Some(false),
     taperedAnnualAllowance = Some(false),
     moneyPurchasedAllowance = Some(false)
   )

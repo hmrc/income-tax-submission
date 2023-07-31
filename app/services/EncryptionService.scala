@@ -27,7 +27,6 @@ import models.pensions.charges._
 import models.pensions.employmentPensions.{EmploymentPensionModel, EmploymentPensions, EncryptedEmploymentPensionModel, EncryptedEmploymentPensions}
 import models.pensions.income._
 import models.pensions.reliefs.{EncryptedPensionReliefs, EncryptedReliefs, PensionReliefs, Reliefs}
-import models.pensions.statebenefits._
 import models.statebenefits.{AllStateBenefitsData, EncryptedAllStateBenefitsData}
 import utils.AesGcmAdCrypto
 import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
@@ -724,7 +723,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.map(_.encrypted)),
       lumpSumBenefitTakenInExcessOfLifetimeAllowance = p.lumpSumBenefitTakenInExcessOfLifetimeAllowance.map(encryptLifeTimeAllowance),
       benefitInExcessOfLifetimeAllowance = p.benefitInExcessOfLifetimeAllowance.map(encryptLifeTimeAllowance),
-      isAnnualAllowanceReduced = p.isAnnualAllowanceReduced.encrypted,
+      isAnnualAllowanceReduced = p.isAnnualAllowanceReduced.map(_.encrypted),
       taperedAnnualAllowance = p.taperedAnnualAllowance.map(_.encrypted),
       moneyPurchasedAllowance = p.moneyPurchasedAllowance.map(_.encrypted)
     )
@@ -788,7 +787,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.map(_.decrypted[String])),
       lumpSumBenefitTakenInExcessOfLifetimeAllowance = p.lumpSumBenefitTakenInExcessOfLifetimeAllowance.map(decryptLifeTimeAllowance),
       benefitInExcessOfLifetimeAllowance = p.benefitInExcessOfLifetimeAllowance.map(decryptLifeTimeAllowance),
-      isAnnualAllowanceReduced =  p.isAnnualAllowanceReduced.decrypted[Boolean],
+      isAnnualAllowanceReduced =  p.isAnnualAllowanceReduced.map(_.decrypted[Boolean]),
       taperedAnnualAllowance = p.taperedAnnualAllowance.map(_.decrypted[Boolean]),
       moneyPurchasedAllowance = p.moneyPurchasedAllowance.map(_.decrypted[Boolean])
     )
