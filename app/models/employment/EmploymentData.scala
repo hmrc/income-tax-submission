@@ -26,6 +26,7 @@ case class EmploymentData(submittedOn: String,
                           directorshipCeasedDate: Option[String],
                           occPen: Option[Boolean],
                           disguisedRemuneration: Option[Boolean],
+                          offPayrollWorker: Option[Boolean],
                           pay: Option[Pay],
                           deductions: Option[Deductions]) {
 
@@ -43,6 +44,7 @@ case class EncryptedEmploymentData(submittedOn: EncryptedValue,
                                    directorshipCeasedDate: Option[EncryptedValue],
                                    occPen: Option[EncryptedValue],
                                    disguisedRemuneration: Option[EncryptedValue],
+                                   offPayrollWorker: Option[EncryptedValue],
                                    pay: Option[EncryptedPay],
                                    deductions: Option[EncryptedDeductions])
 
