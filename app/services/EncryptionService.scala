@@ -320,6 +320,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       directorshipCeasedDate = e.directorshipCeasedDate.map(_.encrypted),
       occPen = e.occPen.map(_.encrypted),
       disguisedRemuneration = e.disguisedRemuneration.map(_.encrypted),
+      offPayrollWorker = e.offPayrollWorker.map(_.encrypted),
       pay = pay,
       deductions = deductions
     )
@@ -358,6 +359,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       directorshipCeasedDate = e.directorshipCeasedDate.map(_.decrypted[String]),
       occPen = e.occPen.map(_.decrypted[Boolean]),
       disguisedRemuneration = e.disguisedRemuneration.map(_.decrypted[Boolean]),
+      offPayrollWorker = e.offPayrollWorker.map(_.decrypted[Boolean]),
       pay = pay,
       deductions = deductions
     )

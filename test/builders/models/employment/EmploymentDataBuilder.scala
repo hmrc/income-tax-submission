@@ -30,6 +30,7 @@ object EmploymentDataBuilder {
     directorshipCeasedDate = Some("2020-02-12"),
     occPen = Some(false),
     disguisedRemuneration = Some(false),
+    offPayrollWorker = Some(false),
     pay = Some(aPay),
     deductions = Some(aDeductions)
   )
@@ -42,6 +43,7 @@ object EmploymentDataBuilder {
     directorshipCeasedDate = Some("2020-02-12"),
     occPen = Some(true),
     disguisedRemuneration = Some(false),
+    offPayrollWorker = Some(false),
     pay = Some(aPay),
     deductions = Some(aDeductions)
   )
