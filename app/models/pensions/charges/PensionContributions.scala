@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,10 @@ import uk.gov.hmrc.crypto.EncryptedValue
 
 case class PensionContributions(pensionSchemeTaxReference: Seq[String],
                                 inExcessOfTheAnnualAllowance: BigDecimal,
-                                annualAllowanceTaxPaid: BigDecimal)
+                                annualAllowanceTaxPaid: BigDecimal,
+                                isAnnualAllowanceReduced: Option[Boolean],
+                                taperedAnnualAllowance: Option[Boolean],
+                                moneyPurchasedAllowance: Option[Boolean])
 
 object PensionContributions {
   implicit val format: OFormat[PensionContributions] = Json.format[PensionContributions]
@@ -29,7 +32,10 @@ object PensionContributions {
 
 case class EncryptedPensionContributions(pensionSchemeTaxReference: Seq[EncryptedValue],
                                          inExcessOfTheAnnualAllowance: EncryptedValue,
-                                         annualAllowanceTaxPaid: EncryptedValue)
+                                         annualAllowanceTaxPaid: EncryptedValue,
+                                         isAnnualAllowanceReduced: Option[EncryptedValue],
+                                         taperedAnnualAllowance: Option[EncryptedValue],
+                                         moneyPurchasedAllowance: Option[EncryptedValue])
 
 object EncryptedPensionContributions {
   implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -698,7 +698,10 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
     EncryptedPensionContributions(
       pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.encrypted),
       inExcessOfTheAnnualAllowance = p.inExcessOfTheAnnualAllowance.encrypted,
-      annualAllowanceTaxPaid = p.annualAllowanceTaxPaid.encrypted
+      annualAllowanceTaxPaid = p.annualAllowanceTaxPaid.encrypted,
+      isAnnualAllowanceReduced = p.isAnnualAllowanceReduced.map(_.encrypted),
+      taperedAnnualAllowance = p.taperedAnnualAllowance.map(_.encrypted),
+      moneyPurchasedAllowance = p.moneyPurchasedAllowance.map(_.encrypted)
     )
   }
 
@@ -724,10 +727,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
     EncryptedPensionSavingsTaxCharges(
       pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.map(_.encrypted)),
       lumpSumBenefitTakenInExcessOfLifetimeAllowance = p.lumpSumBenefitTakenInExcessOfLifetimeAllowance.map(encryptLifeTimeAllowance),
-      benefitInExcessOfLifetimeAllowance = p.benefitInExcessOfLifetimeAllowance.map(encryptLifeTimeAllowance),
-      isAnnualAllowanceReduced = p.isAnnualAllowanceReduced.map(_.encrypted),
-      taperedAnnualAllowance = p.taperedAnnualAllowance.map(_.encrypted),
-      moneyPurchasedAllowance = p.moneyPurchasedAllowance.map(_.encrypted)
+      benefitInExcessOfLifetimeAllowance = p.benefitInExcessOfLifetimeAllowance.map(encryptLifeTimeAllowance)
     )
   }
 
@@ -788,10 +788,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
     PensionSavingsTaxCharges(
       pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.map(_.decrypted[String])),
       lumpSumBenefitTakenInExcessOfLifetimeAllowance = p.lumpSumBenefitTakenInExcessOfLifetimeAllowance.map(decryptLifeTimeAllowance),
-      benefitInExcessOfLifetimeAllowance = p.benefitInExcessOfLifetimeAllowance.map(decryptLifeTimeAllowance),
-      isAnnualAllowanceReduced =  p.isAnnualAllowanceReduced.map(_.decrypted[Boolean]),
-      taperedAnnualAllowance = p.taperedAnnualAllowance.map(_.decrypted[Boolean]),
-      moneyPurchasedAllowance = p.moneyPurchasedAllowance.map(_.decrypted[Boolean])
+      benefitInExcessOfLifetimeAllowance = p.benefitInExcessOfLifetimeAllowance.map(decryptLifeTimeAllowance)
     )
   }
 
@@ -843,7 +840,10 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
     PensionContributions(
       pensionSchemeTaxReference = p.pensionSchemeTaxReference.map(_.decrypted[String]),
       inExcessOfTheAnnualAllowance = p.inExcessOfTheAnnualAllowance.decrypted[BigDecimal],
-      annualAllowanceTaxPaid = p.annualAllowanceTaxPaid.decrypted[BigDecimal]
+      annualAllowanceTaxPaid = p.annualAllowanceTaxPaid.decrypted[BigDecimal],
+      isAnnualAllowanceReduced = p.isAnnualAllowanceReduced.map(_.decrypted[Boolean]),
+      taperedAnnualAllowance = p.taperedAnnualAllowance.map(_.decrypted[Boolean]),
+      moneyPurchasedAllowance = p.moneyPurchasedAllowance.map(_.decrypted[Boolean])
     )
   }
 
