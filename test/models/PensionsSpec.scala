@@ -199,10 +199,7 @@ class PensionsSpec extends TestUtils {
         "benefitInExcessOfLifetimeAllowance" -> Json.obj(
           "amount" -> 100.0,
           "taxPaid" -> 200.0
-        ),
-        "isAnnualAllowanceReduced" -> false,
-        "taperedAnnualAllowance" -> false,
-        "moneyPurchasedAllowance" -> false
+        )
       ),
       "pensionSchemeOverseasTransfers" -> Json.obj(
         "overseasSchemeProvider" -> Json.arr(Json.obj(
@@ -228,7 +225,10 @@ class PensionsSpec extends TestUtils {
       "pensionContributions" -> Json.obj(
         "pensionSchemeTaxReference" -> Json.arr("00123456RA", "00123456RB"),
         "inExcessOfTheAnnualAllowance" -> 100.0,
-        "annualAllowanceTaxPaid" -> 200.0
+        "annualAllowanceTaxPaid" -> 200.0,
+        "isAnnualAllowanceReduced" -> false,
+        "taperedAnnualAllowance" -> false,
+        "moneyPurchasedAllowance" -> false
       ),
       "overseasPensionContributions" -> Json.obj(
         "overseasSchemeProvider" -> Json.arr(Json.obj(
