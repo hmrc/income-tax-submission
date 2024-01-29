@@ -21,7 +21,10 @@ import uk.gov.hmrc.crypto.EncryptedValue
 
 case class PensionContributions(pensionSchemeTaxReference: Seq[String],
                                 inExcessOfTheAnnualAllowance: BigDecimal,
-                                annualAllowanceTaxPaid: BigDecimal)
+                                annualAllowanceTaxPaid: BigDecimal,
+                                isAnnualAllowanceReduced: Option[Boolean],
+                                taperedAnnualAllowance: Option[Boolean],
+                                moneyPurchasedAllowance: Option[Boolean])
 
 object PensionContributions {
   implicit val format: OFormat[PensionContributions] = Json.format[PensionContributions]
@@ -29,7 +32,10 @@ object PensionContributions {
 
 case class EncryptedPensionContributions(pensionSchemeTaxReference: Seq[EncryptedValue],
                                          inExcessOfTheAnnualAllowance: EncryptedValue,
-                                         annualAllowanceTaxPaid: EncryptedValue)
+                                         annualAllowanceTaxPaid: EncryptedValue,
+                                         isAnnualAllowanceReduced: Option[EncryptedValue],
+                                         taperedAnnualAllowance: Option[EncryptedValue],
+                                         moneyPurchasedAllowance: Option[EncryptedValue])
 
 object EncryptedPensionContributions {
   implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]

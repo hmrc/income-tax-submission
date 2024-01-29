@@ -21,10 +21,7 @@ import uk.gov.hmrc.crypto.EncryptedValue
 
 case class PensionSavingsTaxCharges(pensionSchemeTaxReference: Option[Seq[String]],
                                     lumpSumBenefitTakenInExcessOfLifetimeAllowance: Option[LifetimeAllowance],
-                                    benefitInExcessOfLifetimeAllowance: Option[LifetimeAllowance],
-                                    isAnnualAllowanceReduced: Option[Boolean],
-                                    taperedAnnualAllowance: Option[Boolean],
-                                    moneyPurchasedAllowance: Option[Boolean])
+                                    benefitInExcessOfLifetimeAllowance: Option[LifetimeAllowance])
 
 object PensionSavingsTaxCharges {
   implicit val format: OFormat[PensionSavingsTaxCharges] = Json.format[PensionSavingsTaxCharges]
@@ -32,10 +29,7 @@ object PensionSavingsTaxCharges {
 
 case class EncryptedPensionSavingsTaxCharges(pensionSchemeTaxReference: Option[Seq[EncryptedValue]],
                                              lumpSumBenefitTakenInExcessOfLifetimeAllowance: Option[EncryptedLifetimeAllowance],
-                                             benefitInExcessOfLifetimeAllowance: Option[EncryptedLifetimeAllowance],
-                                             isAnnualAllowanceReduced: Option[EncryptedValue],
-                                             taperedAnnualAllowance: Option[EncryptedValue],
-                                             moneyPurchasedAllowance: Option[EncryptedValue])
+                                             benefitInExcessOfLifetimeAllowance: Option[EncryptedLifetimeAllowance])
 
 object EncryptedPensionSavingsTaxCharges {
   implicit lazy val encryptedValueOFormat: OFormat[EncryptedValue] = Json.format[EncryptedValue]
