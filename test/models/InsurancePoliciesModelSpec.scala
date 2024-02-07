@@ -71,8 +71,8 @@ class InsurancePoliciesModelSpec extends TestUtils {
 
   val submittedOn = "2020-01-04T05:01:01Z"
   val validInsurancePoliciesModel: InsurancePoliciesModel = InsurancePoliciesModel(
-    submittedOn,
-    Seq(validLifeInsuranceModel),
+    Some(submittedOn),
+    Some(Seq(validLifeInsuranceModel)),
     Some(Seq(validCapitalRedemptionModel)),
     Some(Seq(validLifeAnnuityModel)),
     Some(Seq(validVoidedIsaModel)),
