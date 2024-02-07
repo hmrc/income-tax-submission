@@ -48,7 +48,10 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
 
   private def handleUnavailableService(service: String, data: Either[APIErrorModel, _]): (String, APIErrorBody) = {
     data.fold(
-      error => (service, error.body),
+      error => {
+        logger.error(s"[GetIncomeSourcesService][handleUnavailableService] $service has responded with status: ${error.status}")
+        (service, error.body)
+      },
       _ => ("remove", APIErrorModel(0, APIErrorBodyModel.parsingError).body)
     )
   }
@@ -91,7 +94,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
           cis.fold(_ => Some(AllCISDeductions(Some(CISSource(None, None, None, Seq.empty)), None)), data => data),
           stateBenefits.fold(_ => Some(AllStateBenefitsData(None)), data => data),
           interestSavings.fold(_ => Some(SavingsIncomeDataModel(None, None, None)), data => data),
-          gains.fold(_ => Some(InsurancePoliciesModel("", Seq.empty, None, None, None, None)), data => data),
+          gains.fold(_ => Some(InsurancePoliciesModel(None, None, None, None, None, None)), data => data),
           stockDividends.fold(_ => Some(StockDividends(None, None, None, None)), data => data)
         )
       )

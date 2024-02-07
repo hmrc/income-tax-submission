@@ -985,17 +985,19 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       }
     }
 
-    val eLifeInsurance: Seq[EncryptedLifeInsuranceModel] = {
+    val eLifeInsurance: Option[Seq[EncryptedLifeInsuranceModel]] = {
       gains.lifeInsurance.map {
         g =>
-          EncryptedLifeInsuranceModel(
-            customerReference = g.customerReference.map(_.encrypted),
-            event = g.event.map(_.encrypted),
-            gainAmount = g.gainAmount.encrypted,
-            taxPaid = g.taxPaid.map(_.encrypted),
-            yearsHeld = g.yearsHeld.map(_.encrypted),
-            yearsHeldSinceLastGain = g.yearsHeldSinceLastGain.map(_.encrypted),
-            deficiencyRelief = g.deficiencyRelief.map(_.encrypted)
+          g.map(l =>
+            EncryptedLifeInsuranceModel(
+              customerReference = l.customerReference.map(_.encrypted),
+              event = l.event.map(_.encrypted),
+              gainAmount = l.gainAmount.encrypted,
+              taxPaid = l.taxPaid.map(_.encrypted),
+              yearsHeld = l.yearsHeld.map(_.encrypted),
+              yearsHeldSinceLastGain = l.yearsHeldSinceLastGain.map(_.encrypted),
+              deficiencyRelief = l.deficiencyRelief.map(_.encrypted)
+            )
           )
       }
     }
@@ -1018,7 +1020,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
 
 
     EncryptedInsurancePoliciesModel(
-      submittedOn = gains.submittedOn.encrypted,
+      submittedOn = gains.submittedOn.map(_.encrypted),
       lifeInsurance = eLifeInsurance,
       capitalRedemption = eCapitalRedemption,
       lifeAnnuity = eLifeAnnuity,
@@ -1077,17 +1079,19 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       }
     }
 
-    val eLifeInsurance: Seq[LifeInsuranceModel] = {
+    val eLifeInsurance: Option[Seq[LifeInsuranceModel]] = {
       gains.lifeInsurance.map {
         g =>
+          g.map(l =>
           LifeInsuranceModel(
-            customerReference = g.customerReference.map(_.decrypted[String]),
-            event = g.event.map(_.decrypted[String]),
-            gainAmount = g.gainAmount.decrypted[BigDecimal],
-            taxPaid = g.taxPaid.map(_.decrypted[Boolean]),
-            yearsHeld = g.yearsHeld.map(_.decrypted[Int]),
-            yearsHeldSinceLastGain = g.yearsHeldSinceLastGain.map(_.decrypted[Int]),
-            deficiencyRelief = g.deficiencyRelief.map(_.decrypted[BigDecimal])
+            customerReference = l.customerReference.map(_.decrypted[String]),
+            event = l.event.map(_.decrypted[String]),
+            gainAmount = l.gainAmount.decrypted[BigDecimal],
+            taxPaid = l.taxPaid.map(_.decrypted[Boolean]),
+            yearsHeld = l.yearsHeld.map(_.decrypted[Int]),
+            yearsHeldSinceLastGain = l.yearsHeldSinceLastGain.map(_.decrypted[Int]),
+            deficiencyRelief = l.deficiencyRelief.map(_.decrypted[BigDecimal])
+          )
           )
       }
     }
@@ -1110,7 +1114,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
 
 
     InsurancePoliciesModel(
-      submittedOn = gains.submittedOn.decrypted[String],
+      submittedOn = gains.submittedOn.map(_.decrypted[String]),
       lifeInsurance = eLifeInsurance,
       capitalRedemption = eCapitalRedemption,
       lifeAnnuity = eLifeAnnuity,
