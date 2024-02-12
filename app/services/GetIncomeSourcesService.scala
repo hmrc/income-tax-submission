@@ -26,6 +26,7 @@ import models.gifts.GiftAid
 import models.pensions.Pensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.Logging
+import play.libs.Json
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
@@ -46,11 +47,21 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSources]
 
 
-  private def handleUnavailableService(service: String, data: Either[APIErrorModel, _]): (String, APIErrorBody) = {
+  private def handleUnavailableService(service: String, data: Either[APIErrorModel, _])(implicit hc: HeaderCarrier): (String, APIErrorBody) = {
+    val correlationId = hc.extraHeaders.find(_._1 == "X-Correlation-Id")
     data.fold(
       error => {
-        logger.error(s"[GetIncomeSourcesService][handleUnavailableService] $service has responded with status: ${error.status}")
-        (service, error.body)
+        logger.error(
+          s"[GetIncomeSourcesService][handleUnavailableService] $service has responded with status: ${error.status} with correlation id: $correlationId"
+        )
+        error.toJson.validate[APIErrorBodyModel].fold(
+          _ => {
+            logger.error(s"[GetIncomeSourcesService][handleUnavailableService] Error Json validation failed: ${error.body} with correlation id: $correlationId")
+            (service, APIErrorBodyModel("INTERNAL_SERVER_ERROR", APIErrorBodyModel.parsingError.reason))
+          },
+          valid => (service, valid)
+        )
+        //(service, error.body)
       },
       _ => ("remove", APIErrorModel(0, APIErrorBodyModel.parsingError).body)
     )
