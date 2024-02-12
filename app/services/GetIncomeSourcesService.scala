@@ -59,9 +59,11 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
             logger.error(s"[GetIncomeSourcesService][handleUnavailableService] Error Json validation failed: ${error.body} with correlation id: $correlationId")
             (service, APIErrorBodyModel("INTERNAL_SERVER_ERROR", APIErrorBodyModel.parsingError.reason))
           },
-          valid => (service, valid)
+          valid => {
+            logger.info(s"[GetIncomeSourcesService][handleUnavailableService] Passed validation, response: $valid")
+            (service, valid)
+          }
         )
-        //(service, error.body)
       },
       _ => ("remove", APIErrorModel(0, APIErrorBodyModel.parsingError).body)
     )
