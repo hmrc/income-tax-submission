@@ -114,7 +114,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
             handleUnavailableService(INTEREST_SAVINGS, interestSavings),
             handleUnavailableService(GAINS, gains),
             handleUnavailableService(STOCK_DIVIDENDS, stockDividends)
-          ), ),
+          ), Some(Seq[(String, APIErrorBody)]())),
           dividends.fold(_ => Some(Dividends(None, None)), data => data),
           interest.fold(_ => Some(Seq(Interest("", "", Some(0), Some(0)))), data => data),
           giftAid.fold(_ => Some(GiftAid(None, None)), data => data),
@@ -132,7 +132,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
     }
   }
 
-  def getIncomeSource[A](excludedIncomeSources: Seq[String] = Seq(),
+  private def getIncomeSource[A](excludedIncomeSources: Seq[String] = Seq(),
                                  incomeSource: String,
                                  response: Future[Either[APIErrorModel, Option[A]]]): Future[Either[APIErrorModel, Option[A]]] = {
     if (excludedIncomeSources.contains(incomeSource)) {
@@ -146,12 +146,13 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
   def getGiftAid(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                 (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[GiftAid]]] = {
 
-    if (excludedIncomeSources.contains(GIFT_AID)) {
-      shutteredIncomeSourceLog(GIFT_AID)
-      Future(Right(None))
-    } else {
-      giftAidConnector.getSubmittedGiftAid(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
-    }
+    getIncomeSource(excludedIncomeSources, GIFT_AID, giftAidConnector.getSubmittedGiftAid(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid))))
+//    if (excludedIncomeSources.contains(GIFT_AID)) {
+//      shutteredIncomeSourceLog(GIFT_AID)
+//      Future(Right(None))
+//    } else {
+//      giftAidConnector.getSubmittedGiftAid(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
+//    }
   }
 
   def getEmployment(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
