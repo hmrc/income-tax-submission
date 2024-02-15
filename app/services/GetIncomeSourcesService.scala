@@ -26,11 +26,11 @@ import models.gifts.GiftAid
 import models.pensions.Pensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.Logging
-import play.libs.Json
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassManifestFactory.Nothing
 
 class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsConnector,
                                         interestConnector: IncomeTaxInterestConnector,
@@ -47,34 +47,52 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSources]
 
 
-  private def handleUnavailableService(service: String, data: Either[APIErrorModel, _])(implicit hc: HeaderCarrier): (String, APIErrorBody) = {
-    val correlationId = hc.extraHeaders.find(_._1 == "X-Correlation-Id")
-    data.fold(
-      error => {
-        logger.error(
-          s"[GetIncomeSourcesService][handleUnavailableService] $service has responded with status: ${error.status} with correlation id: $correlationId"
-        )
-        error.toJson.validate[APIErrorBodyModel].fold(
-          _ => {
-            logger.error(s"[GetIncomeSourcesService][handleUnavailableService] Error Json validation failed: ${error.body} with correlation id: $correlationId")
-            (service, APIErrorBodyModel("INTERNAL_SERVER_ERROR", APIErrorBodyModel.parsingError.reason))
-          },
-          valid => {
-            logger.info(s"[GetIncomeSourcesService][handleUnavailableService] Passed validation, response: $valid")
-            (service, valid)
-          }
-        )
-      },
-      _ => ("remove", APIErrorModel(0, APIErrorBodyModel.parsingError).body)
-    )
+  private def handleUnavailableService(service: String, data: Either[APIErrorModel, _])(implicit hc: HeaderCarrier): Option[(String, APIErrorBody)] = {
+    val correlationId = hc.extraHeaders.find(_._1 == "X-CorrelationId")
+    data match {
+      case Left(value) => Some((service, value.body))
+      case Right(_) => None
+    }
+//    data.fold(
+//      error => {
+//        logger.error(
+//          s"[GetIncomeSourcesService][handleUnavailableService] $service has responded with status: ${error.status} with correlation id: $correlationId"
+//        )
+//        error.toJson.validate[APIErrorBodyModel].fold(
+//          _ => {
+//            logger.error(s"[GetIncomeSourcesService][handleUnavailableService] Error Json validation failed: ${error.body} with correlation id: $correlationId")
+//            (service, APIErrorBodyModel("INTERNAL_SERVER_ERROR", APIErrorBodyModel.parsingError.reason))
+//          },
+//          valid => {
+//            logger.info(s"[GetIncomeSourcesService][handleUnavailableService] Passed validation, response: $valid")
+//            (service, valid)
+//          }
+//        )
+//      },
+//      _ => None
+//    )
+  }
+
+  def refineErrorList(errors: Seq[Option[(String, APIErrorBody)]], refinedListParam: Option[Seq[(String, APIErrorBody)]] = None): Option[Seq[(String, APIErrorBody)]] = {
+    if (errors.head.isEmpty) { refinedListParam } else {
+      errors.head match {
+        case Some(value) => refineErrorList(errors.tail, Some(Seq(value) ++ refinedListParam.getOrElse(Seq[(String, APIErrorBody)]())))
+        case None => refineErrorList(errors.tail, refinedListParam)
+      }
+    }
   }
 
   def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                          (implicit hc: HeaderCarrier): Future[IncomeSourceResponse] = {
+    val mtdItIdHeader = hc.withExtraHeaders(("mtditid", mtditid))
+    val dividendsConnectorResponse = dividendsConnector.getSubmittedDividends(nino, taxYear)(mtdItIdHeader)
+    val giftAidConnectorResponse = giftAidConnector.getSubmittedGiftAid(nino, taxYear)(mtdItIdHeader)
     for {
-      dividends <- getDividends(nino, taxYear, mtditid, excludedIncomeSources)
+      //dividends <- getDividends(nino, taxYear, mtditid, excludedIncomeSources)
+      dividends <- getIncomeSource(excludedIncomeSources, DIVIDENDS, dividendsConnectorResponse)
       interest <- getInterest(nino, taxYear, mtditid, excludedIncomeSources)
-      giftAid <- getGiftAid(nino, taxYear, mtditid, excludedIncomeSources)
+      //giftAid <- getGiftAid(nino, taxYear, mtditid, excludedIncomeSources)
+      giftAid <- getIncomeSource(excludedIncomeSources, GIFT_AID, Future(Left(APIErrorModel(500, APIErrorBodyModel("CODE", "REASON")))))
       employment <- getEmployment(nino, taxYear, mtditid, excludedIncomeSources)
       pensions <- getPensions(nino, taxYear, mtditid, excludedIncomeSources)
       cis <- getCIS(nino, taxYear, mtditid, excludedIncomeSources)
@@ -85,18 +103,18 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
     } yield {
       Right(
         IncomeSources(
-          Some(Seq(
-            handleUnavailableService(common.IncomeSources.DIVIDENDS, dividends),
-            handleUnavailableService(common.IncomeSources.INTEREST, interest),
-            handleUnavailableService(common.IncomeSources.GIFT_AID, giftAid),
-            handleUnavailableService(common.IncomeSources.EMPLOYMENT, employment),
-            handleUnavailableService(common.IncomeSources.PENSIONS, pensions),
-            handleUnavailableService(common.IncomeSources.CIS, cis),
-            handleUnavailableService(common.IncomeSources.STATE_BENEFITS, stateBenefits),
-            handleUnavailableService(common.IncomeSources.INTEREST_SAVINGS, interestSavings),
-            handleUnavailableService(common.IncomeSources.GAINS, gains),
-            handleUnavailableService(common.IncomeSources.STOCK_DIVIDENDS, stockDividends)
-          ).filter(elem => elem._1 != "remove")),
+          refineErrorList(Seq[Option[(String, APIErrorBody)]](
+            handleUnavailableService(DIVIDENDS, dividends),
+            handleUnavailableService(INTEREST, interest),
+            handleUnavailableService(GIFT_AID, giftAid),
+            handleUnavailableService(EMPLOYMENT, employment),
+            handleUnavailableService(PENSIONS, pensions),
+            handleUnavailableService(CIS, cis),
+            handleUnavailableService(STATE_BENEFITS, stateBenefits),
+            handleUnavailableService(INTEREST_SAVINGS, interestSavings),
+            handleUnavailableService(GAINS, gains),
+            handleUnavailableService(STOCK_DIVIDENDS, stockDividends)
+          ), ),
           dividends.fold(_ => Some(Dividends(None, None)), data => data),
           interest.fold(_ => Some(Seq(Interest("", "", Some(0), Some(0)))), data => data),
           giftAid.fold(_ => Some(GiftAid(None, None)), data => data),
@@ -111,6 +129,17 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
           stockDividends.fold(_ => Some(StockDividends(None, None, None, None)), data => data)
         )
       )
+    }
+  }
+
+  def getIncomeSource[A](excludedIncomeSources: Seq[String] = Seq(),
+                                 incomeSource: String,
+                                 response: Future[Either[APIErrorModel, Option[A]]]): Future[Either[APIErrorModel, Option[A]]] = {
+    if (excludedIncomeSources.contains(incomeSource)) {
+      shutteredIncomeSourceLog(incomeSource)
+      Future(Right(None))
+    } else {
+      response
     }
   }
 
@@ -221,7 +250,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
     }
   }
 
-  def shutteredIncomeSourceLog(source: String): Unit = {
+  private def shutteredIncomeSourceLog(source: String): Unit = {
     logger.info(s"Income source $source is currently shuttered. Not retrieving data for $source.")
   }
 }
