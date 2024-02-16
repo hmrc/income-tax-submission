@@ -30,7 +30,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import scala.reflect.ClassManifestFactory.Nothing
 
 class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsConnector,
                                         interestConnector: IncomeTaxInterestConnector,
@@ -50,49 +49,23 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
   private def handleUnavailableService(service: String, data: Either[APIErrorModel, _])(implicit hc: HeaderCarrier): Option[(String, APIErrorBody)] = {
     val correlationId = hc.extraHeaders.find(_._1 == "X-CorrelationId")
     data match {
-      case Left(value) => Some((service, value.body))
-      case Right(_) => None
-    }
-//    data.fold(
-//      error => {
-//        logger.error(
-//          s"[GetIncomeSourcesService][handleUnavailableService] $service has responded with status: ${error.status} with correlation id: $correlationId"
-//        )
-//        error.toJson.validate[APIErrorBodyModel].fold(
-//          _ => {
-//            logger.error(s"[GetIncomeSourcesService][handleUnavailableService] Error Json validation failed: ${error.body} with correlation id: $correlationId")
-//            (service, APIErrorBodyModel("INTERNAL_SERVER_ERROR", APIErrorBodyModel.parsingError.reason))
-//          },
-//          valid => {
-//            logger.info(s"[GetIncomeSourcesService][handleUnavailableService] Passed validation, response: $valid")
-//            (service, valid)
-//          }
-//        )
-//      },
-//      _ => None
-//    )
-  }
-
-  def refineErrorList(errors: Seq[Option[(String, APIErrorBody)]], refinedListParam: Option[Seq[(String, APIErrorBody)]] = None): Option[Seq[(String, APIErrorBody)]] = {
-    if (errors.head.isEmpty) { refinedListParam } else {
-      errors.head match {
-        case Some(value) => refineErrorList(errors.tail, Some(Seq(value) ++ refinedListParam.getOrElse(Seq[(String, APIErrorBody)]())))
-        case None => refineErrorList(errors.tail, refinedListParam)
-      }
+      case Left(value) =>
+        logger.info(s"[GetIncomeSourcesService][handleUnavailableService] $service is unavailable with status ${value.status}. CorrelationId: $correlationId.")
+        Some((service, value.body))
+      case Right(_) =>
+        logger.info(s"[GetIncomeSourcesService][handleUnavailableService] $service is available.")
+        None
     }
   }
 
   def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                          (implicit hc: HeaderCarrier): Future[IncomeSourceResponse] = {
-    val mtdItIdHeader = hc.withExtraHeaders(("mtditid", mtditid))
-    val dividendsConnectorResponse = dividendsConnector.getSubmittedDividends(nino, taxYear)(mtdItIdHeader)
-    val giftAidConnectorResponse = giftAidConnector.getSubmittedGiftAid(nino, taxYear)(mtdItIdHeader)
+
     for {
-      //dividends <- getDividends(nino, taxYear, mtditid, excludedIncomeSources)
-      dividends <- getIncomeSource(excludedIncomeSources, DIVIDENDS, dividendsConnectorResponse)
+      dividends <- getDividends(nino, taxYear, mtditid, excludedIncomeSources)
       interest <- getInterest(nino, taxYear, mtditid, excludedIncomeSources)
-      //giftAid <- getGiftAid(nino, taxYear, mtditid, excludedIncomeSources)
-      giftAid <- getIncomeSource(excludedIncomeSources, GIFT_AID, Future(Left(APIErrorModel(500, APIErrorBodyModel("CODE", "REASON")))))
+      giftAid <- getGiftAid(nino, taxYear, mtditid, excludedIncomeSources)
+      //giftAid <- getIncomeSource(excludedIncomeSources, GIFT_AID, Future(Left(APIErrorModel(500, APIErrorBodyModel("CODE", "REASON")))))
       employment <- getEmployment(nino, taxYear, mtditid, excludedIncomeSources)
       pensions <- getPensions(nino, taxYear, mtditid, excludedIncomeSources)
       cis <- getCIS(nino, taxYear, mtditid, excludedIncomeSources)
@@ -101,20 +74,22 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       gains <- getGains(nino, taxYear, mtditid, excludedIncomeSources)
       stockDividends <- getStockDividends(nino, taxYear, mtditid, excludedIncomeSources)
     } yield {
+      val errorCheck = Some(Seq(
+        handleUnavailableService(DIVIDENDS, dividends),
+        handleUnavailableService(INTEREST, interest),
+        handleUnavailableService(GIFT_AID, giftAid),
+        handleUnavailableService(EMPLOYMENT, employment),
+        handleUnavailableService(PENSIONS, pensions),
+        handleUnavailableService(CIS, cis),
+        handleUnavailableService(STATE_BENEFITS, stateBenefits),
+        handleUnavailableService(INTEREST_SAVINGS, interestSavings),
+        handleUnavailableService(GAINS, gains),
+        handleUnavailableService(STOCK_DIVIDENDS, stockDividends)
+      ).flatten)
+      val errors = if (errorCheck.isEmpty) None else errorCheck
       Right(
         IncomeSources(
-          refineErrorList(Seq[Option[(String, APIErrorBody)]](
-            handleUnavailableService(DIVIDENDS, dividends),
-            handleUnavailableService(INTEREST, interest),
-            handleUnavailableService(GIFT_AID, giftAid),
-            handleUnavailableService(EMPLOYMENT, employment),
-            handleUnavailableService(PENSIONS, pensions),
-            handleUnavailableService(CIS, cis),
-            handleUnavailableService(STATE_BENEFITS, stateBenefits),
-            handleUnavailableService(INTEREST_SAVINGS, interestSavings),
-            handleUnavailableService(GAINS, gains),
-            handleUnavailableService(STOCK_DIVIDENDS, stockDividends)
-          ), Some(Seq[(String, APIErrorBody)]())),
+          errors,
           dividends.fold(_ => Some(Dividends(None, None)), data => data),
           interest.fold(_ => Some(Seq(Interest("", "", Some(0), Some(0)))), data => data),
           giftAid.fold(_ => Some(GiftAid(None, None)), data => data),
@@ -132,123 +107,93 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
     }
   }
 
-  private def getIncomeSource[A](excludedIncomeSources: Seq[String] = Seq(),
-                                 incomeSource: String,
-                                 response: Future[Either[APIErrorModel, Option[A]]]): Future[Either[APIErrorModel, Option[A]]] = {
+  private def getIncomeSource[A](excludedIncomeSources: Seq[String],
+                                 incomeSource: String)
+                                (response: => Future[Either[APIErrorModel, Option[A]]]): Future[Either[APIErrorModel, Option[A]]] = {
+
     if (excludedIncomeSources.contains(incomeSource)) {
       shutteredIncomeSourceLog(incomeSource)
       Future(Right(None))
     } else {
       response
     }
+
   }
 
   def getGiftAid(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                 (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[GiftAid]]] = {
 
-    getIncomeSource(excludedIncomeSources, GIFT_AID, giftAidConnector.getSubmittedGiftAid(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid))))
-//    if (excludedIncomeSources.contains(GIFT_AID)) {
-//      shutteredIncomeSourceLog(GIFT_AID)
-//      Future(Right(None))
-//    } else {
-//      giftAidConnector.getSubmittedGiftAid(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
-//    }
+    getIncomeSource(excludedIncomeSources, GIFT_AID)(giftAidConnector.getSubmittedGiftAid(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid))))
+
   }
 
   def getEmployment(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                    (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[AllEmploymentData]]] = {
 
-    if (excludedIncomeSources.contains(EMPLOYMENT)) {
-      shutteredIncomeSourceLog(EMPLOYMENT)
-      Future(Right(None))
-    } else {
-      employmentConnector.getSubmittedEmployment(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
-    }
+    getIncomeSource(excludedIncomeSources, EMPLOYMENT)(employmentConnector.getSubmittedEmployment(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid))))
+
   }
 
   def getDividends(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                   (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[Dividends]]] = {
 
-    if (excludedIncomeSources.contains(DIVIDENDS)) {
-      shutteredIncomeSourceLog(DIVIDENDS)
-      Future(Right(None))
-    } else {
-      dividendsConnector.getSubmittedDividends(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
-    }
+    getIncomeSource(excludedIncomeSources, DIVIDENDS)(dividendsConnector.getSubmittedDividends(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid))))
+
   }
 
   def getInterest(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                  (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[List[Interest]]]] = {
 
-    if (excludedIncomeSources.contains(INTEREST)) {
-      shutteredIncomeSourceLog(INTEREST)
-      Future(Right(None))
-    } else {
-      interestConnector.getSubmittedInterest(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
-    }
+    getIncomeSource(excludedIncomeSources, INTEREST)(interestConnector.getSubmittedInterest(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid))))
+
   }
 
   def getPensions(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                  (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[Pensions]]] = {
 
-    if (excludedIncomeSources.contains(PENSIONS)) {
-      shutteredIncomeSourceLog(PENSIONS)
-      Future(Right(None))
-    } else {
-      pensionsConnector.getSubmittedPensions(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
-    }
+    getIncomeSource(excludedIncomeSources, PENSIONS)(pensionsConnector.getSubmittedPensions(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid))))
+
   }
 
   def getCIS(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
             (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[AllCISDeductions]]] = {
 
-    if (excludedIncomeSources.contains(CIS)) {
-      shutteredIncomeSourceLog(CIS)
-      Future(Right(None))
-    } else {
-      cisConnector.getSubmittedCIS(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
-    }
+    getIncomeSource(excludedIncomeSources, CIS)(cisConnector.getSubmittedCIS(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid))))
+
   }
 
   def getStateBenefits(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                       (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[AllStateBenefitsData]]] = {
-    if (excludedIncomeSources.contains(STATE_BENEFITS)) {
-      shutteredIncomeSourceLog(STATE_BENEFITS)
-      Future(Right(None))
-    } else {
+
+    getIncomeSource(excludedIncomeSources, STATE_BENEFITS)(
       stateBenefitsConnector.getSubmittedStateBenefits(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
-    }
+    )
+
   }
 
   def getSavingsInterest(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                         (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[SavingsIncomeDataModel]]] = {
-    if (excludedIncomeSources.contains(INTEREST_SAVINGS)) {
-      shutteredIncomeSourceLog(INTEREST_SAVINGS)
-      Future(Right(None))
-    } else {
+
+    getIncomeSource(excludedIncomeSources, INTEREST_SAVINGS)(
       interestSavingsConnector.getSubmittedInterestSavings(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
-    }
+    )
+
   }
 
   def getGains(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
               (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[InsurancePoliciesModel]]] = {
-    if (excludedIncomeSources.contains(GAINS)) {
-      shutteredIncomeSourceLog(GAINS)
-      Future(Right(None))
-    } else {
-      gainsConnector.getSubmittedGains(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
-    }
+
+    getIncomeSource(excludedIncomeSources, GAINS)( gainsConnector.getSubmittedGains(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid))))
+
   }
 
   def getStockDividends(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
-                  (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[StockDividends]]] = {
+                       (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[StockDividends]]] = {
 
-    if (excludedIncomeSources.contains(STOCK_DIVIDENDS)) {
-      shutteredIncomeSourceLog(STOCK_DIVIDENDS)
-      Future(Right(None))
-    } else {
+    getIncomeSource(excludedIncomeSources, STOCK_DIVIDENDS)(
       stockDividendsConnector.getSubmittedStockDividends(nino, taxYear)(hc.withExtraHeaders(("mtditid", mtditid)))
-    }
+    )
+
   }
 
   private def shutteredIncomeSourceLog(source: String): Unit = {
