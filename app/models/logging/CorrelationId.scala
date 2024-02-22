@@ -21,7 +21,6 @@ import uk.gov.hmrc.http.HttpResponse
 
 import java.util.UUID
 
-
 object CorrelationId {
   val CorrelationIdHeaderKey = "CorrelationId"
 
@@ -30,7 +29,6 @@ object CorrelationId {
     .getOrElse(CorrelationId.generate())
 
   implicit class RequestHeaderOps(val value: RequestHeader) extends AnyVal {
-
     def withCorrelationId(): (RequestHeader, String) = {
       val correlationId = getOrGenerateCorrelationId(value)
 
@@ -64,7 +62,6 @@ object CorrelationId {
   implicit class HttpResponseOps(val value: HttpResponse) extends AnyVal {
     def correlationId: String =
       value.header(CorrelationIdHeaderKey).getOrElse("unknown")
-
   }
 
   private def generate(): String = UUID.randomUUID().toString
