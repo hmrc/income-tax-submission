@@ -19,9 +19,7 @@ package controllers
 import com.google.inject.Inject
 import common.IncomeSources._
 import controllers.predicates.AuthorisedAction
-import filters.CorrelationIdFilter.CorrelationIdHeaderKey
 import models.{APIErrorBodyModel, IncomeSources, RefreshIncomeSource}
-import org.slf4j.MDC
 import play.api.Logging
 import play.api.libs.json.{JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}

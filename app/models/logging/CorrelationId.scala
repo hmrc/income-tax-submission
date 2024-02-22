@@ -16,7 +16,6 @@
 
 package models.logging
 
-import filters.CorrelationIdFilter.CorrelationIdHeaderKey
 import play.api.mvc.{AnyContent, Request, RequestHeader, Result}
 import uk.gov.hmrc.http.HttpResponse
 
@@ -24,6 +23,8 @@ import java.util.UUID
 
 
 object CorrelationId {
+  val CorrelationIdHeaderKey = "CorrelationId"
+
   private def getOrGenerateCorrelationId(requestHeader: RequestHeader): String = requestHeader.headers
     .get(CorrelationIdHeaderKey)
     .getOrElse(CorrelationId.generate())

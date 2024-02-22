@@ -18,7 +18,7 @@ package filters
 
 import akka.stream.Materializer
 import filters.CorrelationIdFilter.addCorrelationIdToMdc
-import models.logging.CorrelationId.{RequestHeaderOps, RequestOps, ResultOps}
+import models.logging.CorrelationId.{CorrelationIdHeaderKey, RequestHeaderOps, RequestOps, ResultOps}
 import org.slf4j.MDC
 import play.api.mvc._
 
@@ -46,8 +46,6 @@ class CorrelationIdFilter @Inject()(implicit val mat: Materializer, ec: Executio
 }
 
 object CorrelationIdFilter {
-  val CorrelationIdHeaderKey = "CorrelationId"
-
   def clearCorrelationIdMdc(): Unit =
     MDC.remove(CorrelationIdHeaderKey)
 

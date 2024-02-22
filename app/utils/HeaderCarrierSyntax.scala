@@ -16,6 +16,7 @@
 
 package utils
 
+import filters.CorrelationIdFilter
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames}
 
 object HeaderCarrierSyntax {
@@ -35,7 +36,7 @@ object HeaderCarrierSyntax {
         HeaderNames.googleAnalyticUserId  -> hc.gaUserId,
         HeaderNames.deviceID              -> hc.deviceID,
         HeaderNames.akamaiReputation      -> hc.akamaiReputation.map(_.value),
-        "CorrelationId"                   -> maybeCorrelationId
+        CorrelationIdFilter.CorrelationIdHeaderKey                   -> maybeCorrelationId
       ).collect { case (k, Some(v)) => (k, v) }
     }
 
