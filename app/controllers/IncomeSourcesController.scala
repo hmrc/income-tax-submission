@@ -19,7 +19,9 @@ package controllers
 import com.google.inject.Inject
 import common.IncomeSources._
 import controllers.predicates.AuthorisedAction
+import filters.CorrelationIdFilter.CorrelationIdHeaderKey
 import models.{APIErrorBodyModel, IncomeSources, RefreshIncomeSource}
+import org.slf4j.MDC
 import play.api.Logging
 import play.api.libs.json.{JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -64,7 +66,6 @@ class IncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSource
   }
 
   def refreshIncomeSource(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
-
     user.body.asJson.map(_.validate[RefreshIncomeSource]) match {
       case Some(JsSuccess(RefreshIncomeSource(incomeSource), _)) =>
 

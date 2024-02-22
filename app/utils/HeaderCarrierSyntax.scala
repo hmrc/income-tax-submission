@@ -34,9 +34,15 @@ object HeaderCarrierSyntax {
         HeaderNames.googleAnalyticTokenId -> hc.gaToken,
         HeaderNames.googleAnalyticUserId  -> hc.gaUserId,
         HeaderNames.deviceID              -> hc.deviceID,
-        HeaderNames.akamaiReputation      -> hc.akamaiReputation.map(_.value)
+        HeaderNames.akamaiReputation      -> hc.akamaiReputation.map(_.value),
+        "CorrelationId"                   -> maybeCorrelationId
       ).collect { case (k, Some(v)) => (k, v) }
     }
+
+    def maybeCorrelationId: Option[String] =
+      hc.headers(List("CorrelationId")).map(_._2).headOption
+
+
   }
 
 }

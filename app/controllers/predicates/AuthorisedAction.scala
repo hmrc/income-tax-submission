@@ -17,6 +17,7 @@
 package controllers.predicates
 
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
+import filters.CorrelationIdFilter.addCorrelationIdToMdc
 import models.User
 import play.api.Logger
 import play.api.mvc.Results.Unauthorized
@@ -40,7 +41,8 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
 
   val unauthorized: Future[Result] = Future(Unauthorized)
 
-  def async(block: User[AnyContent] => Future[Result]): Action[AnyContent] = defaultActionBuilder.async { implicit request =>
+  def async(block: User[AnyContent] => Future[Result]): Action[AnyContent] = defaultActionBuilder.async { original =>
+    implicit val request: Request[AnyContent] = addCorrelationIdToMdc(original)
 
     implicit lazy val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 

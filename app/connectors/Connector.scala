@@ -17,21 +17,24 @@
 package connectors
 
 import com.typesafe.config.ConfigFactory
+import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HeaderCarrier.Config
 import utils.HeaderCarrierSyntax.HeaderCarrierOps
 
 import java.net.URL
 
-trait Connector {
+trait Connector extends Logging {
 
   private val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 
   private[connectors] def addHeadersToHeaderCarrier(url : String)(implicit hc: HeaderCarrier): HeaderCarrier = {
     val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
+    val correlationId = hc.maybeCorrelationId.map(id => "CorrelationId" -> id).toList
+    logger.debug(s"Preparing request for $url for correlationId=$correlationId")
 
-    if(isInternalHost) {
-      hc
+    if (isInternalHost) {
+      hc.withExtraHeaders(correlationId: _*)
     } else {
       hc.withExtraHeaders(hc.toExplicitHeaders: _*)
     }
