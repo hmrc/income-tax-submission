@@ -64,6 +64,7 @@ class IncomeSourcesController @Inject()(getIncomeSourcesService: GetIncomeSource
   }
 
   def refreshIncomeSource(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
+    
     user.body.asJson.map(_.validate[RefreshIncomeSource]) match {
       case Some(JsSuccess(RefreshIncomeSource(incomeSource), _)) =>
 

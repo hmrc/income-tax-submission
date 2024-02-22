@@ -24,14 +24,13 @@ import utils.HeaderCarrierSyntax.HeaderCarrierOps
 
 import java.net.URL
 
-trait Connector extends Logging {
+trait Connector {
 
   private val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 
   private[connectors] def addHeadersToHeaderCarrier(url : String)(implicit hc: HeaderCarrier): HeaderCarrier = {
     val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
     val correlationId = hc.maybeCorrelationId.map(id => "CorrelationId" -> id).toList
-    logger.debug(s"Preparing request for $url for correlationId=$correlationId")
 
     if (isInternalHost) {
       hc.withExtraHeaders(correlationId: _*)
