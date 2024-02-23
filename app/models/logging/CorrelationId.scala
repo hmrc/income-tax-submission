@@ -16,7 +16,7 @@
 
 package models.logging
 
-import play.api.mvc.{AnyContent, Request, RequestHeader, Result}
+import play.api.mvc.{Request, RequestHeader}
 
 import java.util.UUID
 
@@ -30,10 +30,7 @@ object CorrelationId {
   implicit class RequestHeaderOps(val value: RequestHeader) extends AnyVal {
     def withCorrelationId(): (RequestHeader, String) = {
       val correlationId = getOrGenerateCorrelationId(value)
-
-      val updatedRequest =
-        if (value.headers.hasHeader(CorrelationIdHeaderKey)) value
-        else value.withHeaders(value.headers.add(CorrelationIdHeaderKey -> correlationId))
+      val updatedRequest = value.withHeaders(value.headers.replace(CorrelationIdHeaderKey -> correlationId))
 
       (updatedRequest, correlationId)
     }
@@ -43,19 +40,10 @@ object CorrelationId {
   object RequestOps {
     def withCorrelationId[A](value: Request[A]): (Request[A], String) = {
       val correlationId = getOrGenerateCorrelationId(value)
-
-      val updatedRequest =
-        if (value.headers.hasHeader(CorrelationIdHeaderKey)) value
-        else value.withHeaders(value.headers.add(CorrelationIdHeaderKey -> correlationId))
+      val updatedRequest = value.withHeaders(value.headers.replace(CorrelationIdHeaderKey -> correlationId))
 
       (updatedRequest, correlationId)
     }
-  }
-
-  implicit class ResultOps(val value: Result) extends AnyVal {
-    def withCorrelationId(correlationId: String): Result =
-      if (value.header.headers.contains(CorrelationIdHeaderKey)) value
-      else value.withHeaders(CorrelationIdHeaderKey -> correlationId)
   }
 
   private def generate(): String = UUID.randomUUID().toString
