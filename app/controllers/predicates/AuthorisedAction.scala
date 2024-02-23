@@ -17,8 +17,8 @@
 package controllers.predicates
 
 import common.{EnrolmentIdentifiers, EnrolmentKeys}
-import filters.CorrelationIdFilter.addCorrelationIdToMdc
 import models.User
+import models.logging.CorrelationIdMdc.withEnrichedCorrelationId
 import play.api.Logger
 import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
@@ -42,27 +42,28 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
   val unauthorized: Future[Result] = Future(Unauthorized)
 
   def async(block: User[AnyContent] => Future[Result]): Action[AnyContent] = defaultActionBuilder.async { original =>
-    implicit val request: Request[AnyContent] = addCorrelationIdToMdc(original)
+    withEnrichedCorrelationId(original) { request =>
+      implicit lazy val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
-    implicit lazy val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+      request.headers.get("mtditid").fold {
+        logger.warn("[AuthorisedAction][async] - No MTDITID in the header. Returning unauthorised.")
+        unauthorized
+      }(
+        mtdItId =>
+          authorised().retrieve(affinityGroup) {
+            case Some(AffinityGroup.Agent) => agentAuthentication(block, mtdItId)(request, headerCarrier)
+            case _ => individualAuthentication(block, mtdItId)(request, headerCarrier)
+          } recover {
+            case _: NoActiveSession =>
+              logger.info(s"[AuthorisedAction][async] - No active session.")
+              Unauthorized
+            case _: AuthorisationException =>
+              logger.info(s"[AuthorisedAction][async] - User failed to authenticate")
+              Unauthorized
+          }
+      )
+    }
 
-    request.headers.get("mtditid").fold {
-      logger.warn("[AuthorisedAction][async] - No MTDITID in the header. Returning unauthorised.")
-      unauthorized
-    }(
-      mtdItId =>
-        authorised().retrieve(affinityGroup) {
-          case Some(AffinityGroup.Agent) => agentAuthentication(block, mtdItId)(request, headerCarrier)
-          case _ => individualAuthentication(block, mtdItId)(request, headerCarrier)
-        } recover {
-          case _: NoActiveSession =>
-            logger.info(s"[AuthorisedAction][async] - No active session.")
-            Unauthorized
-          case _: AuthorisationException =>
-            logger.info(s"[AuthorisedAction][async] - User failed to authenticate")
-            Unauthorized
-        }
-    )
   }
 
   val minimumConfidenceLevel: Int = ConfidenceLevel.L250.level

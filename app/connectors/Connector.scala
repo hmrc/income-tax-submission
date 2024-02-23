@@ -17,6 +17,7 @@
 package connectors
 
 import com.typesafe.config.ConfigFactory
+import models.logging.CorrelationId.CorrelationIdHeaderKey
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HeaderCarrier.Config
@@ -30,7 +31,7 @@ trait Connector {
 
   private[connectors] def addHeadersToHeaderCarrier(url : String)(implicit hc: HeaderCarrier): HeaderCarrier = {
     val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
-    val correlationId = hc.maybeCorrelationId.map(id => "CorrelationId" -> id).toList
+    val correlationId = hc.maybeCorrelationId.map(id => CorrelationIdHeaderKey -> id).toList
 
     if (isInternalHost) {
       hc.withExtraHeaders(correlationId: _*)
