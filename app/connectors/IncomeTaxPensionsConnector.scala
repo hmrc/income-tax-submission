@@ -25,12 +25,10 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class IncomeTaxPensionsConnector @Inject()(val http: HttpClient, val config: AppConfig)
-                                          (implicit ec: ExecutionContext) extends Connector with Logging {
+                                          (implicit ec: ExecutionContext) extends Connector {
 
   def getSubmittedPensions(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
     val submittedPensionsUrl: String = config.pensionsBaseUrl + s"/income-tax-pensions/income-tax/nino/$nino/sources?taxYear=$taxYear"
-
-    logger.info("test")
 
     http.GET[IncomeSourcesResponseModel](submittedPensionsUrl)(SubmittedPensionsHttpReads, addHeadersToHeaderCarrier(submittedPensionsUrl), ec)
   }
