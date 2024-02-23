@@ -28,7 +28,7 @@ object CorrelationIdMdc {
    *
    * It puts the correlationId to the the request header if it does not exist there already. It is send to downstream services.
    *
-   * It also puts the correlationId to the MDC context for logging purposes.
+   * It also puts the correlationId to the MDC context for logging purpose.
    */
   def withEnrichedCorrelationId[A, B](originalRequest: Request[A])(block: Request[A] => Future[B])(implicit ec: ExecutionContext): Future[B] = {
     val (updatedRequest, correlationId) = RequestOps.withCorrelationId(originalRequest)
