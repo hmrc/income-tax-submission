@@ -18,7 +18,6 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.SubmittedPensionsParser.{IncomeSourcesResponseModel, SubmittedPensionsHttpReads}
-import play.api.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject
