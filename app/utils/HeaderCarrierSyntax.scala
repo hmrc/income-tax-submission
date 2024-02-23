@@ -16,6 +16,7 @@
 
 package utils
 
+import models.logging.CorrelationId
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames}
 
 object HeaderCarrierSyntax {
@@ -24,19 +25,23 @@ object HeaderCarrierSyntax {
 
     def toExplicitHeaders: Seq[(String, String)] = {
       Seq(
-        HeaderNames.xRequestId            -> hc.requestId.map(_.value),
-        HeaderNames.xSessionId            -> hc.sessionId.map(_.value),
-        HeaderNames.xForwardedFor         -> hc.forwarded.map(_.value),
-        HeaderNames.xRequestChain         -> Some(hc.requestChain.value),
-        HeaderNames.authorisation         -> hc.authorization.map(_.value),
-        HeaderNames.trueClientIp          -> hc.trueClientIp,
-        HeaderNames.trueClientPort        -> hc.trueClientPort,
-        HeaderNames.googleAnalyticTokenId -> hc.gaToken,
-        HeaderNames.googleAnalyticUserId  -> hc.gaUserId,
-        HeaderNames.deviceID              -> hc.deviceID,
-        HeaderNames.akamaiReputation      -> hc.akamaiReputation.map(_.value)
+        HeaderNames.xRequestId               -> hc.requestId.map(_.value),
+        HeaderNames.xSessionId               -> hc.sessionId.map(_.value),
+        HeaderNames.xForwardedFor            -> hc.forwarded.map(_.value),
+        HeaderNames.xRequestChain            -> Some(hc.requestChain.value),
+        HeaderNames.authorisation            -> hc.authorization.map(_.value),
+        HeaderNames.trueClientIp             -> hc.trueClientIp,
+        HeaderNames.trueClientPort           -> hc.trueClientPort,
+        HeaderNames.googleAnalyticTokenId    -> hc.gaToken,
+        HeaderNames.googleAnalyticUserId     -> hc.gaUserId,
+        HeaderNames.deviceID                 -> hc.deviceID,
+        HeaderNames.akamaiReputation         -> hc.akamaiReputation.map(_.value),
+        CorrelationId.CorrelationIdHeaderKey -> maybeCorrelationId
       ).collect { case (k, Some(v)) => (k, v) }
     }
+
+    def maybeCorrelationId: Option[String] =
+      hc.headers(List(CorrelationId.CorrelationIdHeaderKey)).map(_._2).headOption
   }
 
 }
