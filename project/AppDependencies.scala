@@ -15,28 +15,29 @@
  */
 
 import play.core.PlayVersion.current
-import sbt._
+import sbt.*
 
 object AppDependencies {
 
   private val bootstrapPlay28Version = "7.22.0"
-  private val mongoVersion = "1.3.0"
+  private val mongoVersion           = "1.3.0"
 
   val compile: Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"                   %% "bootstrap-backend-play-28"  % bootstrapPlay28Version,
-    "uk.gov.hmrc.mongo"             %% "hmrc-mongo-play-28"         % mongoVersion,
-    "com.fasterxml.jackson.module"  %%  "jackson-module-scala"      % "2.14.2"
+    "uk.gov.hmrc"                  %% "bootstrap-backend-play-28" % bootstrapPlay28Version,
+    "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-28"        % mongoVersion,
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.14.2",
+    "org.typelevel"                %% "cats-core"                 % "2.9.0",
   )
 
   val test: Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"                   %%  "bootstrap-test-play-28"     % bootstrapPlay28Version  % Test,
-    "org.scalatest"                 %%  "scalatest"                  % "3.2.15"                % Test,
-    "com.typesafe.play"             %%  "play-test"                  % current                 % Test,
-    "org.pegdown"                   %   "pegdown"                    % "1.6.0"                 % "test, it",
-    "com.vladsch.flexmark"          %   "flexmark-all"               % "0.62.2"                % "test, it",
-    "org.scalatestplus.play"        %%  "scalatestplus-play"         % "5.1.0"                 % "test, it",
-    "com.github.tomakehurst"        %   "wiremock-jre8"              % "2.35.0"                % "test, it",
-    "org.scalamock"                 %%  "scalamock"                  % "5.2.0"                 % Test,
-    "uk.gov.hmrc.mongo"             %%  "hmrc-mongo-test-play-28"    % mongoVersion                % "test, it"
+    "uk.gov.hmrc"            %% "bootstrap-test-play-28"  % bootstrapPlay28Version % Test,
+    "org.scalatest"          %% "scalatest"               % "3.2.15"               % Test,
+    "com.typesafe.play"      %% "play-test"               % current                % Test,
+    "org.pegdown"             % "pegdown"                 % "1.6.0"                % "test, it",
+    "com.vladsch.flexmark"    % "flexmark-all"            % "0.62.2"               % "test, it",
+    "org.scalatestplus.play" %% "scalatestplus-play"      % "5.1.0"                % "test, it",
+    "com.github.tomakehurst"  % "wiremock-jre8"           % "2.35.0"               % "test, it",
+    "org.scalamock"          %% "scalamock"               % "5.2.0"                % Test,
+    "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28" % mongoVersion           % "test, it"
   )
 }
