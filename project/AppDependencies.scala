@@ -15,7 +15,7 @@
  */
 
 import play.core.PlayVersion.current
-import sbt.*
+import sbt._
 
 object AppDependencies {
 
@@ -26,7 +26,7 @@ object AppDependencies {
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-28" % bootstrapPlay28Version,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-28"        % mongoVersion,
     "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.14.2",
-    "org.typelevel"                %% "cats-core"                 % "2.9.0",
+    "org.typelevel"                %% "cats-core"                 % "2.9.0"
   )
 
   val test: Seq[ModuleID] = Seq(
