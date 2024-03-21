@@ -23,7 +23,6 @@ import helpers.IntegrationSpec
 import models.User
 import models.mongo.{DatabaseError, EncryptionDecryptionError, UserData}
 import org.bson.conversions.Bson
-import org.joda.time.DateTime
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.scalatest.BeforeAndAfterAll
@@ -33,6 +32,7 @@ import services.EncryptionService
 import uk.gov.hmrc.mongo.MongoUtils
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 
+import java.time.Instant
 import scala.concurrent.Future
 
 class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
@@ -112,8 +112,8 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       count mustBe 1
       val data: Either[DatabaseError, Option[UserData]] =
         await(repo.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
-      data.toOption.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
-        aUserData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
+      data.toOption.get.map(_.copy(lastUpdated = Instant.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
+        aUserData.copy(lastUpdated = Instant.parse("2021-05-17T14:01:52.634Z"))
       )
     }
 
@@ -123,8 +123,8 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       res mustBe Right(())
       count mustBe 1
       val data = await(repo.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
-      data.toOption.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
-        aUserData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
+      data.toOption.get.map(_.copy(lastUpdated = Instant.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
+        aUserData.copy(lastUpdated = Instant.parse("2021-05-17T14:01:52.634Z"))
       )
     }
     "update a document in the collection" in {
@@ -134,8 +134,8 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       res mustBe Right(())
       count mustBe 1
       val data = await(repo.find(User(aUserData.mtdItId, None, aUserData.nino, aUserData.sessionId), aUserData.taxYear))
-      data.toOption.get.map(_.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
-        newUserData.copy(lastUpdated = DateTime.parse("2021-05-17T14:01:52.634Z"))
+      data.toOption.get.map(_.copy(lastUpdated = Instant.parse("2021-05-17T14:01:52.634Z"))) mustBe Some(
+        newUserData.copy(lastUpdated = Instant.parse("2021-05-17T14:01:52.634Z"))
       )
     }
     "insert a new document to the collection if the sessionId is different" in {

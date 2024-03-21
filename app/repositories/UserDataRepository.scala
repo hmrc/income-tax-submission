@@ -19,17 +19,16 @@ package repositories
 import com.mongodb.client.model.ReturnDocument
 import models.User
 import models.mongo._
-import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{FindOneAndReplaceOptions, FindOneAndUpdateOptions}
 import uk.gov.hmrc.mongo.play.json.Codecs.{logger, toBson}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
+import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Left, Try}
 
@@ -67,7 +66,7 @@ trait UserDataRepository[C <: ExclusionUserDataTemplate, V] {
 
     val userData = collection.findOneAndUpdate(
       filter = filter(user.nino, taxYear),
-      update = set("lastUpdated", toBson(DateTime.now(DateTimeZone.UTC))(MongoJodaFormats.dateTimeWrites)),
+      update = set("lastUpdated", toBson(Instant.now())),
       options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
     ).toFutureOption().map {
       case Some(data) => Right(Some(data))
@@ -90,7 +89,6 @@ trait UserDataRepository[C <: ExclusionUserDataTemplate, V] {
           case Right(value) => Right(value)
         }
     }
-
   }
 
   def update(userData: V): Future[Either[DatabaseError, Boolean]] = {
@@ -130,6 +128,5 @@ trait UserDataRepository[C <: ExclusionUserDataTemplate, V] {
     pagerDutyLog(ENCRYPTION_DECRYPTION_ERROR, s"$startOfMessage ${exception.getMessage}")
     Left(EncryptionDecryptionError(exception.getMessage))
   }
-
 
 }

@@ -23,9 +23,9 @@ import models.gains.{EncryptedInsurancePoliciesModel, InsurancePoliciesModel}
 import models.gifts.{EncryptedGiftAid, GiftAid}
 import models.pensions.{EncryptedPensions, Pensions}
 import models.statebenefits.{AllStateBenefitsData, EncryptedAllStateBenefitsData}
-import org.joda.time.{DateTime, DateTimeZone}
-import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import play.api.libs.json.{Json, OFormat}
+
+import java.time.Instant
 
 case class UserData(sessionId: String,
                     mtdItId: String,
@@ -41,17 +41,14 @@ case class UserData(sessionId: String,
                     interestSavings: Option[SavingsIncomeDataModel] = None,
                     gains: Option[InsurancePoliciesModel] = None,
                     stockDividends: Option[StockDividends] = None,
-                    lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)) {
+                    lastUpdated: Instant = Instant.now()) {
 
   def toIncomeSourcesResponseModel: IncomeSources = {
     IncomeSources(None, dividends, interest, giftAid, employment, pensions, cis, stateBenefits, interestSavings, gains, stockDividends)
   }
 }
 
-object UserData extends MongoJodaFormats {
-
-  implicit val mongoJodaDateTimeFormats: Format[DateTime] = dateTimeFormat
-
+object UserData {
   implicit lazy val formats: OFormat[UserData] = Json.format[UserData]
 }
 
@@ -69,11 +66,8 @@ case class EncryptedUserData(sessionId: String,
                              interestSavings: Option[EncryptedSavingsIncomeDataModel] = None,
                              gains: Option[EncryptedInsurancePoliciesModel] = None,
                              stockDividends: Option[EncryptedStockDividends] = None,
-                             lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC))
+                             lastUpdated: Instant = Instant.now())
 
-object EncryptedUserData extends MongoJodaFormats {
-
-  implicit val mongoJodaDateTimeFormats: Format[DateTime] = dateTimeFormat
-
+object EncryptedUserData {
   implicit lazy val formats: OFormat[EncryptedUserData] = Json.format[EncryptedUserData]
 }

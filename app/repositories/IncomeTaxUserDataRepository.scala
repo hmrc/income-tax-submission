@@ -16,15 +16,11 @@
 
 package repositories
 
-import java.util.concurrent.TimeUnit
-
 import com.mongodb.client.model.ReturnDocument
 import com.mongodb.client.model.Updates.set
 import config.AppConfig
-import javax.inject.{Inject, Singleton}
 import models.User
 import models.mongo._
-import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.Indexes.{ascending, compoundIndex}
@@ -34,10 +30,12 @@ import services.EncryptionService
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 import utils.PagerDutyHelper.PagerDutyKeys.{ENCRYPTION_DECRYPTION_ERROR, FAILED_TO_FIND_DATA, FAILED_TO_UPDATE_DATA}
 import utils.PagerDutyHelper.pagerDutyLog
 
+import java.time.Instant
+import java.util.concurrent.TimeUnit
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -83,7 +81,7 @@ class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
 
     val findResult = collection.findOneAndUpdate(
       filter = filter(user.sessionId, user.mtditid, user.nino, taxYear),
-      update = set("lastUpdated", toBson(DateTime.now(DateTimeZone.UTC))(MongoJodaFormats.dateTimeWrites)),
+      update = set("lastUpdated", toBson(Instant.now())),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).toFutureOption().map(Right(_)).recover {
       case exception: Exception =>
@@ -117,7 +115,6 @@ class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
 }
 
 trait IncomeTaxUserDataRepository {
-
   def find[T](user: User[T], taxYear: Int): Future[Either[DatabaseError, Option[UserData]]]
   def update(userData: UserData): Future[Either[DatabaseError, Unit]]
 }
