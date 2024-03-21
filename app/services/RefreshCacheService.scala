@@ -37,8 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesService,
-                                    incomeTaxUserDataService: IncomeTaxUserDataService,
-                                    implicit private val appConfig: AppConfig) extends Logging {
+                                    incomeTaxUserDataService: IncomeTaxUserDataService) extends Logging {
 
   def getLatestDataAndRefreshCache(taxYear: Int, incomeSource: String)
                                   (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
@@ -59,8 +58,8 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
     }
   }
 
-  private def getLatestDataForIncomeSource[Response](taxYear: Int, incomeSource: String)
-                                                    (implicit user: User[_], hc: HeaderCarrier): Future[Either[APIErrorModel, Option[Any]]] = {
+  private def getLatestDataForIncomeSource(taxYear: Int, incomeSource: String)
+                                          (implicit user: User[_], hc: HeaderCarrier): Future[Either[APIErrorModel, Option[Any]]] = {
     val nino = user.nino
 
     incomeSource match {
@@ -109,7 +108,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
   }
 
   private def updateCacheBasedOnNewData[A](taxYear: Int, incomeSource: String, newData: Option[A])
-                                          (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
+                                          (implicit user: User[_], ec: ExecutionContext): Future[Result] = {
 
     incomeTaxUserDataService.findUserData(user, taxYear).flatMap {
       case Right(None) | Right(Some(IncomeSources(None, None, None, None, None, None, None, None, None, None, None))) =>

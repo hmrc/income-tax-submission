@@ -16,7 +16,7 @@
 
 package services
 
-import cats.implicits.{catsSyntaxOptionId, none}
+import cats.implicits.{catsSyntaxOptionId, none, toBifunctorOps}
 import common.IncomeSources._
 import connectors._
 import models._
@@ -98,17 +98,23 @@ class GetIncomeSourcesService @Inject() (dividendsConnector: IncomeTaxDividendsC
 
   private def handlePensionsCall(pensionsCall: Either[APIErrorModel, Option[Pensions]],
                                  employmentCall: Either[APIErrorModel, Option[AllEmploymentData]]): Option[Pensions] = {
-    def handleEmploymentForPensions: Option[EmploymentPensions] =
+    def handleEmployment: Option[EmploymentPensions] =
       employmentCall.fold(_ => none[EmploymentPensions], _.map(_.buildEmploymentPensions()))
 
-    pensionsCall match {
-      case Left(_) => Pensions.empty.some
-
-      case Right(maybePensions) =>
+    pensionsCall
+      .map { maybePensions =>
         maybePensions
-          .map(_.copy(employmentPensions = handleEmploymentForPensions))
-          .orElse(Pensions.empty.copy(employmentPensions = handleEmploymentForPensions).some)
-    }
+          .map(_.copy(employmentPensions = handleEmployment))
+          .orElse(
+            handleEmployment.fold(ifEmpty = none[Pensions]) { employment =>
+              Pensions.empty
+                .copy(employmentPensions = employment.some)
+                .some
+            }
+          )
+      }
+      .leftMap(_ => Pensions.empty.some)
+      .merge
   }
 
   def getGiftAid(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())(implicit
