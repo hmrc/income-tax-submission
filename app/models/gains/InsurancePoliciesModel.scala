@@ -28,7 +28,7 @@ case class InsurancePoliciesModel(submittedOn: Option[String],
                                   foreign: Option[Seq[ForeignModel]])
 
 object InsurancePoliciesModel {
-  val empty: InsurancePoliciesModel = InsurancePoliciesModel("", Seq.empty, None, None, None, None)
+  val empty: InsurancePoliciesModel = InsurancePoliciesModel(None, None, None, None, None, None)
 
   implicit val formats: OFormat[InsurancePoliciesModel] = Json.format[InsurancePoliciesModel]
 }
