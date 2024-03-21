@@ -36,6 +36,7 @@ case class CISSource(totalDeductionAmount: Option[BigDecimal],
 }
 
 object CISSource {
+  val empty: CISSource = CISSource(None, None, None, Seq.empty)
   implicit val format: OFormat[CISSource] = Json.format[CISSource]
 }
 

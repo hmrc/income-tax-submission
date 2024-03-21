@@ -83,16 +83,16 @@ class GetIncomeSourcesService @Inject() (dividendsConnector: IncomeTaxDividendsC
             handleUnavailableService(common.IncomeSources.GAINS, gains),
             handleUnavailableService(common.IncomeSources.STOCK_DIVIDENDS, stockDividends)
           ).filter(elem => elem._1 != "remove")),
-        dividends.fold(_ => Some(Dividends(None, None)), data => data),
-        interest.fold(_ => Some(Seq(Interest("", "", Some(0), Some(0)))), data => data),
-        giftAid.fold(_ => Some(GiftAid(None, None)), data => data),
-        employment.fold(_ => Some(AllEmploymentData(Seq.empty, None, Seq.empty, None, None)), data => data.map(_.excludePensionIncome())),
+        dividends.leftMap(_ => Dividends.empty.some).merge,
+        interest.leftMap(_ => Seq(Interest.empty).some).merge,
+        giftAid.leftMap(_ => GiftAid.empty.some).merge,
+        employment.fold(_ => AllEmploymentData.empty.some, data => data.map(_.excludePensionIncome())),
         handlePensionsCall(pensions, employment),
-        cis.fold(_ => Some(AllCISDeductions(Some(CISSource(None, None, None, Seq.empty)), None)), data => data),
-        stateBenefits.fold(_ => Some(AllStateBenefitsData(None)), data => data),
-        interestSavings.fold(_ => Some(SavingsIncomeDataModel(None, None, None)), data => data),
-        gains.fold(_ => Some(InsurancePoliciesModel("", Seq.empty, None, None, None, None)), data => data),
-        stockDividends.fold(_ => Some(StockDividends(None, None, None, None)), data => data)
+        cis.fold(_ => Some(AllCISDeductions(Some(CISSource.empty), None)), data => data),
+        stateBenefits.leftMap(_ => AllStateBenefitsData.empty.some).merge,
+        interestSavings.leftMap(_ => SavingsIncomeDataModel.empty.some).merge,
+        gains.leftMap(_ => InsurancePoliciesModel.empty.some).merge,
+        stockDividends.leftMap(_ => StockDividends.empty.some).merge
       )
     )
 

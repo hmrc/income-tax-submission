@@ -23,6 +23,8 @@ case class Dividends(ukDividends: Option[BigDecimal] = None, otherUkDividends: O
 
 object Dividends {
   implicit val formats: OFormat[Dividends] = Json.format[Dividends]
+
+  val empty: Dividends = Dividends(None, None)
 }
 
 case class EncryptedDividends(ukDividends: Option[EncryptedValue] = None, otherUkDividends: Option[EncryptedValue] = None)

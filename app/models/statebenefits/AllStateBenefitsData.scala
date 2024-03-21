@@ -31,6 +31,7 @@ case class AllStateBenefitsData(stateBenefitsData: Option[StateBenefitsData],
 }
 
 object AllStateBenefitsData {
+  val empty: AllStateBenefitsData = AllStateBenefitsData(None, None)
 
   implicit val allStateBenefitsDataWrites: OWrites[AllStateBenefitsData] = (data: AllStateBenefitsData) => {
     jsonObjNoNulls(

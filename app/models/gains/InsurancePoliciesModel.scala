@@ -16,16 +16,7 @@
 
 package models.gains
 
-import models.{
-  CapitalRedemptionModel,
-  EncryptedCapitalRedemptionModel,
-  EncryptedForeignModel,
-  EncryptedLifeInsuranceModel,
-  EncryptedVoidedIsaModel,
-  ForeignModel,
-  LifeInsuranceModel,
-  VoidedIsaModel
-}
+import models._
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
 
@@ -37,6 +28,8 @@ case class InsurancePoliciesModel(submittedOn: String,
                                   foreign: Option[Seq[ForeignModel]])
 
 object InsurancePoliciesModel {
+  val empty: InsurancePoliciesModel = InsurancePoliciesModel("", Seq.empty, None, None, None, None)
+
   implicit val formats: OFormat[InsurancePoliciesModel] = Json.format[InsurancePoliciesModel]
 }
 
