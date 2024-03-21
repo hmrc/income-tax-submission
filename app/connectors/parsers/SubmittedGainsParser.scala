@@ -37,7 +37,7 @@ object SubmittedGainsParser extends APIParser with Logging {
           response.json.validate[InsurancePoliciesModel].fold[InsurancePoliciesResponseModel](
             _ => badSuccessJsonFromAPI,
             {
-              case InsurancePoliciesModel("", Seq(), None, None, None, None) => Right(None)
+              case InsurancePoliciesModel(None, None, None, None, None, None) => Right(None)
               case parsedModel => Right(Some(parsedModel))
             }
           )

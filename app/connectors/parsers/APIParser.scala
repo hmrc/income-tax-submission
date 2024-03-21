@@ -28,7 +28,8 @@ trait APIParser {
   val service: String
 
   def logMessage(response: HttpResponse): String = {
-    s"[$parserName][read] Received ${response.status} from $service API. Body:${response.body}"
+    val correlationId = response.headers.getOrElse("X-Correlation-Id", "No correlation ID in response.")
+    s"[$parserName][read] Received ${response.status} from $service API. Correlation Id: $correlationId."
   }
 
   def badSuccessJsonFromAPI[Response]: Either[APIErrorModel, Response] = {

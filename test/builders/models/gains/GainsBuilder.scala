@@ -27,8 +27,8 @@ import models.gains.InsurancePoliciesModel
 object GainsBuilder {
 
   val anGains: InsurancePoliciesModel = InsurancePoliciesModel(
-    submittedOn = "2023-01-04T05:01:01Z",
-    lifeInsurance = Seq(aLifeInsurance),
+    submittedOn = Some("2023-01-04T05:01:01Z"),
+    lifeInsurance = Some(Seq(aLifeInsurance)),
     capitalRedemption = Some(Seq(aCapitalRedemption)),
     foreign = Some(Seq(aForeign)),
     lifeAnnuity = Some(Seq(aLifeAnnuity)),

@@ -36,22 +36,14 @@ class APIParserSpec extends TestUtils {
                        |{"code":"INTERNAL_SERVER_ERROR","reason":"The service is currently facing issues."}]}""".stripMargin)): HttpResponse = HttpResponse(
     INTERNAL_SERVER_ERROR,
     json,
-    Map("CorrelationId" -> Seq("1234645654645"))
+    Map("X-Correlation-Id" -> Seq("1234645654645"))
   )
 
   "FakeParser" should {
     "log the correct message" in {
       val result = FakeParser.logMessage(httpResponse())
       result mustBe
-        """[TestParser][read] Received 500 from service API. Body:{
-          |  "failures" : [ {
-          |    "code" : "SERVICE_UNAVAILABLE",
-          |    "reason" : "The service is currently unavailable"
-          |  }, {
-          |    "code" : "INTERNAL_SERVER_ERROR",
-          |    "reason" : "The service is currently facing issues."
-          |  } ]
-          |}""".stripMargin
+        """[TestParser][read] Received 500 from service API. Correlation Id: List(1234645654645).""".stripMargin
     }
     "return the the correct error" in {
       val result = FakeParser.badSuccessJsonFromAPI

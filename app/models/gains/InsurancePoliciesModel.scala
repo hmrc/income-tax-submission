@@ -20,8 +20,8 @@ import models._
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
 
-case class InsurancePoliciesModel(submittedOn: String,
-                                  lifeInsurance: Seq[LifeInsuranceModel],
+case class InsurancePoliciesModel(submittedOn: Option[String],
+                                  lifeInsurance: Option[Seq[LifeInsuranceModel]],
                                   capitalRedemption: Option[Seq[CapitalRedemptionModel]],
                                   lifeAnnuity: Option[Seq[LifeAnnuityModel]],
                                   voidedIsa: Option[Seq[VoidedIsaModel]],
@@ -33,8 +33,8 @@ object InsurancePoliciesModel {
   implicit val formats: OFormat[InsurancePoliciesModel] = Json.format[InsurancePoliciesModel]
 }
 
-case class EncryptedInsurancePoliciesModel(submittedOn: EncryptedValue,
-                                           lifeInsurance: Seq[EncryptedLifeInsuranceModel],
+case class EncryptedInsurancePoliciesModel(submittedOn: Option[EncryptedValue],
+                                           lifeInsurance: Option[Seq[EncryptedLifeInsuranceModel]],
                                            capitalRedemption: Option[Seq[EncryptedCapitalRedemptionModel]],
                                            lifeAnnuity: Option[Seq[EncryptedLifeAnnuityModel]],
                                            voidedIsa: Option[Seq[EncryptedVoidedIsaModel]],

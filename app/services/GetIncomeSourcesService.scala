@@ -48,15 +48,33 @@ class GetIncomeSourcesService @Inject() (dividendsConnector: IncomeTaxDividendsC
 
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSources]
 
-  private def handleUnavailableService(service: String, data: Either[APIErrorModel, _]): (String, APIErrorBody) =
+  private def handleUnavailableService(service: String, data: Either[APIErrorModel, _])(implicit hc: HeaderCarrier): (String, APIErrorBody) = {
+    val correlationId = hc.extraHeaders.find(_._1 == "X-Correlation-Id")
     data.fold(
-      error => (service, error.body),
+      error => {
+        logger.error(
+          s"[GetIncomeSourcesService][handleUnavailableService] $service has responded with status: ${error.status} with correlation id: $correlationId"
+        )
+        error.toJson
+          .validate[APIErrorBodyModel]
+          .fold(
+            _ => {
+              logger.error(
+                s"[GetIncomeSourcesService][handleUnavailableService] Error Json validation failed: ${error.body} with correlation id: $correlationId")
+              (service, APIErrorBodyModel("INTERNAL_SERVER_ERROR", APIErrorBodyModel.parsingError.reason))
+            },
+            valid => {
+              logger.info(s"[GetIncomeSourcesService][handleUnavailableService] Passed validation, response: $valid")
+              (service, valid)
+            }
+          )
+      },
       _ => ("remove", APIErrorModel(0, APIErrorBodyModel.parsingError).body)
     )
+  }
 
   def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())(implicit
       hc: HeaderCarrier): Future[IncomeSourceResponse] =
-    // TODO: Create more .empty methods to clean this up
     for {
       dividends       <- getDividends(nino, taxYear, mtditid, excludedIncomeSources)
       interest        <- getInterest(nino, taxYear, mtditid, excludedIncomeSources)
