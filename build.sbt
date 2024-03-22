@@ -6,7 +6,7 @@ ThisBuild / scalaVersion := "2.13.12"
 
 val appName = "income-tax-submission"
 
-lazy val coverageSettings: Seq[Setting[_]] = {
+lazy val coverageSettings: Seq[Setting[?]] = {
 
   val excludedPackages = Seq(
     "<empty>",
@@ -40,11 +40,11 @@ lazy val microservice = Project(appName, file("."))
   .settings(PlayKeys.playDefaultPort := 9304)
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    scalacOptions += "-Wconf:cat=unused-imports&src=routes/.*:s"
+    scalacOptions += "-Wconf:cat=unused&src=.*routes.*:s"
   )
   .configs(Test)
   .settings(resolvers += Resolver.jcenterRepo)
-  .settings(coverageSettings: _*)
+  .settings(coverageSettings *)
 
 lazy val it = project
   .enablePlugins(PlayScala)
