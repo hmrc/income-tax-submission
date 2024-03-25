@@ -33,7 +33,6 @@ class MockAppConfig(isEncrypted: Boolean = true) extends AppConfig with MockFact
   override val additionalInfoBaseUrl: String = "http://localhost:11111"
 
   override val auditingEnabled: Boolean = true
-  override val graphiteHost: String = "/graphite"
 
   override lazy val encryptionKey: String = "encryptionKey12345"
   override lazy val mongoTTL: Int = 1550
