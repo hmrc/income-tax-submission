@@ -46,7 +46,7 @@ class RefreshCacheServiceSpec extends TestUtils {
   private val getIncomeSourcesService = mock[GetIncomeSourcesService]
   private val incomeTaxUserDataService = mock[IncomeTaxUserDataService]
 
-  private val underTest = new RefreshCacheService(getIncomeSourcesService, incomeTaxUserDataService, mockAppConfig)
+  private val underTest = new RefreshCacheService(getIncomeSourcesService, incomeTaxUserDataService)
 
   ".getLatestDataAndRefreshCache" should {
     "return an error when get call errors" in {
