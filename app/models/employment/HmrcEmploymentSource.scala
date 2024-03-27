@@ -16,7 +16,7 @@
 
 package models.employment
 
-import org.joda.time.DateTime
+import java.time.Instant
 import play.api.libs.json.{Format, Json, OFormat}
 import play.api.Logging
 import uk.gov.hmrc.crypto.EncryptedValue
@@ -38,9 +38,9 @@ case class HmrcEmploymentSource(employmentId: String,
   //scalastyle:on
 
 
-  private def parseDate(submittedOn: String): Option[DateTime] = {
+  private def parseDate(submittedOn: String): Option[Instant] = {
     try {
-      Some(DateTime.parse(submittedOn))
+      Some(Instant.parse(submittedOn))
     } catch {
       case e: Exception =>
         logger.error(s"[HmrcEmploymentSource][parseDate] Couldn't parse submitted on to DateTime - ${e.getMessage}")
@@ -56,8 +56,8 @@ case class HmrcEmploymentSource(employmentId: String,
       case (None, Some(customer)) => Some(customer)
       case (Some(hmrc), Some(customer)) =>
 
-        val hmrcSubmittedOn: Option[DateTime] = hmrc.employmentData.map(_.submittedOn).flatMap(parseDate)
-        val customerSubmittedOn: Option[DateTime] = customer.employmentData.map(_.submittedOn).flatMap(parseDate)
+        val hmrcSubmittedOn: Option[Instant] = hmrc.employmentData.map(_.submittedOn).flatMap(parseDate)
+        val customerSubmittedOn: Option[Instant] = customer.employmentData.map(_.submittedOn).flatMap(parseDate)
 
         Some((hmrcSubmittedOn,customerSubmittedOn) match {
           case (Some(hmrcSubmittedOn), Some(customerSubmittedOn)) => if(hmrcSubmittedOn.isAfter(customerSubmittedOn)) hmrc else customer

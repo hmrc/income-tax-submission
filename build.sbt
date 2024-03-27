@@ -1,10 +1,12 @@
+import scoverage.ScoverageKeys
+import uk.gov.hmrc.DefaultBuildSettings
 
-import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.12"
 
 val appName = "income-tax-submission"
 
-lazy val coverageSettings: Seq[Setting[_]] = {
-  import scoverage.ScoverageKeys
+lazy val coverageSettings: Seq[Setting[?]] = {
 
   val excludedPackages = Seq(
     "<empty>",
@@ -32,21 +34,21 @@ lazy val coverageSettings: Seq[Setting[_]] = {
 }
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
+  .enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
   .settings(PlayKeys.playDefaultPort := 9304)
   .settings(
-    majorVersion := 0,
-    scalaVersion := "2.13.10",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    // To resolve a bug with version 2.x.x of the scoverage plugin - https://github.com/sbt/sbt/issues/6997
-    libraryDependencySchemes ++= Seq("org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always),
-    scalacOptions += "-Wconf:src=routes/.*:s"
+    scalacOptions += "-Wconf:cat=unused&src=.*routes.*:s"
   )
-  .configs(IntegrationTest extend Test)
-  .settings(integrationTestSettings(): _*)
+  .configs(Test)
   .settings(resolvers += Resolver.jcenterRepo)
-  .settings(coverageSettings: _*)
+  .settings(coverageSettings *)
 
+lazy val it = project
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
+  .settings(DefaultBuildSettings.itSettings())
 
+addCommandAlias("runAllChecks", "clean;compile;scalastyle;coverage;test;it/test;coverageReport")

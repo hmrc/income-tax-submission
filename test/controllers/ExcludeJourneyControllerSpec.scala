@@ -19,8 +19,7 @@ package controllers
 import common.IncomeSources._
 import controllers.predicates.AuthorisedAction
 import models.mongo.{DatabaseError, ExclusionUserDataModel, MongoError}
-import models.{APIErrorBodyModel, APIErrorModel, ExcludeJourneyModel, GetExclusionsDataModel, User}
-import org.joda.time.{DateTime, DateTimeZone}
+import models._
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsEmpty
@@ -29,6 +28,7 @@ import services.ExcludeJourneyService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
+import java.time.Instant
 import scala.concurrent.Future
 
 class ExcludeJourneyControllerSpec extends TestUtils {
@@ -274,20 +274,28 @@ class ExcludeJourneyControllerSpec extends TestUtils {
             CIS
           )))
 
+        val lastUpdated = Instant.now()
+
         val findData = ExclusionUserDataModel(
-          nino, taxYear, Seq(
+          nino,
+          taxYear,
+          Seq(
             ExcludeJourneyModel(INTEREST, None),
             ExcludeJourneyModel(CIS, None),
             ExcludeJourneyModel(GIFT_AID, None),
             ExcludeJourneyModel(DIVIDENDS, None)
-          )
+          ),
+          lastUpdated
         )
 
         val expectedInputData = ExclusionUserDataModel(
-          nino, taxYear, Seq(
+          nino,
+          taxYear,
+          Seq(
             ExcludeJourneyModel(GIFT_AID, None),
             ExcludeJourneyModel(DIVIDENDS, None)
-          )
+          ),
+          lastUpdated
         )
 
         val result = {
@@ -345,7 +353,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
 
       "the create/update database action returns an error" in {
 
-        val dt = DateTime.now(DateTimeZone.UTC)
+        val dt = Instant.now()
         lazy val request = FakeRequest("POST", s"/income-tax-submission-service/income-tax/nino/AA000000A/sources/clear-excluded-journeys/$taxYear")
           .withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
           .withJsonBody(Json.obj("journeys" -> Json.arr(

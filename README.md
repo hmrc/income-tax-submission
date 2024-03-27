@@ -7,18 +7,26 @@ This repository is for orchestrating session setup to gather a customer's data f
 
 You will need to have the following:
 
-- Installed/configured [service manager](https://github.com/hmrc/service-manager).
+- Installed/configured [service manager v2](https://github.com/hmrc/sm2).
 
 The service manager profile for this service is:
 
-    sm --start INCOME_TAX_SUBMISSION
+    sm2 --start INCOME_TAX_SUBMISSION
 
 Run the following command to start the remaining services locally:
 
     sudo mongodb (If not already running)
-    sm --start INCOME_TAX_SUBMISSION_ALL -r
+    sm2 --start INCOME_TAX_SUBMISSION_ALL -r
 
 This service runs on port:  `localhost:9304`
+
+### Running Tests
+
+- Run Unit Tests:  `sbt test`
+- Run Integration Tests: `sbt it/test`
+- Run Unit and Integration Tests: `sbt test it/test`
+- Run Unit and Integration Tests with coverage report: `sbt runAllChecks`<br/>
+  which runs `clean compile scalastyle coverage test it/test coverageReport`
 
 ### income-tax-submission endpoints
 
@@ -48,36 +56,30 @@ For more information on the data retrieved from each of the income sources click
 
 ### In-Year
 
-| Nino | Income sources data | Source |
-| --- | --- | --- |
-| AA000001A | Dividends user |  |
-| AA000003A | Interest and dividends data |  |
-| AA123459A | All income sources user | HMRC-Held|
-| AA637489D | Gift aid user |   |
-| AA133742A | Single employment - Employment details, benefits and expenses | HMRC-Held |
-| BB444444A | Multiple employments - Employment details, benefits and expenses  | HMRC-Held |
-| AA370773A | Multiple employments - `occPen` set to true   |HMRC-Held  |
-| AC150000B | CIS User with multiple CIS deductions | Contractor  |
-| AA370343B | User with pension reliefs, pension charges and state benefits |   |
-
-
+| Nino      | Income sources data                                             | Source     |
+|-----------|-----------------------------------------------------------------|------------|
+| AA000001A | Dividends user                                                  |            |
+| AA000003A | Interest and dividends data                                     |            |
+| AA123459A | All income sources user                                         | HMRC-Held  |
+| AA637489D | Gift aid user                                                   |            |
+| AA133742A | Single employment - Employment details, benefits and expenses    | HMRC-Held  |
+| BB444444A | Multiple employments - Employment details, benefits and expenses | HMRC-Held  |
+| AA370773A | Multiple employments - `occPen` set to true                     | HMRC-Held  |
+| AC150000B | CIS User with multiple CIS deductions                           | Contractor |
+| AA370343B | User with pension reliefs, pension charges and state benefits    |            |
 
 ### End of Year
 
-| Nino | Income sources data | Source |
-| --- | --- | --- |
-| AA123459A | User with data for all income sources | HMRC-Held, Customer |
-| AA133742A | Single employment - Employment details and benefits   | HMRC-Held, Customer |
-| BB444444A | Multiple employments - Employment details, benefits and expenses  | HMRC-Held, Customer |
-| AA370773A | Multiple employments - `occPen` set to true | HMRC-Held, Customer |
-| AA455555A | User with ignored hmrc data (Employments can be reinstated) | HMRC-Held |
-| AA333444A | User with only expenses data  | HMRC-Held |
-| AC150000B | CIS User with multiple CIS deductions | Contractor, Customer |
-| AA370343B | User with pension reliefs, pension charges and state benefits |   |
-
-
-
-
+| Nino      | Income sources data                                             | Source               |
+|-----------|-----------------------------------------------------------------|----------------------|
+| AA123459A | User with data for all income sources                           | HMRC-Held, Customer  |
+| AA133742A | Single employment - Employment details and benefits              | HMRC-Held, Customer  |
+| BB444444A | Multiple employments - Employment details, benefits and expenses | HMRC-Held, Customer  |
+| AA370773A | Multiple employments - `occPen` set to true                     | HMRC-Held, Customer  |
+| AA455555A | User with ignored hmrc data (Employments can be reinstated)     | HMRC-Held            |
+| AA333444A | User with only expenses data                                    | HMRC-Held            |
+| AC150000B | CIS User with multiple CIS deductions                           | Contractor, Customer |
+| AA370343B | User with pension reliefs, pension charges and state benefits    |                      |
 
 
 ### License

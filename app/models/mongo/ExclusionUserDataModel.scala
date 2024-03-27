@@ -17,34 +17,29 @@
 package models.mongo
 
 import models.{EncryptedExcludeJourneyModel, ExcludeJourneyModel}
-import org.joda.time.{DateTime, DateTimeZone}
-import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import play.api.libs.json.{Json, OFormat}
+
+import java.time.Instant
 
 
 case class ExclusionUserDataModel(
                                    nino: String,
                                    taxYear: Int,
                                    exclusionModel: Seq[ExcludeJourneyModel],
-                                   lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)
+                                   lastUpdated: Instant = Instant.now()
                                  ) extends ExclusionUserDataTemplate
 
-object ExclusionUserDataModel extends MongoJodaFormats {
-  implicit val mongoJodaDateTimeFormats: Format[DateTime] = dateTimeFormat
-
+object ExclusionUserDataModel {
   implicit lazy val formats: OFormat[ExclusionUserDataModel] = Json.format[ExclusionUserDataModel]
-
 }
 
 case class EncryptedExclusionUserDataModel(
                                             nino: String,
                                             taxYear: Int,
                                             exclusionModel: Seq[EncryptedExcludeJourneyModel],
-                                            lastUpdated: DateTime = DateTime.now(DateTimeZone.UTC)
+                                            lastUpdated: Instant = Instant.now()
                                  ) extends ExclusionUserDataTemplate
 
-object EncryptedExclusionUserDataModel extends MongoJodaFormats {
-  implicit val mongoJodaDateTimeFormats: Format[DateTime] = dateTimeFormat
-
+object EncryptedExclusionUserDataModel {
   implicit lazy val formats: OFormat[EncryptedExclusionUserDataModel] = Json.format[EncryptedExclusionUserDataModel]
 }

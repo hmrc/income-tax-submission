@@ -37,7 +37,6 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
   val additionalInfoBaseUrl: String = servicesConfig.baseUrl("income-tax-additional-information")
 
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
 
   //Mongo config
   lazy val encryptionKey: String = servicesConfig.getString("mongodb.encryption.key")
@@ -61,7 +60,6 @@ trait AppConfig {
   val stateBenefitsBaseUrl: String
 
   val auditingEnabled: Boolean
-  val graphiteHost: String
 
   //Mongo config
   val encryptionKey: String

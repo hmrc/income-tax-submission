@@ -26,6 +26,7 @@ import repositories.ExclusionUserDataRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
+import java.time.Instant
 import scala.concurrent.Future
 
 class ExcludeJourneyServiceSpec extends TestUtils {
@@ -39,6 +40,7 @@ class ExcludeJourneyServiceSpec extends TestUtils {
   private lazy val user: User[AnyContentAsEmpty.type] = User(mtditid, None, nino, sessionId)
 
   private val taxYear = 2023
+  private val lastUpdated = Instant.now()
 
   private lazy val excludeRepository = mock[ExclusionUserDataRepository]
   private lazy val incomeSourcesConnector = mock[GetIncomeSourcesService]
@@ -183,14 +185,19 @@ class ExcludeJourneyServiceSpec extends TestUtils {
 
       "update the data with an updated list of journeys" in {
         val newJourney = ExcludeJourneyModel(INTEREST, None)
-        val oldJourneys = ExclusionUserDataModel(nino, taxYear, Seq(
-          ExcludeJourneyModel(GIFT_AID, None)
-        ))
+        val oldJourneys = ExclusionUserDataModel(
+          nino,
+          taxYear,
+          Seq(ExcludeJourneyModel(GIFT_AID, None)),
+          lastUpdated
+        )
 
-        val expectedInput = ExclusionUserDataModel(nino, taxYear, Seq(
-          ExcludeJourneyModel(GIFT_AID, None),
-          newJourney
-        ))
+        val expectedInput = ExclusionUserDataModel(
+          nino,
+          taxYear,
+          Seq(ExcludeJourneyModel(GIFT_AID, None), newJourney),
+          lastUpdated
+        )
 
         val result = {
           mockUpdate(expectedInput, Right(true))
@@ -206,15 +213,19 @@ class ExcludeJourneyServiceSpec extends TestUtils {
 
       "update the data with an updated list of journeys" in {
         val newJourney = ExcludeJourneyModel(INTEREST, None)
-        val oldJourneys = ExclusionUserDataModel(nino, taxYear, Seq(
-          ExcludeJourneyModel(GIFT_AID, None),
-          newJourney
-        ))
+        val oldJourneys = ExclusionUserDataModel(
+          nino,
+          taxYear,
+          Seq(ExcludeJourneyModel(GIFT_AID, None), newJourney),
+          lastUpdated
+        )
 
-        val expectedInput = ExclusionUserDataModel(nino, taxYear, Seq(
-          ExcludeJourneyModel(GIFT_AID, None),
-          newJourney
-        ))
+        val expectedInput = ExclusionUserDataModel(
+          nino,
+          taxYear,
+          Seq(ExcludeJourneyModel(GIFT_AID, None), newJourney),
+          lastUpdated
+        )
 
         val result = {
           mockUpdate(expectedInput, Right(true))
@@ -230,14 +241,19 @@ class ExcludeJourneyServiceSpec extends TestUtils {
 
       "create the data with an updated list of journeys" in {
         val newJourney = ExcludeJourneyModel(INTEREST, None)
-        val oldJourneys = ExclusionUserDataModel(nino, taxYear, Seq(
-          ExcludeJourneyModel(GIFT_AID, None)
-        ))
+        val oldJourneys = ExclusionUserDataModel(
+          nino,
+          taxYear,
+          Seq(ExcludeJourneyModel(GIFT_AID, None)),
+          lastUpdated
+        )
 
-        val expectedInput = ExclusionUserDataModel(nino, taxYear, Seq(
-          ExcludeJourneyModel(GIFT_AID, None),
-          newJourney
-        ))
+        val expectedInput = ExclusionUserDataModel(
+          nino,
+          taxYear,
+          Seq(ExcludeJourneyModel(GIFT_AID, None), newJourney),
+          lastUpdated
+        )
 
         val result = {
           mockCreate(expectedInput, Right(true))
@@ -253,15 +269,19 @@ class ExcludeJourneyServiceSpec extends TestUtils {
 
       "create the data with an updated list of journeys" in {
         val newJourney = ExcludeJourneyModel(INTEREST, None)
-        val oldJourneys = ExclusionUserDataModel(nino, taxYear, Seq(
-          ExcludeJourneyModel(GIFT_AID, None),
-          newJourney
-        ))
+        val oldJourneys = ExclusionUserDataModel(
+          nino,
+          taxYear,
+          Seq(ExcludeJourneyModel(GIFT_AID, None), newJourney),
+          lastUpdated
+        )
 
-        val expectedInput = ExclusionUserDataModel(nino, taxYear, Seq(
-          ExcludeJourneyModel(GIFT_AID, None),
-          newJourney
-        ))
+        val expectedInput = ExclusionUserDataModel(
+          nino,
+          taxYear,
+          Seq(ExcludeJourneyModel(GIFT_AID, None), newJourney),
+          lastUpdated
+        )
 
         val result = {
           mockCreate(expectedInput, Right(true))
@@ -318,16 +338,17 @@ class ExcludeJourneyServiceSpec extends TestUtils {
 
       "the provided journey key is removed from the excluded list" in {
         val findData = Right(Some(ExclusionUserDataModel(
-          nino, taxYear, Seq(
-            ExcludeJourneyModel(GIFT_AID, None),
-            ExcludeJourneyModel(INTEREST, None)
-          )
+          nino,
+          taxYear,
+          Seq(ExcludeJourneyModel(GIFT_AID, None), ExcludeJourneyModel(INTEREST, None)),
+          lastUpdated
         )))
 
         val expectedUpdateInput = ExclusionUserDataModel(
-          nino, taxYear, Seq(
-            ExcludeJourneyModel(GIFT_AID, None)
-          )
+          nino,
+          taxYear,
+          Seq(ExcludeJourneyModel(GIFT_AID, None)),
+          lastUpdated
         )
 
         val result = {
@@ -365,16 +386,17 @@ class ExcludeJourneyServiceSpec extends TestUtils {
 
       "there is an error updating the exclusion data" in {
         val findData = Right(Some(ExclusionUserDataModel(
-          nino, taxYear, Seq(
-            ExcludeJourneyModel(GIFT_AID, None),
-            ExcludeJourneyModel(INTEREST, None)
-          )
+          nino,
+          taxYear,
+          Seq(ExcludeJourneyModel(GIFT_AID, None), ExcludeJourneyModel(INTEREST, None)),
+          lastUpdated
         )))
 
         val expectedUpdateInput = ExclusionUserDataModel(
-          nino, taxYear, Seq(
-            ExcludeJourneyModel(GIFT_AID, None)
-          )
+          nino,
+          taxYear,
+          Seq(ExcludeJourneyModel(GIFT_AID, None)),
+          lastUpdated
         )
 
         val result = {
