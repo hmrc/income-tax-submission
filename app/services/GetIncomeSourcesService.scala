@@ -16,7 +16,7 @@
 
 package services
 
-import cats.implicits.{catsSyntaxOptionId, none, toBifunctorOps}
+import cats.implicits.catsSyntaxOptionId
 import common.IncomeSources._
 import connectors._
 import models._
@@ -25,9 +25,9 @@ import models.employment.AllEmploymentData
 import models.gains.InsurancePoliciesModel
 import models.gifts.GiftAid
 import models.pensions.Pensions
-import models.pensions.employmentPensions.EmploymentPensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.Logging
+import services.helpers.GetIncomeSourcesServiceHelper.handlePensions
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
@@ -101,39 +101,18 @@ class GetIncomeSourcesService @Inject() (dividendsConnector: IncomeTaxDividendsC
             handleUnavailableService(common.IncomeSources.GAINS, gains),
             handleUnavailableService(common.IncomeSources.STOCK_DIVIDENDS, stockDividends)
           ).filter(elem => elem._1 != "remove")),
-        dividends.leftMap(_ => Dividends.empty.some).merge,
-        interest.leftMap(_ => Seq(Interest.empty).some).merge,
-        giftAid.leftMap(_ => GiftAid.empty.some).merge,
+        dividends.fold(_ => Dividends.empty.some, data => data),
+        interest.fold(_ => Seq(Interest.empty).some, data => data),
+        giftAid.fold(_ => GiftAid.empty.some, data => data),
         employment.fold(_ => AllEmploymentData.empty.some, data => data.map(_.excludePensionIncome())),
-        handlePensionsCall(pensions, employment),
+        handlePensions(pensions, employment),
         cis.fold(_ => Some(AllCISDeductions(Some(CISSource.empty), None)), data => data),
-        stateBenefits.leftMap(_ => AllStateBenefitsData.empty.some).merge,
-        interestSavings.leftMap(_ => SavingsIncomeDataModel.empty.some).merge,
-        gains.leftMap(_ => InsurancePoliciesModel.empty.some).merge,
-        stockDividends.leftMap(_ => StockDividends.empty.some).merge
+        stateBenefits.fold(_ => AllStateBenefitsData.empty.some, data => data),
+        interestSavings.fold(_ => SavingsIncomeDataModel.empty.some, data => data),
+        gains.fold(_ => InsurancePoliciesModel.empty.some, data => data),
+        stockDividends.fold(_ => StockDividends.empty.some, data => data)
       )
     )
-
-  private def handlePensionsCall(pensionsCall: Either[APIErrorModel, Option[Pensions]],
-                                 employmentCall: Either[APIErrorModel, Option[AllEmploymentData]]): Option[Pensions] = {
-    def handleEmployment: Option[EmploymentPensions] =
-      employmentCall.fold(_ => none[EmploymentPensions], _.map(_.buildEmploymentPensions()))
-
-    pensionsCall
-      .map { maybePensions =>
-        maybePensions
-          .map(_.copy(employmentPensions = handleEmployment))
-          .orElse(
-            handleEmployment.fold(ifEmpty = none[Pensions]) { employment =>
-              Pensions.empty
-                .copy(employmentPensions = employment.some)
-                .some
-            }
-          )
-      }
-      .leftMap(_ => Pensions.empty.some)
-      .merge
-  }
 
   def getGiftAid(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())(implicit
       hc: HeaderCarrier): Future[Either[APIErrorModel, Option[GiftAid]]] =
