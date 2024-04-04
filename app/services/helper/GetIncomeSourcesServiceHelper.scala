@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package services.helpers
+package services.helper
 
 import cats.implicits.{catsSyntaxOptionId, none, toBifunctorOps}
 import models.APIErrorModel

@@ -27,7 +27,7 @@ import models.gifts.GiftAid
 import models.pensions.Pensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.Logging
-import services.helpers.GetIncomeSourcesServiceHelper.handlePensions
+import services.helper.GetIncomeSourcesServiceHelper.handlePensions
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject

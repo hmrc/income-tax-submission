@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package services.helpers
+package services.helper
 
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentDataWithOccPen
 import builders.models.pensions.PensionsBuilder.aPensions
@@ -27,7 +27,7 @@ import org.scalatest.OptionValues.convertOptionToValuable
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status.BAD_REQUEST
-import services.helpers.GetIncomeSourcesServiceHelper.handlePensions
+import services.helper.GetIncomeSourcesServiceHelper.handlePensions
 
 class GetIncomeSourcesServiceHelperSpec extends AnyWordSpec with Matchers {
 
