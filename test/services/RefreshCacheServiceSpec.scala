@@ -20,6 +20,7 @@ import builders.models.DividendsBuilder.aDividends
 import builders.models.IncomeSourcesBuilder.anIncomeSources
 import builders.models.InterestBuilder.anInterest
 import builders.models.SavingsIncomeBuilder
+import builders.models.StockDividendsBuilder.anStockDividends
 import builders.models.cis.AllCISDeductionsBuilder
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import builders.models.gains.GainsBuilder
@@ -109,6 +110,140 @@ class RefreshCacheServiceSpec extends TestUtils {
         .returning(Future.successful(NoContent))
 
       await(underTest.getLatestDataAndRefreshCache(taxYear, "dividends")) mustBe NoContent
+    }
+
+    "get the latest dividends and update the data when no dividends data" in {
+      (getIncomeSourcesService.getDividends(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+        .expects("AA123456A", taxYear, "1234567890", *, *)
+        .returning(Future.successful(Right(None)))
+
+      (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
+        .expects(user, taxYear, *)
+        .returning(Future.successful(Right(Some(anIncomeSources))))
+
+      val expected = Some(anIncomeSources.copy(dividends = None))
+
+      (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
+        .expects(taxYear, expected, NoContent, user, *)
+        .returning(Future.successful(NoContent))
+
+      await(underTest.getLatestDataAndRefreshCache(taxYear, "dividends")) mustBe NoContent
+    }
+
+    "get the latest dividends and update the data when no dividends data in session as well as in get" in {
+      (getIncomeSourcesService.getDividends(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+        .expects("AA123456A", taxYear, "1234567890", *, *)
+        .returning(Future.successful(Right(None)))
+
+      (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
+        .expects(user, taxYear, *)
+        .returning(Future.successful(Right(Some(anIncomeSources.copy(dividends = None)))))
+
+      val expected = Some(anIncomeSources.copy(dividends = None))
+
+      (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
+        .expects(taxYear, expected, NoContent, user, *)
+        .returning(Future.successful(NoContent))
+
+      await(underTest.getLatestDataAndRefreshCache(taxYear, "dividends")) mustBe NoContent
+    }
+
+    "return an error when get call errors for stock dividends" in {
+      (getIncomeSourcesService.getStockDividends(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+        .expects("AA123456A", taxYear, "1234567890", *, *)
+        .returning(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("Failed", "Reason")))))
+
+      val result = await(underTest.getLatestDataAndRefreshCache(taxYear, "stock-dividends"))
+
+      result.header.status mustBe INTERNAL_SERVER_ERROR
+    }
+
+    "return an error when find data from DB errors for stock dividends" in {
+      (getIncomeSourcesService.getStockDividends(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+        .expects("AA123456A", taxYear, "1234567890", *, *)
+        .returning(Future.successful(Right(Some(anStockDividends))))
+
+      (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
+        .expects(user, taxYear, *)
+        .returning(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("Failed", "Reason")))))
+
+      val result = await(underTest.getLatestDataAndRefreshCache(taxYear, "stock-dividends"))
+
+      result.header.status mustBe INTERNAL_SERVER_ERROR
+    }
+
+    "return an error when save data errors for stock dividends" in {
+      (getIncomeSourcesService.getStockDividends(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+        .expects("AA123456A", taxYear, "1234567890", *, *)
+        .returning(Future.successful(Right(Some(anStockDividends))))
+
+      (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
+        .expects(user, taxYear, *)
+        .returning(Future.successful(Right(Some(anIncomeSources))))
+
+      val expected = Some(anIncomeSources.copy(stockDividends = Some(anStockDividends)))
+
+      (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
+        .expects(taxYear, expected, NoContent, user, *)
+        .returning(Future.successful(InternalServerError))
+
+      val result = await(underTest.getLatestDataAndRefreshCache(taxYear, "stock-dividends"))
+
+      result.header.status mustBe INTERNAL_SERVER_ERROR
+    }
+
+    "get the latest stock dividends and update the data" in {
+      (getIncomeSourcesService.getStockDividends(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+        .expects("AA123456A", taxYear, "1234567890", *, *)
+        .returning(Future.successful(Right(Some(anStockDividends))))
+
+      (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
+        .expects(user, taxYear, *)
+        .returning(Future.successful(Right(Some(anIncomeSources))))
+
+      val expected = Some(anIncomeSources.copy(stockDividends = Some(anStockDividends)))
+
+      (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
+        .expects(taxYear, expected, NoContent, user, *)
+        .returning(Future.successful(NoContent))
+
+      await(underTest.getLatestDataAndRefreshCache(taxYear, "stock-dividends")) mustBe NoContent
+    }
+
+    "get the latest stock dividends and update the data when no stock dividends data" in {
+      (getIncomeSourcesService.getStockDividends(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+        .expects("AA123456A", taxYear, "1234567890", *, *)
+        .returning(Future.successful(Right(None)))
+
+      (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
+        .expects(user, taxYear, *)
+        .returning(Future.successful(Right(Some(anIncomeSources))))
+
+      val expected = Some(anIncomeSources.copy(stockDividends = None))
+
+      (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
+        .expects(taxYear, expected, NoContent, user, *)
+        .returning(Future.successful(NoContent))
+
+      await(underTest.getLatestDataAndRefreshCache(taxYear, "stock-dividends")) mustBe NoContent
+    }
+
+    "get the latest stock dividends and update the data when no stock dividends data in session as well as in get" in {
+      (getIncomeSourcesService.getStockDividends(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
+        .expects("AA123456A", taxYear, "1234567890", *, *)
+        .returning(Future.successful(Right(None)))
+
+      (incomeTaxUserDataService.findUserData(_: User[_], _: Int)(_: ExecutionContext))
+        .expects(user, taxYear, *)
+        .returning(Future.successful(Right(Some(anIncomeSources.copy(stockDividends = None)))))
+
+      val expected = Some(anIncomeSources.copy(stockDividends = None))
+
+      (incomeTaxUserDataService.saveUserData(_: Int, _: Option[IncomeSources])(_: Result)(_: User[_], _: ExecutionContext))
+        .expects(taxYear, expected, NoContent, user, *)
+        .returning(Future.successful(NoContent))
+
+      await(underTest.getLatestDataAndRefreshCache(taxYear, "stock-dividends")) mustBe NoContent
     }
 
     "get the latest interest and update the data" in {
