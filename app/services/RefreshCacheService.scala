@@ -46,6 +46,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
     getLatestDataForIncomeSource(taxYear, incomeSource).flatMap {
       case Right(None) => updateCacheBasedOnNewData(taxYear, incomeSource, None)
       case Right(Some(model: Dividends)) => updateCacheBasedOnNewData[Dividends](taxYear, incomeSource, Some(model))
+      case Right(Some(model: StockDividends)) => updateCacheBasedOnNewData[StockDividends](taxYear, incomeSource, Some(model))
       case Right(Some(model: AllEmploymentData)) => updateCacheBasedOnNewData[AllEmploymentData](taxYear, incomeSource, Some(model))
       case Right(Some(model: GiftAid)) => updateCacheBasedOnNewData[GiftAid](taxYear, incomeSource, Some(model))
       case Right(Some(model: List[Interest])) => updateCacheBasedOnNewData[List[Interest]](taxYear, incomeSource, Some(model))
@@ -65,6 +66,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
 
     incomeSource match {
       case DIVIDENDS => getIncomeSourcesService.getDividends(nino, taxYear, user.mtditid)
+      case STOCK_DIVIDENDS => getIncomeSourcesService.getStockDividends(nino, taxYear, user.mtditid)
       case INTEREST => getIncomeSourcesService.getInterest(nino, taxYear, user.mtditid)
       case GIFT_AID => getIncomeSourcesService.getGiftAid(nino, taxYear, user.mtditid)
       case EMPLOYMENT => getIncomeSourcesService.getEmployment(nino, taxYear, user.mtditid)
@@ -81,6 +83,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
   private def createModelFromNewData[A](newData: Option[A], currentData: IncomeSources, incomeSource: String): IncomeSources = {
     newData match {
       case Some(model: Dividends) => currentData.copy(dividends = Some(model))
+      case Some(model: StockDividends) => currentData.copy(stockDividends = Some(model))
       case Some(model: AllEmploymentData) => currentData.copy(employment = Some(model))
       case Some(model: GiftAid) => currentData.copy(giftAid = Some(model))
       case Some(model: List[Interest]) => currentData.copy(interest = Some(model))
@@ -97,6 +100,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
   private def defaultCurrentData(currentData: IncomeSources, incomeSource: String): IncomeSources = {
     incomeSource match {
       case DIVIDENDS => currentData.copy(dividends = None)
+      case STOCK_DIVIDENDS => currentData.copy(stockDividends = None)
       case INTEREST => currentData.copy(interest = None)
       case GIFT_AID => currentData.copy(giftAid = None)
       case EMPLOYMENT => currentData.copy(employment = None)
@@ -148,6 +152,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
 
     incomeSource match {
       case DIVIDENDS => noDataLog(data.dividends.isEmpty)
+      case STOCK_DIVIDENDS => noDataLog(data.stockDividends.isEmpty)
       case INTEREST => noDataLog(data.interest.isEmpty)
       case GIFT_AID => noDataLog(data.giftAid.isEmpty)
       case EMPLOYMENT => noDataLog(data.employment.isEmpty)
@@ -156,7 +161,6 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case STATE_BENEFITS => noDataLog(data.stateBenefits.isEmpty)
       case INTEREST_SAVINGS => noDataLog(data.interestSavings.isEmpty)
       case GAINS => noDataLog(data.gains.isEmpty)
-      case STOCK_DIVIDENDS => noDataLog(data.stockDividends.isEmpty)
     }
   }
 }
