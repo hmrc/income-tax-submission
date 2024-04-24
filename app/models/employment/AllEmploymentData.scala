@@ -76,6 +76,8 @@ case class AllEmploymentData(hmrcEmploymentData: Seq[HmrcEmploymentSource],
 
 object AllEmploymentData {
   implicit val format: OFormat[AllEmploymentData] = Json.format[AllEmploymentData]
+
+  val empty: AllEmploymentData = AllEmploymentData(Seq.empty, None, Seq.empty, None, None)
 }
 
 case class EncryptedAllEmploymentData(hmrcEmploymentData: Seq[EncryptedHmrcEmploymentSource],

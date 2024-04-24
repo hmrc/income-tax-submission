@@ -22,12 +22,12 @@ case class GiftAid(giftAidPayments: Option[GiftAidPayments], gifts: Option[Gifts
 
 object GiftAid {
   implicit val format: OFormat[GiftAid] = Json.format[GiftAid]
+
+  val empty: GiftAid = GiftAid(None, None)
 }
 
-case class EncryptedGiftAid(giftAidPayments: Option[EncryptedGiftAidPayments],
-                            gifts: Option[EncryptedGifts])
+case class EncryptedGiftAid(giftAidPayments: Option[EncryptedGiftAidPayments], gifts: Option[EncryptedGifts])
 
 object EncryptedGiftAid {
   implicit val format: OFormat[EncryptedGiftAid] = Json.format[EncryptedGiftAid]
 }
-

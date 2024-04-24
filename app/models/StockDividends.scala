@@ -30,6 +30,7 @@ case class StockDividends(
                          )
 
 object StockDividends {
+  val empty: StockDividends = StockDividends()
   implicit val formats: OFormat[StockDividends] = Json.format[StockDividends]
 }
 

@@ -16,17 +16,16 @@
 
 package models
 
+import cats.implicits.catsSyntaxOptionId
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.crypto.EncryptedValue
 
-case class Interest(accountName: String,
-                    incomeSourceId: String,
-                    taxedUkInterest: Option[BigDecimal],
-                    untaxedUkInterest: Option[BigDecimal])
-
+case class Interest(accountName: String, incomeSourceId: String, taxedUkInterest: Option[BigDecimal], untaxedUkInterest: Option[BigDecimal])
 
 object Interest {
   implicit val formats: OFormat[Interest] = Json.format[Interest]
+
+  val empty: Interest = Interest("", "", BigDecimal(0).some, BigDecimal(0).some)
 }
 
 case class EncryptedInterest(accountName: EncryptedValue,
