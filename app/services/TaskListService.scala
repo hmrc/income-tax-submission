@@ -26,23 +26,22 @@ import models.gifts.GiftAid
 import models.pensions.Pensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.Logging
-import play.libs.Json
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsConnector,
-                                        interestConnector: IncomeTaxInterestConnector,
-                                        giftAidConnector: IncomeTaxGiftAidConnector,
-                                        employmentConnector: IncomeTaxEmploymentConnector,
-                                        pensionsConnector: IncomeTaxPensionsConnector,
-                                        cisConnector: IncomeTaxCISConnector,
-                                        stateBenefitsConnector: IncomeTaxStateBenefitsConnector,
-                                        interestSavingsConnector: IncomeTaxInterestSavingsConnector,
-                                        gainsConnector: IncomeTaxGainsConnector,
-                                        stockDividendsConnector: IncomeTaxStockDividendsConnector,
-                                        implicit val ec: ExecutionContext) extends Logging {
+class TaskListService @Inject()(dividendsConnector: IncomeTaxDividendsConnector,
+                                interestConnector: IncomeTaxInterestConnector,
+                                giftAidConnector: IncomeTaxGiftAidConnector,
+                                employmentConnector: IncomeTaxEmploymentConnector,
+                                pensionsConnector: IncomeTaxPensionsConnector,
+                                cisConnector: IncomeTaxCISConnector,
+                                stateBenefitsConnector: IncomeTaxStateBenefitsConnector,
+                                interestSavingsConnector: IncomeTaxInterestSavingsConnector,
+                                gainsConnector: IncomeTaxGainsConnector,
+                                stockDividendsConnector: IncomeTaxStockDividendsConnector,
+                                implicit val ec: ExecutionContext) extends Logging {
 
   type IncomeSourceResponse = Either[APIErrorModel, IncomeSources]
 
@@ -70,7 +69,38 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
   }
 
   def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
-                         (implicit hc: HeaderCarrier): Future[IncomeSourceResponse] = {
+                         (implicit hc: HeaderCarrier): Future[TaskListResponse] = {
+    /**
+     * retrieve all income sources
+     *  - check if data exist
+     *  - compare the sections with Tailoring Tasklist section
+     *  - populate missing sections
+     *  - Need to derive status as well here (in particular CHECK status)
+     *  - we need to think about CIP explicit audit events
+     *  - currently the overview page allows to work on other journeys even if they are under maintenance - do we support this?
+     *  - explore refresh cache service? what is the purpose of this?
+     *  - Think about unique document identifier for tasklist
+     *  - if any service is not available then we create the SECTION and link will be disabled with UNAVAILABLE STATUS
+     *    - What is parial data from tailoring service is available and only thing we dont know is , if there need to be
+     *      additional link, based on existing data
+     *      EXAMPLE PENSIONS
+     *      STATE PENSION (user did not select this) - if service is up and data available then this is "CHECK NOW"
+     *      OTHER UK PENSION
+     *      UNAUTHORISED PAYMENT
+     *      SHORT SERVICE REFUNDS
+     *      NON UK PENSION
+     *      => In above if the user did n;t select STATE PENSION, But based on downstream data - STATE PENSION LINK was
+             *      suppose to be populated, but as the service is down we dont know if this would be there or not
+             *      however based on tailoring data, we know below 4 link needs to be displayed
+                   OTHER UK PENSION
+                   UNAUTHORISED PAYMENT
+                   SHORT SERVICE REFUNDS
+                   NON UK PENSION
+                    "Downstream unavaiable"
+     *
+     * Under maintenance status, should stop user from continuing the journey.
+     * what happens currenlty when some journye is under maintenance and user clicks on continue or user had not ansered all the journeys
+     */
     for {
       dividends <- getDividends(nino, taxYear, mtditid, excludedIncomeSources)//
       interest <- getInterest(nino, taxYear, mtditid, excludedIncomeSources)
@@ -82,7 +112,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       interestSavings <- getSavingsInterest(nino, taxYear, mtditid, excludedIncomeSources)
       gains <- getGains(nino, taxYear, mtditid, excludedIncomeSources)
       stockDividends <- getStockDividends(nino, taxYear, mtditid, excludedIncomeSources)
-      tailoring <- getStockDividends(nino, taxYear, mtditid, excludedIncomeSources)
+      tailoring <- getTailoringTaskList(nino, taxYear, mtditid, excludedIncomeSources)
     } yield {
       Right(
         IncomeSources(
