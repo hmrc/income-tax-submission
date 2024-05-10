@@ -68,7 +68,7 @@ class TaskListService @Inject()(dividendsConnector: IncomeTaxDividendsConnector,
     )
   }
 
-  def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
+/*  def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                          (implicit hc: HeaderCarrier): Future[TaskListResponse] = {
     /**
      * retrieve all income sources
@@ -112,7 +112,7 @@ class TaskListService @Inject()(dividendsConnector: IncomeTaxDividendsConnector,
       interestSavings <- getSavingsInterest(nino, taxYear, mtditid, excludedIncomeSources)
       gains <- getGains(nino, taxYear, mtditid, excludedIncomeSources)
       stockDividends <- getStockDividends(nino, taxYear, mtditid, excludedIncomeSources)
-      tailoring <- getTailoringTaskList(nino, taxYear, mtditid, excludedIncomeSources)
+      //tailoring <- getTailoringTaskList(nino, taxYear, mtditid, excludedIncomeSources)
     } yield {
       Right(
         IncomeSources(
@@ -143,7 +143,7 @@ class TaskListService @Inject()(dividendsConnector: IncomeTaxDividendsConnector,
         )
       )
     }
-  }
+  }*/
 
   def getGiftAid(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                 (implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[GiftAid]]] = {
