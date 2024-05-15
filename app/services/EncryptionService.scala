@@ -53,6 +53,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       stateBenefits = userData.stateBenefits.map(_.encrypted()),
       interestSavings = userData.interestSavings.map(encryptSavingsIncome),
       gains = userData.gains.map(encryptGains),
+      stockDividends = userData.stockDividends.map(encryptStockDividends),
       lastUpdated = userData.lastUpdated
     )
   }
@@ -64,6 +65,42 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
     )
   }
 
+  private def encryptStockDividends(stockDividends: StockDividends)(implicit associatedText: String): EncryptedStockDividends = {
+    def getEncryptedForeignInterestModel(modelData: Option[Seq[ForeignInterestModel]]): Option[Seq[EncryptedForeignInterestModel]] = {
+      modelData.map {
+        g =>
+          g.map(foreignInterestsModel =>
+            EncryptedForeignInterestModel(
+              countryCode = foreignInterestsModel.countryCode.encrypted,
+              amountBeforeTax = foreignInterestsModel.amountBeforeTax.map(_.encrypted),
+              taxTakenOff = foreignInterestsModel.taxTakenOff.map(_.encrypted),
+              specialWithholdingTax = foreignInterestsModel.specialWithholdingTax.map(_.encrypted),
+              foreignTaxCreditRelief = foreignInterestsModel.foreignTaxCreditRelief.map(_.encrypted),
+              taxableAmount = foreignInterestsModel.taxableAmount.encrypted
+            )
+          )
+      }
+    }
+
+    def getEncryptedDividend(modelData:Option[Dividend]): Option[EncryptedDividend] = {
+      modelData.map {
+        g =>
+          EncryptedDividend(
+            customerReference = g.customerReference.map(_.encrypted),
+            grossAmount = g.grossAmount.map(_.encrypted)
+          )
+      }
+    }
+    EncryptedStockDividends(
+      submittedOn = stockDividends.submittedOn.map(_.encrypted),
+      foreignDividends = getEncryptedForeignInterestModel(stockDividends.foreignDividend),
+      dividendIncomeReceivedWhilstAbroad = getEncryptedForeignInterestModel(stockDividends.dividendIncomeReceivedWhilstAbroad),
+      stockDividends = getEncryptedDividend(stockDividends.stockDividend),
+      redeemableShares = getEncryptedDividend(stockDividends.redeemableShares),
+      bonusIssuesOfSecurities = getEncryptedDividend(stockDividends.bonusIssuesOfSecurities),
+      closeCompanyLoansWrittenOff = getEncryptedDividend(stockDividends.closeCompanyLoansWrittenOff)
+    )
+  }
   private def encryptInterest(interest: Seq[Interest])(implicit associatedText: String): Seq[EncryptedInterest] = {
     interest.map {
       interest =>
