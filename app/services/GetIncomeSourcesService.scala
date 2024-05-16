@@ -71,7 +71,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
   def getAllIncomeSources(nino: String, taxYear: Int, mtditid: String, excludedIncomeSources: Seq[String] = Seq())
                          (implicit hc: HeaderCarrier): Future[IncomeSourceResponse] = {
     for {
-      dividends <- getDividends(nino, taxYear, mtditid, excludedIncomeSources)//
+      dividends <- getDividends(nino, taxYear, mtditid, excludedIncomeSources)
       interest <- getInterest(nino, taxYear, mtditid, excludedIncomeSources)
       giftAid <- getGiftAid(nino, taxYear, mtditid, excludedIncomeSources)
       employment <- getEmployment(nino, taxYear, mtditid, excludedIncomeSources)
