@@ -524,6 +524,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
       stateBenefits = userData.stateBenefits.map(_.decrypted()),
       interestSavings = userData.interestSavings.map(decryptSavingsIncome),
       gains = userData.gains.map(decryptGains),
+      stockDividends = userData.stockDividends.map(decryptStockDividends),
       lastUpdated = userData.lastUpdated
     )
   }
@@ -532,6 +533,44 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
     Dividends(
       dividends.ukDividends.map(_.decrypted[BigDecimal]),
       dividends.otherUkDividends.map(_.decrypted[BigDecimal])
+    )
+  }
+
+  private def decryptStockDividends(estockDividends: EncryptedStockDividends)(implicit associatedText: String): StockDividends = {
+    def getForeignInterestModel(modelData: Option[Seq[EncryptedForeignInterestModel]]): Option[Seq[ForeignInterestModel]] = {
+      modelData.map {
+        g =>
+          g.map(eforeignInterestsModel =>
+            ForeignInterestModel(
+              countryCode = eforeignInterestsModel.countryCode.decrypted[String],
+              amountBeforeTax = eforeignInterestsModel.amountBeforeTax.map(_.decrypted[BigDecimal]),
+              taxTakenOff = eforeignInterestsModel.taxTakenOff.map(_.decrypted[BigDecimal]),
+              specialWithholdingTax = eforeignInterestsModel.specialWithholdingTax.map(_.decrypted[BigDecimal]),
+              foreignTaxCreditRelief = eforeignInterestsModel.foreignTaxCreditRelief.map(_.decrypted[Boolean]),
+              taxableAmount = eforeignInterestsModel.taxableAmount.decrypted[BigDecimal]
+            )
+          )
+      }
+    }
+
+    def getDividend(modelData: Option[EncryptedDividend]): Option[Dividend] = {
+      modelData.map {
+        g =>
+          Dividend(
+            customerReference = g.customerReference.map(_.decrypted[String]),
+            grossAmount = g.grossAmount.map(_.decrypted[BigDecimal])
+          )
+      }
+    }
+
+    StockDividends(
+      submittedOn = estockDividends.submittedOn.map(_.decrypted[String]),
+      foreignDividend = getForeignInterestModel(estockDividends.foreignDividends),
+      dividendIncomeReceivedWhilstAbroad = getForeignInterestModel(estockDividends.dividendIncomeReceivedWhilstAbroad),
+      stockDividend = getDividend(estockDividends.stockDividends),
+      redeemableShares = getDividend(estockDividends.redeemableShares),
+      bonusIssuesOfSecurities = getDividend(estockDividends.bonusIssuesOfSecurities),
+      closeCompanyLoansWrittenOff = getDividend(estockDividends.closeCompanyLoansWrittenOff)
     )
   }
 
