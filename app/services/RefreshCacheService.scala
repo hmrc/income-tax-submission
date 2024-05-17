@@ -42,7 +42,8 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
 
   def getLatestDataAndRefreshCache(taxYear: Int, incomeSource: String)
                                   (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
-
+//1 min cache
+    // cache exist - return data -
     getLatestDataForIncomeSource(taxYear, incomeSource).flatMap {
       case Right(None) => updateCacheBasedOnNewData(taxYear, incomeSource, None)
       case Right(Some(model: Dividends)) => updateCacheBasedOnNewData[Dividends](taxYear, incomeSource, Some(model))

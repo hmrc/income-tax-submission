@@ -26,7 +26,6 @@ import models.gifts.GiftAid
 import models.pensions.Pensions
 import models.statebenefits.AllStateBenefitsData
 import play.api.Logging
-import play.libs.Json
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
@@ -82,6 +81,7 @@ class GetIncomeSourcesService @Inject()(dividendsConnector: IncomeTaxDividendsCo
       interestSavings <- getSavingsInterest(nino, taxYear, mtditid, excludedIncomeSources)
       gains <- getGains(nino, taxYear, mtditid, excludedIncomeSources)
       stockDividends <- getStockDividends(nino, taxYear, mtditid, excludedIncomeSources)
+
     } yield {
       Right(
         IncomeSources(
