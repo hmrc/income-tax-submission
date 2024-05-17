@@ -18,7 +18,7 @@ package controllers
 
 import connectors.parsers.TaskListDataParser.TaskListResponseModel
 import models._
-import models.tasklist.{TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
+import models.tasklist.{TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
 import org.scalamock.handlers.CallHandler3
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -33,19 +33,19 @@ class TaskListDataControllerSpec extends TestUtils {
 
   private val mockTaskListDataService: TaskListDataService = mock[TaskListDataService]
 
-  def mockGetTaskListData(data: Either[APIErrorModel, Option[List[TaskListSection]]]):
+  def mockGetTaskListData(data: Either[APIErrorModel, Option[TaskListModel]]):
   CallHandler3[Int, String, HeaderCarrier, Future[TaskListResponseModel]] = {
     (mockTaskListDataService.get(_: Int, _: String)(_: HeaderCarrier))
       .expects(*, *, *)
       .returning(Future.successful(data))
   }
 
-  private val taskListData: TaskListResponseModel = Right(Some(List[TaskListSection](
+  private val taskListData: TaskListResponseModel = Right(Some(TaskListModel(List[TaskListSection](
     TaskListSection(
       sectionTitle = "AboutYou",
       taskItems = List[TaskListSectionItem](
         TaskListSectionItem(TaskTitle(content = "UK Residence Status"), status = TaskStatus("Completed"), Some("url"))))
-  )))
+  ))))
 
   private val controller: TaskListDataController = TaskListDataController(mockTaskListDataService, mockControllerComponents, authorisedAction)
   private val mtdItId: String = "1234567890"

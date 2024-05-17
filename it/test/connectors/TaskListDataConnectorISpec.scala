@@ -17,7 +17,7 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import models.tasklist.{TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
+import models.tasklist.{TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -39,12 +39,12 @@ class TaskListDataConnectorISpec extends ConnectorIntegrationTest {
 
   "TaskListDataConnector" should {
 
-    val expectedResult: List[TaskListSection] = List[TaskListSection](
+    val expectedResult: TaskListModel = TaskListModel(List[TaskListSection](
       TaskListSection(
         sectionTitle = "AboutYou",
         taskItems = List[TaskListSectionItem](
           TaskListSectionItem(TaskTitle(content = "UK Residence Status"), status = TaskStatus("Completed"), Some("url"))))
-    )
+    ))
 
     val responseBody = Json.toJson(expectedResult).toString()
     implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue"))).withExtraHeaders(mtdItIdHeader)

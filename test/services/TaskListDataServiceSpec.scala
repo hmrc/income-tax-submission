@@ -17,7 +17,7 @@
 package services
 
 import connectors._
-import models.tasklist.{TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
+import models.tasklist.{TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.{TaxYearUtils, TestUtils}
 
@@ -36,12 +36,12 @@ class TaskListDataServiceSpec extends TestUtils {
     scala.concurrent.ExecutionContext.global
   )
 
-  private val taskListResult = Some(List[TaskListSection](
+  private val taskListResult = Some(TaskListModel(List[TaskListSection](
     TaskListSection(
       sectionTitle = "AboutYou",
       taskItems = List[TaskListSectionItem](
         TaskListSectionItem(TaskTitle(content = "UK Residence Status"), status = TaskStatus("Completed"), Some("url"))))
-  ))
+  )))
 
   ".get" when {
     "data exists" should {
