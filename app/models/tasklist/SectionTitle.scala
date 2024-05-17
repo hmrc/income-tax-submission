@@ -16,7 +16,20 @@
 
 package models.tasklist
 
-// TODO: Add enum of strings for title and replace String with this trait in the title attribute of TaskListSection
-trait SectionTitle {
+import models.WithName
 
+sealed trait SectionTitle
+
+object SectionTitle extends SectionTitle {
+  case object AboutYouTitle extends WithName("AboutYou") with SectionTitle
+  case object CharitableDonationsTitle extends WithName("CharitableDonations") with SectionTitle
+  case object EmploymentTitle extends WithName("Employment") with SectionTitle
+  case object SelfEmploymentTitle extends WithName("SelfEmployment") with SectionTitle
+  case object EsaTitle extends WithName("Esa") with SectionTitle
+  case object JsaTitle extends WithName("Jsa") with SectionTitle
+  case object PensionsTitle extends WithName("Pensions") with SectionTitle
+  case object PaymentsIntoPensionsTitle extends WithName("PaymentsIntoPensions") with SectionTitle
+  case object InterestTitle extends WithName("Interest") with SectionTitle
+  case object DividendsTitle extends WithName("Dividends") with SectionTitle
 }
+
