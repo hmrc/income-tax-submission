@@ -17,7 +17,7 @@
 package connectors.parsers
 
 import models._
-import models.tasklist.TaskListSection
+import models.tasklist.TaskListModel
 import play.api.Logging
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
@@ -25,7 +25,7 @@ import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.pagerDutyLog
 
 object TaskListDataParser extends APIParser with Logging {
-  type TaskListResponseModel = Either[APIErrorModel, Option[List[TaskListSection]]]
+  type TaskListResponseModel = Either[APIErrorModel, Option[TaskListModel]]
 
   override val parserName: String = "TaskListParser"
   override val service: String = "income-tax-tailor-return"
@@ -35,7 +35,7 @@ object TaskListDataParser extends APIParser with Logging {
     override def read(method: String, url: String, response: HttpResponse): TaskListResponseModel = {
       response.status match {
         case OK =>
-          response.json.validate[List[TaskListSection]].fold(
+          response.json.validate[TaskListModel].fold(
             _ => badSuccessJsonFromAPI,
             model => Right(Some(model))
           )
