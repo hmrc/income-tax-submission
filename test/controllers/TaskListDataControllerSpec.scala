@@ -43,8 +43,9 @@ class TaskListDataControllerSpec extends TestUtils {
   private val taskListData: TaskListResponseModel = Right(Some(TaskListModel(List[TaskListSection](
     TaskListSection(
       sectionTitle = "AboutYou",
-      taskItems = List[TaskListSectionItem](
+      taskItems = Some(List[TaskListSectionItem](
         TaskListSectionItem(TaskTitle(content = "UK Residence Status"), status = TaskStatus("Completed"), Some("url"))))
+    )
   ))))
 
   private val controller: TaskListDataController = TaskListDataController(mockTaskListDataService, mockControllerComponents, authorisedAction)

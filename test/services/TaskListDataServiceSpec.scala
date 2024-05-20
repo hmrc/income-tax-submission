@@ -39,8 +39,9 @@ class TaskListDataServiceSpec extends TestUtils {
   private val taskListResult = Some(TaskListModel(List[TaskListSection](
     TaskListSection(
       sectionTitle = "AboutYou",
-      taskItems = List[TaskListSectionItem](
+      taskItems = Some(List[TaskListSectionItem](
         TaskListSectionItem(TaskTitle(content = "UK Residence Status"), status = TaskStatus("Completed"), Some("url"))))
+    )
   )))
 
   ".get" when {

@@ -42,8 +42,10 @@ class TaskListDataConnectorISpec extends ConnectorIntegrationTest {
     val expectedResult: TaskListModel = TaskListModel(List[TaskListSection](
       TaskListSection(
         sectionTitle = "AboutYou",
-        taskItems = List[TaskListSectionItem](
-          TaskListSectionItem(TaskTitle(content = "UK Residence Status"), status = TaskStatus("Completed"), Some("url"))))
+        taskItems = Some(List[TaskListSectionItem](
+          TaskListSectionItem(TaskTitle(content = "UK Residence Status"), status = TaskStatus("Completed"), Some("url"))
+        ))
+      )
     ))
 
     val responseBody = Json.toJson(expectedResult).toString()
