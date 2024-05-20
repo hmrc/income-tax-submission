@@ -21,16 +21,20 @@ import org.scalamock.scalatest.MockFactory
 
 class MockAppConfig(isEncrypted: Boolean = true) extends AppConfig with MockFactory {
 
+  private val host: String = "http://localhost:11111"
+
   override val authBaseUrl: String = "/auth"
 
-  override val dividendsBaseUrl: String = "http://localhost:11111"
-  override val interestBaseUrl: String = "http://localhost:11111"
-  override val employmentBaseUrl: String = "http://localhost:11111"
-  override val giftAidBaseUrl: String = "http://localhost:11111"
-  override val pensionsBaseUrl: String = "http://localhost:11111"
-  override val cisBaseUrl: String = "http://localhost:11111"
-  override val stateBenefitsBaseUrl: String = "http://localhost:11111"
-  override val additionalInfoBaseUrl: String = "http://localhost:11111"
+  override val dividendsBaseUrl: String = host
+  override val interestBaseUrl: String = host
+  override val employmentBaseUrl: String = host
+  override val giftAidBaseUrl: String = host
+  override val pensionsBaseUrl: String = host
+  override val cisBaseUrl: String = host
+  override val stateBenefitsBaseUrl: String = host
+  override val additionalInfoBaseUrl: String = host
+  override val tailoringPhaseIIBaseUrl: String = host
+
 
   override val auditingEnabled: Boolean = true
 
