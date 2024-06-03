@@ -33,6 +33,8 @@ object SubmittedDividendsParser extends APIParser with Logging {
     override def read(method: String, url: String, response: HttpResponse): IncomeSourcesResponseModel = {
       response.status match {
         case OK =>
+          //    TODO: This log is temporary to see the response from IFS and will be removed shortly
+          logger.info("SubmittedDividendsParser response: " + response.json)
           response.json.validate[Dividends].fold[IncomeSourcesResponseModel](
             _ => badSuccessJsonFromAPI,
             {
