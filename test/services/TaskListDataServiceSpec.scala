@@ -17,7 +17,7 @@
 package services
 
 import connectors._
-import models.tasklist.{TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
+import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.{TaxYearUtils, TestUtils}
 
@@ -38,9 +38,9 @@ class TaskListDataServiceSpec extends TestUtils {
 
   private val taskListResult = Some(TaskListModel(List[TaskListSection](
     TaskListSection(
-      sectionTitle = "AboutYou",
+      sectionTitle = SectionTitle.AboutYouTitle(),
       taskItems = Some(List[TaskListSectionItem](
-        TaskListSectionItem(TaskTitle(content = "UK Residence Status"), status = TaskStatus("Completed"), Some("url"))))
+        TaskListSectionItem(TaskTitle(content = "UK Residence Status"), status = TaskStatus.Completed(), Some("url"))))
     )
   )))
 
