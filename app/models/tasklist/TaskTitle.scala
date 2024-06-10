@@ -23,7 +23,7 @@ trait TaskTitle extends Enumerable.Implicits
 
 object TaskTitle extends TaskTitle {
 
-  private val aboutYouItemTitles: AboutYouItemTitles.type = AboutYouItemTitles
+  val aboutYouItemTitles: AboutYouItemTitles.type = AboutYouItemTitles
   private val charitableDonationsTitles: CharitableDonationsTitles.type = CharitableDonationsTitles
   private val employmentTitles: EmploymentTitles.type = EmploymentTitles
   private val selfEmploymentTitles: SelfEmploymentTitles.type = SelfEmploymentTitles

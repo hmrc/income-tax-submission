@@ -43,7 +43,7 @@ class TaskListDataConnectorISpec extends ConnectorIntegrationTest {
       TaskListSection(
         sectionTitle = SectionTitle.AboutYouTitle(),
         taskItems = Some(List[TaskListSectionItem](
-          TaskListSectionItem(TaskTitle(content = "UK Residence Status"), status = TaskStatus.Completed(), Some("url"))
+          TaskListSectionItem(TaskTitle.aboutYouItemTitles.UkResidenceStatus(), status = TaskStatus.Completed(), Some("url"))
         ))
       )
     ))
