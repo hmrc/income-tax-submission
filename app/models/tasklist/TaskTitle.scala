@@ -24,15 +24,15 @@ trait TaskTitle extends Enumerable.Implicits
 object TaskTitle extends TaskTitle {
 
   val aboutYouItemTitles: AboutYouItemTitles.type = AboutYouItemTitles
-  private val charitableDonationsTitles: CharitableDonationsTitles.type = CharitableDonationsTitles
-  private val employmentTitles: EmploymentTitles.type = EmploymentTitles
-  private val selfEmploymentTitles: SelfEmploymentTitles.type = SelfEmploymentTitles
-  private val esaTitles: EsaTitles.type = EsaTitles
-  private val jsaTitles: JsaTitles.type = JsaTitles
-  private val pensionsTitles: PensionsTitles.type = PensionsTitles
-  private val paymentsIntoPensionsTitles: PaymentsIntoPensionsTitles.type = PaymentsIntoPensionsTitles
-  private val ukInterestTitles: UkInterestTitles.type = UkInterestTitles
-  private val ukDividendsTitles: UkDividendsTitles.type = UkDividendsTitles
+  val charitableDonationsTitles: CharitableDonationsTitles.type = CharitableDonationsTitles
+  val employmentTitles: EmploymentTitles.type = EmploymentTitles
+  val selfEmploymentTitles: SelfEmploymentTitles.type = SelfEmploymentTitles
+  val esaTitles: EsaTitles.type = EsaTitles
+  val jsaTitles: JsaTitles.type = JsaTitles
+  val pensionsTitles: PensionsTitles.type = PensionsTitles
+  val paymentsIntoPensionsTitles: PaymentsIntoPensionsTitles.type = PaymentsIntoPensionsTitles
+  val ukInterestTitles: UkInterestTitles.type = UkInterestTitles
+  val ukDividendsTitles: UkDividendsTitles.type = UkDividendsTitles
 
   val values: Seq[TaskTitle] = Seq(
     aboutYouItemTitles.UkResidenceStatus(),
