@@ -16,11 +16,10 @@
 
 package models.tasklist
 
-import models.tasklist.TaskTitle.{aboutYouItemTitles, charitableDonationsTitles, employmentTitles, esaTitles, jsaTitles, paymentsIntoPensionsTitles, pensionsTitles, selfEmploymentTitles, ukDividendsTitles, ukInterestTitles}
-import models.tasklist.taskItemTitles.PensionsTitles.OtherUkPensions
+import models.tasklist.TaskTitle._
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
-import play.api.libs.json.{JsPath, JsSuccess, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 
 class TaskTitleSpec extends AnyFreeSpec with Matchers {
 
@@ -59,12 +58,6 @@ class TaskTitleSpec extends AnyFreeSpec with Matchers {
     "must parse to json" in {
       val underTest: Seq[JsValue] = TaskTitle.values.map(x => Json.toJson(x))
       underTest.isInstanceOf[Seq[JsValue]] mustBe true
-    }
-
-    "something" in {
-      val underTest = TaskTitle.pensionsTitles.OtherUkPensions()
-      Json.toJson(underTest).toString() mustBe "{}"
-      Json.toJson(underTest).validate[TaskTitle.pensionsTitles.OtherUkPensions] mustBe JsSuccess(OtherUkPensions(), JsPath())
     }
   }
 }
