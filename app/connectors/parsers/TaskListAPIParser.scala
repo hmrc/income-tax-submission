@@ -16,20 +16,17 @@
 
 package connectors.parsers
 
-import models._
+import connectors.parsers.TaskListTailoringDataParser.TaskListResponseModel
 import models.tasklist.TaskListModel
-import play.api.Logging
-import play.api.http.Status._
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
-import utils.PagerDutyHelper.PagerDutyKeys._
+import utils.PagerDutyHelper.PagerDutyKeys.{UNEXPECTED_RESPONSE_FROM_API}
 import utils.PagerDutyHelper.pagerDutyLog
 
-object TaskListDataParser extends APIParser with Logging {
-  type TaskListResponseModel = Either[APIErrorModel, Option[TaskListModel]]
+import play.api.http.Status._
+import utils.PagerDutyHelper.PagerDutyKeys._
 
-  override val parserName: String = "TaskListParser"
-  override val service: String = "income-tax-tailor-return"
-
+trait TaskListAPIParser extends APIParser {
   implicit object TaskListHttpReads extends HttpReads[TaskListResponseModel] {
 
     override def read(method: String, url: String, response: HttpResponse): TaskListResponseModel = {
@@ -56,4 +53,5 @@ object TaskListDataParser extends APIParser with Logging {
       }
     }
   }
+
 }
