@@ -43,6 +43,7 @@ class TaskTitleSpec extends AnyFreeSpec with Matchers {
         pensionsTitles.ShortServiceRefunds(),
         paymentsIntoPensionsTitles.PaymentsIntoUk(),
         paymentsIntoPensionsTitles.PaymentsIntoOverseas(),
+        paymentsIntoPensionsTitles.AnnualAllowances(),
         paymentsIntoPensionsTitles.OverseasTransfer(),
         ukInterestTitles.BanksAndBuilding(),
         ukInterestTitles.TrustFundBond(),
