@@ -27,7 +27,7 @@ class PensionTaskListDataConnector @Inject()(val http: HttpClient, val config: A
                                             (implicit ec: ExecutionContext) extends Connector {
 
   def get(taxYear: Int,nino:String)(implicit hc: HeaderCarrier): Future[TaskListResponseModel] = {
-    val taskListDataUrl: String = config.pensionsBaseUrl + s"income-tax-pensions/$taxYear/common-task-list/$nino"
+    val taskListDataUrl: String = config.pensionsBaseUrl + s"/income-tax-pensions/$taxYear/common-task-list/$nino"
 
 
     http.GET[TaskListResponseModel](taskListDataUrl)(TaskListHttpReads, addHeadersToHeaderCarrier(taskListDataUrl), ec)
