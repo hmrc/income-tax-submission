@@ -50,7 +50,6 @@ class TaskListDataService @Inject()(
 
     val tailoringSectionItems: Seq[TaskListSectionItem] =
       tailoringSectionItemsMap.get(sectionTitleToMerge.toString).flatMap(identity).getOrElse(Seq.empty)
-
     otherServiceTaskList.map {
       case Right(remoteModel) =>
         remoteModel match {
@@ -58,18 +57,18 @@ class TaskListDataService @Inject()(
             val remoteTaskListSectionItems: Seq[TaskListSectionItem] =
               getSectionItemMap(x).get(sectionTitleToMerge.toString).flatMap(identity).getOrElse(Seq.empty)
 
-            val commonItems = tailoringSectionItems.intersect(remoteTaskListSectionItems)
-            val tailoringOnlyItems = tailoringSectionItems.diff(remoteTaskListSectionItems).map(_.copy(status = TaskStatus("Not Started")))
-            //TODO change status on review, revisit this
-            val remoteOnlyItems = remoteTaskListSectionItems.diff(tailoringSectionItems).map(_.copy(status = TaskStatus("Check now")))
+            val commonItems = remoteTaskListSectionItems.filter(item => tailoringSectionItems.exists(_.title.content == item.title.content))
+            val tailoringOnlyItems = tailoringSectionItems.filterNot(item => remoteTaskListSectionItems.exists(_.title.content == item.title.content))
+              .map(_.copy(status = TaskStatus("notStarted")))
 
+            val remoteOnlyItems = remoteTaskListSectionItems.filterNot(item => tailoringSectionItems.exists(_.title.content == item.title.content))
+              .map(_.copy(status = TaskStatus("checkNow")))
             val mergedSectionItems: Option[Seq[TaskListSectionItem]] = Some(remoteOnlyItems ++ tailoringOnlyItems ++ commonItems)
 
             val updatedSectionsList: Seq[TaskListSection] =
               convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge.toString, mergedSectionItems))
-val result = TaskListModel(updatedSectionsList)
-            println(s"1111 - check and merge result $result")
-            Right(Some(result))
+            Right(Some(TaskListModel(updatedSectionsList)))
+
           case None => Right(Some(tailoringTaskListModel))
         }
       case Left(_) =>
@@ -78,12 +77,15 @@ val result = TaskListModel(updatedSectionsList)
         val updatedSectionsList: Seq[TaskListSection] =
           convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge.toString, sectionWithUnderMaintenance))
         val result = TaskListModel(updatedSectionsList)
-        println(s"1111 - Left result $result")
         Right(Some(result))
     }.recover {
       case ex: Throwable =>
-        println(s"1111 - error $ex")
-        Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INVALID STATE", "Failed to merge task list data")))
+
+        val sectionWithUnderMaintenance: Option[Seq[TaskListSectionItem]] = Some(tailoringSectionItems.map(_.copy(status = TaskStatus("underMaintenance"))))
+        val updatedSectionsList: Seq[TaskListSection] =
+          convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge.toString, sectionWithUnderMaintenance))
+        val result = TaskListModel(updatedSectionsList)
+        Right(Some(result))
     }
   }
 
@@ -91,7 +93,6 @@ val result = TaskListModel(updatedSectionsList)
   def get(taxYear: Int, nino: String, mtdItId: String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListModel]]] = {
     val tailoringTaskListResponse: Future[TaskListResponseModel] = connector.get(taxYear)(hc.withExtraHeaders(("mtditid", mtdItId)))
     val pensionTaskListResponse: Future[TaskListResponseModel] = pensionTaskListDataConnector.get(taxYear, nino)(hc.withExtraHeaders(("mtditid", mtdItId)))
-println(s"1111- pension data $pensionTaskListResponse")
     tailoringTaskListResponse.flatMap {
       case Right(Some(tailoringData)) =>
         checkAndMergeResponse(PensionsTitle, tailoringData, pensionTaskListResponse)
