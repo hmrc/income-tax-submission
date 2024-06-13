@@ -18,7 +18,7 @@ package controllers
 
 import connectors.parsers.TaskListDataParser.TaskListResponseModel
 import models._
-import models.tasklist.{TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
+import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
 import org.scalamock.handlers.CallHandler3
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -42,9 +42,9 @@ class TaskListDataControllerSpec extends TestUtils {
 
   private val taskListData: TaskListResponseModel = Right(Some(TaskListModel(List[TaskListSection](
     TaskListSection(
-      sectionTitle = "AboutYou",
+      sectionTitle = SectionTitle.AboutYouTitle(),
       taskItems = Some(List[TaskListSectionItem](
-        TaskListSectionItem(TaskTitle(content = "UK Residence Status"), status = TaskStatus("Completed"), Some("url"))))
+        TaskListSectionItem(TaskTitle.aboutYouItemTitles.UkResidenceStatus(), status = TaskStatus.Completed(), Some("url"))))
     )
   ))))
 
