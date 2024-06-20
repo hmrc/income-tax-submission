@@ -17,41 +17,22 @@
 package models.tasklist
 
 import models.{Enumerable, WithName}
-import play.api.libs.json.{Json, OWrites, Reads}
+import enumeratum._
 
-trait TaskStatus extends Enumerable.Implicits
+sealed abstract class TaskStatus(override val entryName: String) extends EnumEntry {
+  override def toString: String = entryName
+}
+object TaskStatus extends Enum[TaskStatus] with PlayJsonEnum[TaskStatus] {
 
-object TaskStatus extends TaskStatus {
+  val values: IndexedSeq[TaskStatus] = findValues
 
-  case class Completed() extends WithName("completed") with TaskStatus
-  object Completed {
-    implicit val nonStrictReads: Reads[Completed] = Reads.pure(Completed())
-    implicit val writes: OWrites[Completed] = OWrites[Completed](_ => Json.obj())
-  }
+  case object Completed extends TaskStatus ("completed")
+  case object InProgress extends TaskStatus ("inProgress")
+  case object NotStarted extends TaskStatus ("notStarted")
+  case object CheckNow extends TaskStatus ("checkNow")
+  case object UnderMaintenance extends TaskStatus ("underMaintenance")
 
-  case class InProgress() extends WithName("inProgress") with TaskStatus
-  object InProgress {
-    implicit val nonStrictReads: Reads[InProgress] = Reads.pure(InProgress())
-    implicit val writes: OWrites[InProgress] = OWrites[InProgress](_ => Json.obj())
-  }
-
-  case class NotStarted() extends WithName("notStarted") with TaskStatus
-  object NotStarted {
-    implicit val nonStrictReads: Reads[NotStarted] = Reads.pure(NotStarted())
-    implicit val writes: OWrites[NotStarted] = OWrites[NotStarted](_ => Json.obj())
-  }
-
-  case class CheckNow() extends WithName("checkNow") with TaskStatus
-  object CheckNow {
-    implicit val nonStrictReads: Reads[CheckNow] = Reads.pure(CheckNow())
-    implicit val writes: OWrites[CheckNow] = OWrites[CheckNow](_ => Json.obj())
-  }
-
-  val values: Seq[TaskStatus] = Seq(
-    Completed(), InProgress(), NotStarted(), CheckNow()
-  )
-
+  // Adding Enumerable support for TaskStatus
   implicit val enumerable: Enumerable[TaskStatus] =
     Enumerable(values.map(v => v.toString -> v): _*)
-
 }
