@@ -16,7 +16,7 @@
 
 package controllers
 
-import connectors.parsers.TaskListDataParser.TaskListResponseModel
+import connectors.parsers.TaskListTailoringDataParser.TaskListResponseModel
 import models._
 import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
 import org.scalamock.handlers.CallHandler3
