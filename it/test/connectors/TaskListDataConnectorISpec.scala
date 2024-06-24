@@ -41,9 +41,9 @@ class TaskListDataConnectorISpec extends ConnectorIntegrationTest {
 
     val expectedResult: TaskListModel = TaskListModel(List[TaskListSection](
       TaskListSection(
-        sectionTitle = SectionTitle.AboutYouTitle(),
+        sectionTitle = SectionTitle.AboutYouTitle,
         taskItems = Some(List[TaskListSectionItem](
-          TaskListSectionItem(TaskTitle.aboutYouItemTitles.UkResidenceStatus(), status = TaskStatus.Completed(), Some("url"))
+          TaskListSectionItem(TaskTitle.UkResidenceStatus, status = TaskStatus.Completed, Some("url"))
         ))
       )
     ))
