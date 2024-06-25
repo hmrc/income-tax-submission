@@ -12,4 +12,4 @@ POST        /income-tax/nino/:nino/sources/exclude-journey/:taxYear             
 
 POST        /income-tax/nino/:nino/sources/clear-excluded-journeys/:taxYear        controllers.ExcludeJourneyController.clearJourneys(taxYear: Int, nino: String)
 
-GET         /income-tax/task-list/:taxYear                                         controllers.TaskListDataController.get(taxYear: Int)
+GET         /income-tax/nino/:nino/sources/task-list/:taxYear                      controllers.TaskListDataController.get(nino: String, taxYear: Int)

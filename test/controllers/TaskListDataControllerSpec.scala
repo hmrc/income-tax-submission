@@ -42,15 +42,16 @@ class TaskListDataControllerSpec extends TestUtils {
 
   private val taskListData: TaskListResponseModel = Right(Some(TaskListModel(List[TaskListSection](
     TaskListSection(
-      sectionTitle = SectionTitle.AboutYouTitle(),
+      sectionTitle = SectionTitle.AboutYouTitle,
       taskItems = Some(List[TaskListSectionItem](
-        TaskListSectionItem(TaskTitle.aboutYouItemTitles.UkResidenceStatus(), status = TaskStatus.Completed(), Some("url"))))
+        TaskListSectionItem(TaskTitle.UkResidenceStatus, status = TaskStatus.Completed, Some("url"))))
     )
   ))))
 
   private val controller: TaskListDataController = TaskListDataController(mockTaskListDataService, mockControllerComponents, authorisedAction)
   private val mtdItId: String = "1234567890"
   private val taxYear: Int = TaxYearUtils.taxYear
+  private val nino: String = "AA123456A"
   private val fakeGetRequest = FakeRequest("GET",
     s"/income-tax-submission-service/income-tax/task-list/$taxYear").withHeaders("mtditid" -> mtdItId, "sessionId" -> "sessionId")
 
@@ -61,7 +62,7 @@ class TaskListDataControllerSpec extends TestUtils {
       val result = {
         mockAuth()
         mockGetTaskListData(taskListData)
-        controller.get(taxYear)(fakeGetRequest)
+        controller.get(nino, taxYear)(fakeGetRequest)
       }
       status(result) mustBe OK
       Json.parse(bodyOf(result)) mustBe Json.toJson(taskListData.toOption.get)
@@ -71,7 +72,7 @@ class TaskListDataControllerSpec extends TestUtils {
       val result = {
         mockAuth()
         mockGetTaskListData(Right(None))
-        controller.get(taxYear)(fakeGetRequest)
+        controller.get(nino, taxYear)(fakeGetRequest)
       }
       status(result) mustBe NOT_FOUND
     }
@@ -80,7 +81,7 @@ class TaskListDataControllerSpec extends TestUtils {
       val result = {
         mockAuth()
         mockGetTaskListData(Left(APIErrorModel(SERVICE_UNAVAILABLE, APIErrorBodyModel("NOT_GOOD", "something went wrong"))))
-        controller.get(taxYear)(fakeGetRequest)
+        controller.get(nino, taxYear)(fakeGetRequest)
       }
       status(result) mustBe SERVICE_UNAVAILABLE
       Json.parse(bodyOf(result)) mustBe APIErrorModel(SERVICE_UNAVAILABLE, APIErrorBodyModel("NOT_GOOD", "something went wrong")).toJson
