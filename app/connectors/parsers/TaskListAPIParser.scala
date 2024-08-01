@@ -17,22 +17,50 @@
 package connectors.parsers
 
 import connectors.parsers.TaskListTailoringDataParser.TaskListResponseModel
-import models.tasklist.TaskListModel
+import models.APIErrorModel
+import models.tasklist.{TaskListModel, TaskListSection}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
-import utils.PagerDutyHelper.PagerDutyKeys.{UNEXPECTED_RESPONSE_FROM_API}
+import utils.PagerDutyHelper.PagerDutyKeys.UNEXPECTED_RESPONSE_FROM_API
 import utils.PagerDutyHelper.pagerDutyLog
-
 import play.api.http.Status._
 import utils.PagerDutyHelper.PagerDutyKeys._
 
 trait TaskListAPIParser extends APIParser {
+  type TaskListSectionResponseModel = Either[APIErrorModel, Option[TaskListSection]]
   implicit object TaskListHttpReads extends HttpReads[TaskListResponseModel] {
 
     override def read(method: String, url: String, response: HttpResponse): TaskListResponseModel = {
       response.status match {
         case OK =>
           response.json.validate[TaskListModel].fold(
+            _ => badSuccessJsonFromAPI,
+            model => Right(Some(model))
+          )
+        case NOT_FOUND =>
+          Right(None)
+        case BAD_REQUEST | UNPROCESSABLE_ENTITY | FORBIDDEN =>
+          pagerDutyLog(FOURXX_RESPONSE_FROM_API, logMessage(response))
+          handleAPIError(response)
+        case INTERNAL_SERVER_ERROR =>
+          pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_API, logMessage(response))
+          handleAPIError(response)
+        case SERVICE_UNAVAILABLE =>
+          pagerDutyLog(SERVICE_UNAVAILABLE_FROM_API, logMessage(response))
+          handleAPIError(response)
+        case _ =>
+          pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, logMessage(response))
+          handleAPIError(response, Some(INTERNAL_SERVER_ERROR))
+      }
+    }
+  }
+
+  implicit object TaskListSectionHttpReads extends HttpReads[TaskListSectionResponseModel] {
+
+    override def read(method: String, url: String, response: HttpResponse): TaskListSectionResponseModel = {
+      response.status match {
+        case OK =>
+          response.json.validate[TaskListSection].fold(
             _ => badSuccessJsonFromAPI,
             model => Right(Some(model))
           )

@@ -17,94 +17,156 @@
 package services
 
 import connectors._
+import connectors.parsers.TaskListPensionDataParser.{TaskListPensionResponseModel, TaskListSectionResponseModel}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import connectors.parsers.TaskListTailoringDataParser.TaskListResponseModel
 import models.{APIErrorBodyModel, APIErrorModel}
-import models.tasklist.SectionTitle.PensionsTitle
+import models.tasklist.SectionTitle.{DividendsTitle, InsuranceGainsTitle, PensionsTitle}
 import models.tasklist.TaskStatus.{CheckNow, NotStarted, UnderMaintenance}
-import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus}
+import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 
 import scala.collection.immutable.ListMap
 
 
-
 class TaskListDataService @Inject()(
                                      connector: TaskListDataConnector,
                                      pensionTaskListDataConnector: PensionTaskListDataConnector,
-                                     implicit val ec: ExecutionContext) {
+                                     dividendsTaskListDataConnector: DividendsTaskListDataConnector,
+                                     additionalInfoTaskListDataConnector: AdditionalInfoTaskListDataConnector,
+                                     implicit val ec: ExecutionContext){
 
-  private def getSectionItemMap(taskListModel: TaskListModel): ListMap[SectionTitle, Option[Seq[TaskListSectionItem]]] = {
+  private def getSectionItemMap(taskListModel: TaskListModel): ListMap[SectionTitle, Option[Seq[TaskListSectionItem]]] =
     ListMap.from(taskListModel.taskList.map(v => (v.sectionTitle, v.taskItems)))
-  }
 
-  private def convertMapToSeq(dataMap: ListMap[SectionTitle, Option[Seq[TaskListSectionItem]]]): Seq[TaskListSection] = {
+  private def convertMapToSeq(dataMap: ListMap[SectionTitle, Option[Seq[TaskListSectionItem]]]): Seq[TaskListSection] =
     dataMap.map {
       case (sectionName, itemsOption) => TaskListSection(sectionName, Some(itemsOption.getOrElse(Seq.empty)))
     }.toSeq
+
+  //TODO once the approach to derive checknot status from downstream is confirmed we can drop this function and use mergeSectionItems instead
+//  private def mergeSectionItemsWithCheckNow(tailoringItems: Seq[TaskListSectionItem], remoteItems: Seq[TaskListSectionItem]): Seq[TaskListSectionItem] = {
+//    val commonItems = remoteItems.filter(item => tailoringItems.exists(_.title == item.title))
+//    val tailoringOnlyItems = tailoringItems.filterNot(item => remoteItems.exists(_.title == item.title)).map(_.copy(status = NotStarted))
+//    val remoteOnlyItems = remoteItems.filterNot(item => tailoringItems.exists(_.title == item.title)).map(_.copy(status = CheckNow))
+//
+//    remoteOnlyItems ++ tailoringOnlyItems ++ commonItems
+//  }
+
+
+  private def mergeSectionItemsWithCheckNow(tailoringItems: Seq[TaskListSectionItem], remoteItems: Seq[TaskListSectionItem]): Seq[TaskListSectionItem] = {
+    val remoteItemsMap = remoteItems.map(item => item.title -> item).toMap
+
+    val combinedItems = tailoringItems.map { item =>
+      remoteItemsMap.get(item.title) match {
+        case Some(remoteItem) => remoteItem // If remote item exists, take the remote item
+        case None => item.copy(status = NotStarted) // If not, take the tailoring item and set status to NotStarted
+      }
+    }
+
+    val remoteOnlyItems = remoteItems.filterNot(item => tailoringItems.exists(_.title == item.title)).map(_.copy(status = CheckNow))
+
+    combinedItems ++ remoteOnlyItems
   }
 
-  private def checkAndMergeResponse(sectionTitleToMerge: SectionTitle, tailoringTaskListModel: TaskListModel,
-                                    otherServiceTaskList: Future[TaskListResponseModel]): Future[Either[APIErrorModel, Option[TaskListModel]]] = {
+  /**
+   * Below merge is performed on assumption that `check now` status in handled in downstream
+   */
+//    private def mergeSectionItems(tailoringItems: Seq[TaskListSectionItem], remoteItems: Seq[TaskListSectionItem]): Seq[TaskListSectionItem] = {
+//      val tailoringOnlyItems = tailoringItems.filterNot(item => remoteItems.exists(_.title == item.title)).map(_.copy(status = NotStarted))
+//      //This should get all the status including check now
+//      val remoteOnlyItems = remoteItems.filterNot(item => tailoringItems.exists(_.title == item.title))
+//
+//      remoteOnlyItems ++ tailoringOnlyItems
+//    }
+  private def handleTaskListSectionResponse(
+                                             sectionTitleToMerge: SectionTitle,
+                                             tailoringTaskListModel: TaskListModel,
+                                             otherServiceTaskList: Future[TaskListSectionResponseModel]
+                                           ): Future[TaskListModel] = {
 
     val tailoringSectionItemsMap: ListMap[SectionTitle, Option[Seq[TaskListSectionItem]]] = getSectionItemMap(tailoringTaskListModel)
-
-    val tailoringSectionItems: Seq[TaskListSectionItem] = tailoringSectionItemsMap.get(sectionTitleToMerge).flatten.getOrElse(Seq.empty)
+    val tailoringSectionItems: Seq[TaskListSectionItem] = tailoringSectionItemsMap.getOrElse(sectionTitleToMerge, Some(Seq.empty)).getOrElse(Seq.empty)
 
     otherServiceTaskList.map {
-      case Right(remoteModel) =>
-        remoteModel match {
-          case Some(x) =>
-            val remoteTaskListSectionItems: Seq[TaskListSectionItem] = getSectionItemMap(x).get(sectionTitleToMerge).flatten.getOrElse(Seq.empty)
-
-            val commonItems = remoteTaskListSectionItems.filter(item => tailoringSectionItems.exists(_.title == item.title))
-
-            val tailoringOnlyItems = tailoringSectionItems.filterNot(item => remoteTaskListSectionItems.exists(_.title == item.title))
-              .map(_.copy(status = NotStarted))
-
-            val remoteOnlyItems = remoteTaskListSectionItems.filterNot(item => tailoringSectionItems.exists(_.title == item.title))
-              .map(_.copy(status = CheckNow))
-
-            val mergedSectionItems: Option[Seq[TaskListSectionItem]] = Some(remoteOnlyItems ++ tailoringOnlyItems ++ commonItems)
-
-            val updatedSectionsList: Seq[TaskListSection] = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, mergedSectionItems))
-
-            Right(Some(TaskListModel(updatedSectionsList)))
-
-          case None => Right(Some(tailoringTaskListModel))
-        }
-      case Left(_) =>
-        // In case of error, respective section should be displayed as Under Maintenance
-        val sectionWithUnderMaintenance: Option[Seq[TaskListSectionItem]] = Some(tailoringSectionItems.map(_.copy(status = UnderMaintenance)))
-        val updatedSectionsList: Seq[TaskListSection] = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, sectionWithUnderMaintenance))
-        val result = TaskListModel(updatedSectionsList)
-
-        Right(Some(result))
+      case Right(Some(remoteSection)) => {
+        val remoteSectionItems: Seq[TaskListSectionItem] = remoteSection.taskItems.getOrElse(Seq.empty)
+        val mergedSectionItems = Some(mergeSectionItemsWithCheckNow(tailoringSectionItems, remoteSectionItems))
+        val updatedSectionsList = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, mergedSectionItems))
+        TaskListModel(updatedSectionsList)
+      }
+      case Right(None) => tailoringTaskListModel
+      case Left(error) =>
+        val underMaintenanceItems = tailoringSectionItems.map(_.copy(status = UnderMaintenance,href = None))
+        val updatedSectionsList = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, Some(underMaintenanceItems)))
+        TaskListModel(updatedSectionsList)
     }.recover {
       case ex: Throwable =>
-        val sectionWithUnderMaintenance: Option[Seq[TaskListSectionItem]] = Some(tailoringSectionItems.map(_.copy(status = UnderMaintenance)))
-        val updatedSectionsList: Seq[TaskListSection] = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, sectionWithUnderMaintenance))
-        val result = TaskListModel(updatedSectionsList)
+        val underMaintenanceItems = tailoringSectionItems.map(_.copy(status = UnderMaintenance,href = None))
+        val updatedSectionsList = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, Some(underMaintenanceItems)))
+        TaskListModel(updatedSectionsList)
+    }
+  }
 
-        Right(Some(result))
+  /**
+   * TODO Once pension service is brought inline to return only sections and sectionitems, we can remove this function.
+   * This is created to support different model being returned by pension
+   */
+
+  private def handleTaskListModelResponse(
+                                           sectionTitleToMerge: SectionTitle,
+                                           tailoringTaskListModel: TaskListModel,
+                                           otherServiceTaskList: Future[TaskListPensionResponseModel]
+                                         ): Future[TaskListModel] = {
+
+    val tailoringSectionItemsMap = getSectionItemMap(tailoringTaskListModel)
+    val tailoringSectionItems = tailoringSectionItemsMap.getOrElse(sectionTitleToMerge, Some(Seq.empty)).getOrElse(Seq.empty)
+
+    otherServiceTaskList.flatMap{
+      case Right(Some(remoteModel)) =>
+
+        val remoteSectionItems: Seq[TaskListSectionItem] =
+          remoteModel.taskList.find(_.sectionTitle == sectionTitleToMerge).flatMap(_.taskItems).getOrElse(Seq.empty)
+        val mergedSectionItems = Some(mergeSectionItemsWithCheckNow(tailoringSectionItems, remoteSectionItems))
+        val updatedSectionsList = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, mergedSectionItems))
+        Future.successful(TaskListModel(updatedSectionsList))
+
+      case Right(None) => Future.successful(tailoringTaskListModel)
+      case Left(error) =>
+        val underMaintenanceItems: Seq[TaskListSectionItem] = tailoringSectionItems.map(_.copy(status = UnderMaintenance,href = None))
+        val updatedSectionsList = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, Some(underMaintenanceItems)))
+        Future.successful(TaskListModel(updatedSectionsList))
+
+    }.recover {
+      case ex: Throwable =>
+        val underMaintenanceItems = tailoringSectionItems.map(_.copy(status = UnderMaintenance,href = None))
+        val updatedSectionsList = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, Some(underMaintenanceItems)))
+        TaskListModel(updatedSectionsList)
     }
   }
 
 
   def get(taxYear: Int, nino: String, mtdItId: String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListModel]]] = {
-    val tailoringTaskListResponse: Future[TaskListResponseModel] = connector.get(taxYear)(hc.withExtraHeaders(("mtditid", mtdItId)))
-    val pensionTaskListResponse: Future[TaskListResponseModel] = pensionTaskListDataConnector.get(taxYear, nino)(hc.withExtraHeaders(("mtditid", mtdItId)))
+    //TODO move "mtditid" as a constant across the repo in separate PR
+    val enhancedHC = hc.withExtraHeaders(("mtditid", mtdItId))
+    val tailoringTaskListResponse = connector.get(taxYear)(enhancedHC)
+    val pensionTaskListResponse = pensionTaskListDataConnector.get(taxYear, nino)(enhancedHC)
+    val dividendsTaskListResponse = dividendsTaskListDataConnector.get(taxYear, nino)(enhancedHC)
+    val additionalInfoTaskListResponse = additionalInfoTaskListDataConnector.get(taxYear, nino)(enhancedHC)
+
     tailoringTaskListResponse.flatMap {
       case Right(Some(tailoringData)) =>
-        checkAndMergeResponse(PensionsTitle, tailoringData, pensionTaskListResponse)
+        for {
+          mergedWithPensions <- handleTaskListModelResponse(PensionsTitle, tailoringData, pensionTaskListResponse)
+          mergedWithDividends <- handleTaskListSectionResponse(DividendsTitle, mergedWithPensions, dividendsTaskListResponse)
+          finalMerged <- handleTaskListSectionResponse(InsuranceGainsTitle, mergedWithDividends, additionalInfoTaskListResponse)
+        } yield Right(Some(finalMerged))
       case Right(None) =>
         Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INVALID STATE", "Tailoring task list data cannot be empty"))))
       case Left(error) =>
         Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INVALID STATE", "Failed to retrieve tailoring task list data"))))
     }
   }
-
 }

@@ -16,14 +16,9 @@
 
 package connectors.parsers
 
-import models._
-import models.tasklist.TaskListModel
 import play.api.Logging
 
-object TaskListPensionDataParser extends TaskListAPIParser with Logging {
-  type TaskListPensionResponseModel = Either[APIErrorModel, Option[TaskListModel]]
-
+object TaskListDividendDataParser extends TaskListAPIParser with Logging {
   override val parserName: String = "TaskListParser"
-  override val service: String = "pension"
-
+  override val service: String = "dividend"
 }
