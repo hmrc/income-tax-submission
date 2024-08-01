@@ -46,15 +46,6 @@ class TaskListDataService @Inject()(
       case (sectionName, itemsOption) => TaskListSection(sectionName, Some(itemsOption.getOrElse(Seq.empty)))
     }.toSeq
 
-  //TODO once the approach to derive checknot status from downstream is confirmed we can drop this function and use mergeSectionItems instead
-//  private def mergeSectionItemsWithCheckNow(tailoringItems: Seq[TaskListSectionItem], remoteItems: Seq[TaskListSectionItem]): Seq[TaskListSectionItem] = {
-//    val commonItems = remoteItems.filter(item => tailoringItems.exists(_.title == item.title))
-//    val tailoringOnlyItems = tailoringItems.filterNot(item => remoteItems.exists(_.title == item.title)).map(_.copy(status = NotStarted))
-//    val remoteOnlyItems = remoteItems.filterNot(item => tailoringItems.exists(_.title == item.title)).map(_.copy(status = CheckNow))
-//
-//    remoteOnlyItems ++ tailoringOnlyItems ++ commonItems
-//  }
-
 
   private def mergeSectionItemsWithCheckNow(tailoringItems: Seq[TaskListSectionItem], remoteItems: Seq[TaskListSectionItem]): Seq[TaskListSectionItem] = {
     val remoteItemsMap = remoteItems.map(item => item.title -> item).toMap

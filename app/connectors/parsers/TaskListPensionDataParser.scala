@@ -24,6 +24,6 @@ object TaskListPensionDataParser extends TaskListAPIParser with Logging {
   type TaskListPensionResponseModel = Either[APIErrorModel, Option[TaskListModel]]
 
   override val parserName: String = "TaskListParser"
-  override val service: String = "pension"
+  override val service: String = "income-tax-pensions"
 
 }

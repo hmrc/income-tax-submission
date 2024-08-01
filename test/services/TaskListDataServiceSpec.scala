@@ -189,7 +189,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
             TaskListSectionItem(CashDividends, TaskStatus.NotStarted, Some("CashDividendsPage")),
             TaskListSectionItem(DividendsFromUnitTrusts, TaskStatus.NotStarted, Some("DividendsFromUnitTrustsPage")),
           )
-          //In gains we cover the scenario where response from Tailoring and Downstream are same
+
           insuranceGainsSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(LifeInsurance, TaskStatus.InProgress, Some("LifeInsurancePage")),
             TaskListSectionItem(LifeAnnuity, TaskStatus.Completed, Some("CYAPage")),
@@ -201,7 +201,6 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       }
     }
 
-//TODO change URL to None
     "return under maintenance if service has internal error" in {
       when(mockConnector.get(any[Int])(any[HeaderCarrier])).thenReturn(tailoringResponse)
       when(mockPensionConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
@@ -223,9 +222,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           insuranceGainsSection shouldBe defined
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
-            //was Completed (CYAPage) in Tailoring but pension had InProgress("UnauthorisedPaymentsPage"
             TaskListSectionItem(UnauthorisedPayments, TaskStatus.UnderMaintenance, None),
-            //Below two stays same as similar response
             TaskListSectionItem(ShortServiceRefunds, TaskStatus.UnderMaintenance, None),
             TaskListSectionItem(IncomeFromOverseas, TaskStatus.UnderMaintenance, None)
           )
@@ -234,7 +231,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
             TaskListSectionItem(CashDividends, TaskStatus.UnderMaintenance, None),
             TaskListSectionItem(DividendsFromUnitTrusts, TaskStatus.UnderMaintenance, None)
           )
-          //In gains we cover the scenario where response from Tailoring and Downstream are same
+
           insuranceGainsSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(LifeInsurance, TaskStatus.InProgress, Some("LifeInsurancePage")),
             TaskListSectionItem(LifeAnnuity, TaskStatus.Completed, Some("CYAPage")),

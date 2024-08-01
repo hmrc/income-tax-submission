@@ -20,6 +20,6 @@ import play.api.Logging
 
 object TaskListAdditionalInfoDataParser extends TaskListAPIParser with Logging {
   override val parserName: String = "TaskListParser"
-  override val service: String = "additionalInfo"
+  override val service: String = "income-tax-additional-information"
 
 }

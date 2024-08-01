@@ -20,5 +20,5 @@ import play.api.Logging
 
 object TaskListDividendDataParser extends TaskListAPIParser with Logging {
   override val parserName: String = "TaskListParser"
-  override val service: String = "dividend"
+  override val service: String = "income-tax-dividends"
 }
