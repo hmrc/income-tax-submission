@@ -16,20 +16,18 @@
 
 package connectors.parsers
 
-import models._
-import models.tasklist.TaskListModel
-import play.api.Logging
-import play.api.http.Status._
+import connectors.parsers.TaskListTailoringDataParser.TaskListResponseModel
+import models.APIErrorModel
+import models.tasklist.{TaskListModel, TaskListSection}
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
-import utils.PagerDutyHelper.PagerDutyKeys._
+import utils.PagerDutyHelper.PagerDutyKeys.UNEXPECTED_RESPONSE_FROM_API
 import utils.PagerDutyHelper.pagerDutyLog
+import play.api.http.Status._
+import utils.PagerDutyHelper.PagerDutyKeys._
 
-object TaskListDataParser extends APIParser with Logging {
-  type TaskListResponseModel = Either[APIErrorModel, Option[TaskListModel]]
-
-  override val parserName: String = "TaskListParser"
-  override val service: String = "income-tax-tailor-return"
-
+trait TaskListAPIParser extends APIParser {
+  type TaskListSectionResponseModel = Either[APIErrorModel, Option[TaskListSection]]
   implicit object TaskListHttpReads extends HttpReads[TaskListResponseModel] {
 
     override def read(method: String, url: String, response: HttpResponse): TaskListResponseModel = {
@@ -56,4 +54,32 @@ object TaskListDataParser extends APIParser with Logging {
       }
     }
   }
+
+  implicit object TaskListSectionHttpReads extends HttpReads[TaskListSectionResponseModel] {
+
+    override def read(method: String, url: String, response: HttpResponse): TaskListSectionResponseModel = {
+      response.status match {
+        case OK =>
+          response.json.validate[TaskListSection].fold(
+            _ => badSuccessJsonFromAPI,
+            model => Right(Some(model))
+          )
+        case NOT_FOUND =>
+          Right(None)
+        case BAD_REQUEST | UNPROCESSABLE_ENTITY | FORBIDDEN =>
+          pagerDutyLog(FOURXX_RESPONSE_FROM_API, logMessage(response))
+          handleAPIError(response)
+        case INTERNAL_SERVER_ERROR =>
+          pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_API, logMessage(response))
+          handleAPIError(response)
+        case SERVICE_UNAVAILABLE =>
+          pagerDutyLog(SERVICE_UNAVAILABLE_FROM_API, logMessage(response))
+          handleAPIError(response)
+        case _ =>
+          pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, logMessage(response))
+          handleAPIError(response, Some(INTERNAL_SERVER_ERROR))
+      }
+    }
+  }
+
 }

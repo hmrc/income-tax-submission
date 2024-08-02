@@ -17,18 +17,21 @@
 package connectors
 
 import config.AppConfig
-import connectors.parsers.TaskListTailoringDataParser.{TaskListHttpReads, TaskListResponseModel}
+import connectors.parsers.TaskListDividendDataParser.{TaskListSectionHttpReads}
+import models.APIErrorModel
+import models.tasklist.TaskListSection
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class TaskListDataConnector @Inject()(val http: HttpClient, val config: AppConfig)
-                                     (implicit ec: ExecutionContext) extends Connector {
+class DividendsTaskListDataConnector @Inject()(val http: HttpClient, val config: AppConfig)
+                                              (implicit ec: ExecutionContext) extends Connector {
 
-  def get(taxYear: Int)(implicit hc: HeaderCarrier): Future[TaskListResponseModel] = {
-    val taskListDataUrl: String = config.tailoringPhaseIIBaseUrl + s"/income-tax-tailor-return/task-list/data/$taxYear"
+  def get(taxYear: Int,nino:String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListSection]]] = {
+    val taskListDataUrl: String = config.dividendsBaseUrl + s"/income-tax-dividends/$taxYear/tasks/$nino"
 
-    http.GET[TaskListResponseModel](taskListDataUrl)(TaskListHttpReads, addHeadersToHeaderCarrier(taskListDataUrl), ec)
+
+    http.GET[Either[APIErrorModel, Option[TaskListSection]]](taskListDataUrl)(TaskListSectionHttpReads, addHeadersToHeaderCarrier(taskListDataUrl), ec)
   }
 }
