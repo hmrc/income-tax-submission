@@ -54,16 +54,16 @@ class CharitableDonationsTaskListDataConnectorISpec extends ConnectorIntegration
     implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue"))).withExtraHeaders(mtdItIdHeader)
 
     "include internal headers" when {
-      val headersSentToDividendsTaskList = Seq(new HttpHeader(HeaderNames.xSessionId, "sessionIdValue"))
+      val headers = Seq(new HttpHeader(HeaderNames.xSessionId, "sessionIdValue"))
 
       "the host is 'Internal'" in {
-        stubGetWithResponseBody(taskListDataUrl, OK, responseBody, headersSentToDividendsTaskList)
+        stubGetWithResponseBody(taskListDataUrl, OK, responseBody, headers)
 
         Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Right(Some(expectedResult))
       }
 
       "the host is 'External'" in {
-        stubGetWithResponseBody(taskListDataUrl, OK, responseBody, headersSentToDividendsTaskList)
+        stubGetWithResponseBody(taskListDataUrl, OK, responseBody, headers)
 
         Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Right(Some(expectedResult))
       }
