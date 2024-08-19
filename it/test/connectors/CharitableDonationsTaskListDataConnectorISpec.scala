@@ -17,9 +17,9 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import models.tasklist.SectionTitle.PensionsTitle
-import models.tasklist.TaskTitle.StatePension
-import models.tasklist.{TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus}
+import models.tasklist.SectionTitle.CharitableDonationsTitle
+import models.tasklist.TaskTitle.GiftsOfLandOrProperty
+import models.tasklist.{TaskListSection, TaskListSectionItem, TaskStatus}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -31,28 +31,24 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
-class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
+class CharitableDonationsTaskListDataConnectorISpec extends ConnectorIntegrationTest {
   private val taxYear = LocalDate.now(ZoneId.systemDefault()).getYear
   private val mtdItIdHeader = ("mtditid", "1234567890")
   private val requestHeaders = Seq(new HttpHeader("mtditid", "1234567890"))
-  val nino: String = "123456789"
+  val nino :String = "123456789"
 
-  private val underTest: PensionTaskListDataConnector = new PensionTaskListDataConnector(httpClient, new MockAppConfig())
+  private val underTest: CharitableDonationsTaskListDataConnector = new CharitableDonationsTaskListDataConnector(httpClient, new MockAppConfig())
+  def taskListDataUrl: String = s"/income-tax-gift-aid/income-tax/$taxYear/tasks/$nino"
 
-  def taskListDataUrl: String = s"/income-tax-pensions/$taxYear/common-task-list/$nino"
+  "CharitableDonationsTaskListDataConnector" should {
 
-  "PensionTaskListDataConnector" should {
-
-    val expectedResult: TaskListModel = {
-      TaskListModel(Seq(
-        TaskListSection(
-          sectionTitle = PensionsTitle,
-          taskItems = Some(List[TaskListSectionItem](
-            TaskListSectionItem(StatePension, status = TaskStatus.Completed, Some("url"))
-          ))
-        )
-      ))
-    }
+    val expectedResult: TaskListSection =
+      TaskListSection(
+        sectionTitle = CharitableDonationsTitle,
+        taskItems = Some(List[TaskListSectionItem](
+          TaskListSectionItem(GiftsOfLandOrProperty, status = TaskStatus.Completed, Some("url"))
+        ))
+      )
 
     val responseBody = Json.toJson(expectedResult).toString()
     implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue"))).withExtraHeaders(mtdItIdHeader)
@@ -63,13 +59,13 @@ class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       "the host is 'Internal'" in {
         stubGetWithResponseBody(taskListDataUrl, OK, responseBody, headersSentToDividendsTaskList)
 
-        Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Right(Some(expectedResult))
+        Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Right(Some(expectedResult))
       }
 
       "the host is 'External'" in {
         stubGetWithResponseBody(taskListDataUrl, OK, responseBody, headersSentToDividendsTaskList)
 
-        Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Right(Some(expectedResult))
+        Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Right(Some(expectedResult))
       }
     }
 
@@ -77,7 +73,7 @@ class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       stubGetWithResponseBody(taskListDataUrl, NOT_FOUND, "{}", requestHeaders)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Right(None)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Right(None)
     }
 
     "API Returns multiple errors" in {
@@ -94,7 +90,7 @@ class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
 
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
 
     "return a BadRequest" in {
@@ -105,7 +101,7 @@ class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
         BAD_REQUEST, Json.toJson(errorBody).toString(), requestHeaders)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
 
     "return an InternalServerError " in {
@@ -116,7 +112,7 @@ class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
         INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString(), requestHeaders)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
 
     "return an InternalServerError with parsing error when we can't parse the error body" in {
@@ -127,7 +123,7 @@ class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
         INTERNAL_SERVER_ERROR, errorResponseBody.toString(), requestHeaders)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
 
     "return an InternalServerError when an unexpected status is thrown" in {
@@ -137,7 +133,7 @@ class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       stubGetWithResponseBody(taskListDataUrl, IM_A_TEAPOT, errorResponseBody.toString(), requestHeaders)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
 
     "return an InternalServerError when an unexpected status is thrown and there is no body" in {
@@ -146,7 +142,7 @@ class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       stubGetWithoutResponseBody(taskListDataUrl, IM_A_TEAPOT)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
 
     "return a ServiceUnavailableError" in {
@@ -156,7 +152,7 @@ class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       stubGetWithResponseBody(taskListDataUrl, SERVICE_UNAVAILABLE, errorRequestBody, requestHeaders)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
   }
 }

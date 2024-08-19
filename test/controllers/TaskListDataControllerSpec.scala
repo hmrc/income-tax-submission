@@ -18,8 +18,8 @@ package controllers
 
 import connectors.parsers.TaskListTailoringDataParser.TaskListResponseModel
 import models._
-import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
-import org.scalamock.handlers.CallHandler4
+import models.tasklist._
+import org.scalamock.handlers.CallHandler3
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -34,9 +34,9 @@ class TaskListDataControllerSpec extends TestUtils {
   private val mockTaskListDataService: TaskListDataService = mock[TaskListDataService]
 
   def mockGetTaskListData(data: Either[APIErrorModel, Option[TaskListModel]]):
-  CallHandler4[Int, String, String, HeaderCarrier, Future[Either[APIErrorModel, Option[TaskListModel]]]] = {
-    (mockTaskListDataService.get(_: Int, _: String,_: String)(_: HeaderCarrier))
-      .expects(*, *, *,*)
+  CallHandler3[Int, String, HeaderCarrier, Future[Either[APIErrorModel, Option[TaskListModel]]]] = {
+    (mockTaskListDataService.get(_: Int, _: String)(_: HeaderCarrier))
+      .expects(*, *, *)
       .returning(Future.successful(data))
   }
 
