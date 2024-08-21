@@ -32,7 +32,7 @@ case class TaskListDataController @Inject()(service: TaskListDataService,
                                            (implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def get(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
-        service.get(taxYear, nino, user.mtditid).map {
+        service.get(taxYear, nino)(hc.withExtraHeaders("mtditid" -> user.mtditid)).map {
           case Left(error) =>
             logger.info(s"[TaskListDataController][get] Error with status: ${error.status} and body: ${error.body}")
             Status(error.status)(error.toJson)
