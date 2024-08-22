@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import models.{APIErrorBodyModel, APIErrorModel}
-import models.tasklist.SectionTitle.{CharitableDonationsTitle, DividendsTitle, InsuranceGainsTitle, PensionsTitle}
+import models.tasklist.SectionTitle.{CharitableDonationsTitle, DividendsTitle, InsuranceGainsTitle, InterestTitle, PensionsTitle}
 import models.tasklist.TaskStatus.{CheckNow, NotStarted, UnderMaintenance}
 import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
@@ -35,7 +35,8 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
                                     pensionTaskListDataConnector: PensionTaskListDataConnector,
                                     dividendsTaskListDataConnector: DividendsTaskListDataConnector,
                                     additionalInfoTaskListDataConnector: AdditionalInfoTaskListDataConnector,
-                                    charitableDonationsTaskListDataConnector: CharitableDonationsTaskListDataConnector)
+                                    charitableDonationsTaskListDataConnector: CharitableDonationsTaskListDataConnector,
+                                    interestTaskListDataConnector: InterestTaskListDataConnector)
                                    (implicit val ec: ExecutionContext) {
 
   private def getSectionItemMap(taskListModel: TaskListModel): ListMap[SectionTitle, Option[Seq[TaskListSectionItem]]] =
@@ -45,7 +46,6 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
     dataMap.map {
       case (sectionName, itemsOption) => TaskListSection(sectionName, itemsOption)
     }.toSeq
-
 
   private def mergeSectionItemsWithCheckNow(tailoringItems: Seq[TaskListSectionItem], remoteItems: Seq[TaskListSectionItem]): Seq[TaskListSectionItem] = {
     val remoteItemsMap = remoteItems.map(item => item.title -> item).toMap
@@ -133,7 +133,6 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
     }
   }
 
-
   def get(taxYear: Int, nino: String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListModel]]] = {
 
     val tailoringTaskListResponse = connector.get(taxYear)
@@ -141,6 +140,7 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
     val dividendsTaskListResponse = dividendsTaskListDataConnector.get(taxYear, nino)
     val additionalInfoTaskListResponse = additionalInfoTaskListDataConnector.get(taxYear, nino)
     val charitableDonationsTaskListResponse = charitableDonationsTaskListDataConnector.get(taxYear, nino)
+    val interestTaskListResponse = interestTaskListDataConnector.get(taxYear, nino)
 
     tailoringTaskListResponse.flatMap {
       case Right(Some(tailoringData)) =>
@@ -148,7 +148,8 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
           mergedWithPensions <- handleTaskListModelResponse(PensionsTitle, tailoringData, pensionTaskListResponse)
           mergedWithDividends <- handleTaskListSectionResponse(DividendsTitle, mergedWithPensions, dividendsTaskListResponse)
           mergedWithCharitableDonations <- handleTaskListSectionResponse(CharitableDonationsTitle, mergedWithDividends, charitableDonationsTaskListResponse)
-          finalMerged <- handleTaskListSectionResponse(InsuranceGainsTitle, mergedWithCharitableDonations, additionalInfoTaskListResponse)
+          mergedWithInterest <- handleTaskListSectionResponse(InterestTitle, mergedWithCharitableDonations, interestTaskListResponse)
+          finalMerged <- handleTaskListSectionResponse(InsuranceGainsTitle, mergedWithInterest, additionalInfoTaskListResponse)
         } yield Right(Some(finalMerged))
       case Right(None) =>
         Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INVALID STATE", "Tailoring task list data cannot be empty"))))

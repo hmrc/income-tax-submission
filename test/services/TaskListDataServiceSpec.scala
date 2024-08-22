@@ -19,7 +19,7 @@ package services
 
 import connectors._
 import models._
-import models.tasklist.SectionTitle.{CharitableDonationsTitle, DividendsTitle, InsuranceGainsTitle, PensionsTitle}
+import models.tasklist.SectionTitle.{CharitableDonationsTitle, DividendsTitle, InsuranceGainsTitle, InterestTitle, PensionsTitle}
 import models.tasklist.TaskTitle._
 import models.tasklist._
 import org.mockito.ArgumentMatchers.any
@@ -62,11 +62,18 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
         TaskListSectionItem(CapitalRedemption, TaskStatus.NotStarted, Some("CapitalRedemptionPage")),
         TaskListSectionItem(VoidedISA, TaskStatus.NotStarted, Some("VoidedISAPage"))
       ))),
-    TaskListSection(CharitableDonationsTitle, Some(Seq(
+    TaskListSection(
+      CharitableDonationsTitle, Some(Seq(
       TaskListSectionItem(DonationsUsingGiftAid, TaskStatus.Completed, Some("CYAPage")),
       TaskListSectionItem(GiftsOfLandOrProperty, TaskStatus.Completed, Some("CYAPage")),
       TaskListSectionItem(GiftsOfShares, TaskStatus.Completed, Some("CYAPage")),
       TaskListSectionItem(GiftsToOverseas, TaskStatus.Completed, Some("CYAPage"))
+    ))),
+    TaskListSection(
+      InterestTitle, Some(Seq(
+      TaskListSectionItem(BanksAndBuilding, TaskStatus.Completed, Some("CYAPage")),
+      TaskListSectionItem(TrustFundBond, TaskStatus.Completed, Some("CYAPage")),
+      TaskListSectionItem(GiltEdged, TaskStatus.Completed, Some("CYAPage"))
     )))
   )))))
 
@@ -106,10 +113,19 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
     ))
   ))))
 
+  val interestResponse: Future[Right[Nothing, Some[TaskListSection]]] = Future.successful(Right(Some(TaskListSection(
+    InterestTitle, Some(Seq(
+      TaskListSectionItem(BanksAndBuilding, TaskStatus.Completed, Some("CYAPage")),
+      TaskListSectionItem(TrustFundBond, TaskStatus.Completed, Some("CYAPage")),
+      TaskListSectionItem(GiltEdged, TaskStatus.Completed, Some("CYAPage"))
+    ))
+  ))))
+
   val errorModel: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorsBodyModel(Seq(
     APIErrorBodyModel("INVALID_IDTYPE", "ID is invalid"),
     APIErrorBodyModel("INVALID_IDTYPE_2", "ID 2 is invalid")
   )))
+
   val errorResponse: Future[Left[APIErrorModel, Nothing]] = Future.successful(Left(errorModel))
 
   val mockConnector: TaskListDataConnector = mock[TaskListDataConnector]
@@ -117,9 +133,13 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
   val mockDividendsConnector: DividendsTaskListDataConnector = mock[DividendsTaskListDataConnector]
   val mockAdditionalInfoConnector: AdditionalInfoTaskListDataConnector = mock[AdditionalInfoTaskListDataConnector]
   val mockCharitableDonationsConnector: CharitableDonationsTaskListDataConnector = mock[CharitableDonationsTaskListDataConnector]
+  val mockInterestTaskListDataConnector: InterestTaskListDataConnector = mock[InterestTaskListDataConnector]
 
   val taskListDataService =
-    new TaskListDataService(mockConnector, mockPensionConnector, mockDividendsConnector, mockAdditionalInfoConnector, mockCharitableDonationsConnector)
+    new TaskListDataService(
+      mockConnector, mockPensionConnector, mockDividendsConnector, mockAdditionalInfoConnector,
+      mockCharitableDonationsConnector, mockInterestTaskListDataConnector
+    )
 
   "TaskListDataService" should {
 
@@ -130,9 +150,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockDividendsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(dividendsResponse)
       when(mockAdditionalInfoConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
       when(mockCharitableDonationsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(charitableDonationsResponse)
+      when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(interestResponse)
 
-      val result: Either[APIErrorModel, Option[TaskListModel]] =
-        taskListDataService.get(taxYear2023, nino).futureValue
+      val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
       result match {
         case Right(Some(taskListModel)) =>
@@ -140,11 +160,13 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           val dividendsSection = taskListModel.taskList.find(_.sectionTitle == DividendsTitle)
           val insuranceGainsSection = taskListModel.taskList.find(_.sectionTitle == InsuranceGainsTitle)
           val charitableDonationsSection = taskListModel.taskList.find(_.sectionTitle == CharitableDonationsTitle)
+          val interestSection = taskListModel.taskList.find(_.sectionTitle == InterestTitle)
 
           pensionsSection shouldBe defined
           dividendsSection shouldBe defined
           insuranceGainsSection shouldBe defined
           charitableDonationsSection shouldBe defined
+          interestSection shouldBe defined
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
             //was inprogress in pension, but was not selected in tailoring
@@ -178,6 +200,12 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
             TaskListSectionItem(GiftsToOverseas, TaskStatus.Completed, Some("CYAPage"))
           )
 
+          interestSection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(BanksAndBuilding, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(TrustFundBond, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(GiltEdged, TaskStatus.Completed, Some("CYAPage"))
+          )
+
         case _ => fail("Unexpected result")
       }
     }
@@ -190,9 +218,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockDividendsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
       when(mockAdditionalInfoConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
       when(mockCharitableDonationsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
+      when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
 
-      val result: Either[APIErrorModel, Option[TaskListModel]] =
-        taskListDataService.get(taxYear2023, nino).futureValue
+      val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
       result match {
         case Right(Some(taskListModel)) =>
@@ -200,10 +228,12 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           val dividendsSection = taskListModel.taskList.find(_.sectionTitle == DividendsTitle)
           val insuranceGainsSection = taskListModel.taskList.find(_.sectionTitle == InsuranceGainsTitle)
           val charitableDonationsSection = taskListModel.taskList.find(_.sectionTitle == CharitableDonationsTitle)
+          val interestSection = taskListModel.taskList.find(_.sectionTitle == InterestTitle)
 
           pensionsSection shouldBe defined
           dividendsSection shouldBe defined
           insuranceGainsSection shouldBe defined
+          interestSection shouldBe defined
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
             //below section details are as from Tailoring
@@ -231,6 +261,12 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
             TaskListSectionItem(GiftsToOverseas, TaskStatus.Completed, Some("CYAPage"))
           )
 
+          interestSection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(BanksAndBuilding, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(TrustFundBond, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(GiltEdged, TaskStatus.Completed, Some("CYAPage"))
+          )
+
         case _ => fail("Unexpected result")
       }
     }
@@ -242,9 +278,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockDividendsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
       when(mockAdditionalInfoConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
       when(mockCharitableDonationsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(charitableDonationsResponse)
+      when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(interestResponse)
 
-      val result: Either[APIErrorModel, Option[TaskListModel]] =
-        taskListDataService.get(taxYear2023, nino).futureValue
+      val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
       result match {
         case Right(Some(taskListModel)) =>
@@ -253,11 +289,13 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           val dividendsSection = taskListModel.taskList.find(_.sectionTitle == DividendsTitle)
           val insuranceGainsSection = taskListModel.taskList.find(_.sectionTitle == InsuranceGainsTitle)
           val charitableDonationsSection = taskListModel.taskList.find(_.sectionTitle == CharitableDonationsTitle)
+          val interestSection = taskListModel.taskList.find(_.sectionTitle == InterestTitle)
 
           pensionsSection shouldBe defined
           dividendsSection shouldBe defined
           insuranceGainsSection shouldBe defined
           charitableDonationsSection shouldBe defined
+          interestSection shouldBe defined
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(UnauthorisedPayments, TaskStatus.UnderMaintenance, None),
@@ -284,6 +322,12 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
             TaskListSectionItem(GiftsToOverseas, TaskStatus.Completed, Some("CYAPage"))
           )
 
+          interestSection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(BanksAndBuilding, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(TrustFundBond, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(GiltEdged, TaskStatus.Completed, Some("CYAPage"))
+          )
+
         case _ => fail("Unexpected result")
       }
 
@@ -297,9 +341,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockPensionConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(serviceError)
       when(mockDividendsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(serviceError)
       when(mockAdditionalInfoConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
+      when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(interestResponse)
 
-      val result: Either[APIErrorModel, Option[TaskListModel]] =
-        taskListDataService.get(taxYear2023, nino).futureValue
+      val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
       result match {
         case Right(Some(taskListModel)) =>
@@ -307,10 +351,12 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           val pensionsSection = taskListModel.taskList.find(_.sectionTitle == PensionsTitle)
           val dividendsSection = taskListModel.taskList.find(_.sectionTitle == DividendsTitle)
           val insuranceGainsSection = taskListModel.taskList.find(_.sectionTitle == InsuranceGainsTitle)
+          val interestSection = taskListModel.taskList.find(_.sectionTitle == InterestTitle)
 
           pensionsSection shouldBe defined
           dividendsSection shouldBe defined
           insuranceGainsSection shouldBe defined
+          interestSection shouldBe defined
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(UnauthorisedPayments, TaskStatus.UnderMaintenance, None),
@@ -328,6 +374,12 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
             TaskListSectionItem(LifeAnnuity, TaskStatus.Completed, Some("CYAPage")),
             TaskListSectionItem(CapitalRedemption, TaskStatus.NotStarted, Some("CapitalRedemptionPage")),
             TaskListSectionItem(VoidedISA, TaskStatus.NotStarted, Some("VoidedISAPage"))
+          )
+
+          interestSection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(BanksAndBuilding, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(TrustFundBond, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(GiltEdged, TaskStatus.Completed, Some("CYAPage"))
           )
 
         case _ => fail("Unexpected result")
