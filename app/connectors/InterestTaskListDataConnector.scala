@@ -28,7 +28,7 @@ class InterestTaskListDataConnector @Inject()(val http: HttpClient, val config: 
 
   def get(taxYear: Int,nino:String)(implicit hc: HeaderCarrier): Future[TaskListSectionResponseModel] = {
 
-    val taskListDataUrl: String = config.interestBaseUrl + s"/income-tax-interest/income-tax/$taxYear/tasks/$nino"
+    val taskListDataUrl: String = config.interestBaseUrl + s"/income-tax-interest/$taxYear/tasks/$nino"
 
     http.GET[TaskListSectionResponseModel](taskListDataUrl)(TaskListSectionHttpReads, addHeadersToHeaderCarrier(taskListDataUrl), ec)
   }

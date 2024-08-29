@@ -40,7 +40,7 @@ class InterestTaskListDataConnectorISpec extends ConnectorIntegrationTest {
   private val underTest: InterestTaskListDataConnector = new InterestTaskListDataConnector(httpClient, new MockAppConfig())
   implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-  def taskListDataUrl: String = s"/income-tax-interest/income-tax/$taxYear/tasks/$nino"
+  def taskListDataUrl: String = s"/income-tax-interest/$taxYear/tasks/$nino"
 
   "InterestTaskListDataConnector" should {
 
