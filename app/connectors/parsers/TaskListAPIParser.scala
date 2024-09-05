@@ -27,9 +27,9 @@ import play.api.http.Status._
 import utils.PagerDutyHelper.PagerDutyKeys._
 
 trait TaskListAPIParser extends APIParser {
-  type TaskListSectionResponseModel = Either[APIErrorModel, Option[TaskListSection]]
-  implicit object TaskListHttpReads extends HttpReads[TaskListResponseModel] {
 
+  //This is for tailoring [TaskListResponseModel]
+  implicit object TaskListHttpReads extends HttpReads[TaskListResponseModel] {
     override def read(method: String, url: String, response: HttpResponse): TaskListResponseModel = {
       response.status match {
         case OK =>
@@ -55,6 +55,37 @@ trait TaskListAPIParser extends APIParser {
     }
   }
 
+  //This is for Pension, StateBenefits(ESA , JSA) Seq[TaskListSection]
+  type SeqOfTaskListSection = Either[APIErrorModel, Option[Seq[TaskListSection]]]
+  implicit object SeqOfTaskListSectionHttpReads extends HttpReads[SeqOfTaskListSection] {
+
+    override def read(method: String, url: String, response: HttpResponse): SeqOfTaskListSection = {
+      response.status match {
+        case OK =>
+          response.json.validate[Seq[TaskListSection]].fold(
+            _ => badSuccessJsonFromAPI,
+            model => Right(Some(model))
+          )
+        case NOT_FOUND =>
+          Right(None)
+        case BAD_REQUEST | UNPROCESSABLE_ENTITY | FORBIDDEN =>
+          pagerDutyLog(FOURXX_RESPONSE_FROM_API, logMessage(response))
+          handleAPIError(response)
+        case INTERNAL_SERVER_ERROR =>
+          pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_API, logMessage(response))
+          handleAPIError(response)
+        case SERVICE_UNAVAILABLE =>
+          pagerDutyLog(SERVICE_UNAVAILABLE_FROM_API, logMessage(response))
+          handleAPIError(response)
+        case _ =>
+          pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, logMessage(response))
+          handleAPIError(response, Some(INTERNAL_SERVER_ERROR))
+      }
+    }
+  }
+
+  //This is for most of services Option[TaskListSection]
+  type TaskListSectionResponseModel = Either[APIErrorModel, Option[TaskListSection]]
   implicit object TaskListSectionHttpReads extends HttpReads[TaskListSectionResponseModel] {
 
     override def read(method: String, url: String, response: HttpResponse): TaskListSectionResponseModel = {
