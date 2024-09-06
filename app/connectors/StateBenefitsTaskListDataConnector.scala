@@ -17,19 +17,19 @@
 package connectors
 
 import config.AppConfig
-import connectors.parsers.TaskListPensionDataParser.{SeqOfTaskListSectionHttpReads, SeqOfTaskListSection}
+import connectors.parsers.TaskListCISDataParser.SeqOfTaskListSection
+import connectors.parsers.TaskListStateBenefitsDataParser.SeqOfTaskListSectionHttpReads
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class PensionTaskListDataConnector @Inject()(val http: HttpClient, val config: AppConfig)
-                                            (implicit ec: ExecutionContext) extends Connector {
+class StateBenefitsTaskListDataConnector @Inject()(val http: HttpClient, val config: AppConfig)
+                                                  (implicit ec: ExecutionContext) extends Connector {
 
-  def get(taxYear: Int,nino:String)(implicit hc: HeaderCarrier): Future[SeqOfTaskListSection] = {
-    val taskListDataUrl: String = config.pensionsBaseUrl + s"/income-tax-pensions/$taxYear/common-task-list/$nino"
+  def get(taxYear: Int,nino: String)(implicit hc: HeaderCarrier): Future[SeqOfTaskListSection] = {
+    val submittedStateBenefitsUrl: String = config.stateBenefitsBaseUrl + s"/income-tax-state-benefits/$taxYear/tasks/$nino"
 
-
-    http.GET[SeqOfTaskListSection](taskListDataUrl)(SeqOfTaskListSectionHttpReads, addHeadersToHeaderCarrier(taskListDataUrl), ec)
+    http.GET[SeqOfTaskListSection](submittedStateBenefitsUrl)(SeqOfTaskListSectionHttpReads, addHeadersToHeaderCarrier(submittedStateBenefitsUrl), ec)
   }
 }

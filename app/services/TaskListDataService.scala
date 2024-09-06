@@ -17,18 +17,18 @@
 package services
 
 import connectors._
-import connectors.parsers.TaskListPensionDataParser.{TaskListPensionResponseModel, TaskListSectionResponseModel}
+import connectors.parsers.TaskListCISDataParser.SeqOfTaskListSection
+import connectors.parsers.TaskListPensionDataParser.TaskListSectionResponseModel
+import models.tasklist.SectionTitle._
+import models.tasklist.TaskStatus.{CheckNow, NotStarted, UnderMaintenance}
+import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem}
+import models.{APIErrorBodyModel, APIErrorModel}
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
-import models.{APIErrorBodyModel, APIErrorModel}
-import models.tasklist.SectionTitle.{CharitableDonationsTitle, DividendsTitle, InsuranceGainsTitle, InterestTitle, PensionsTitle}
-import models.tasklist.TaskStatus.{CheckNow, NotStarted, UnderMaintenance}
-import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem}
-import play.api.http.Status.INTERNAL_SERVER_ERROR
-
 import scala.collection.immutable.ListMap
+import scala.concurrent.{ExecutionContext, Future}
 
 
 class TaskListDataService @Inject()(connector: TaskListDataConnector,
@@ -36,7 +36,10 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
                                     dividendsTaskListDataConnector: DividendsTaskListDataConnector,
                                     additionalInfoTaskListDataConnector: AdditionalInfoTaskListDataConnector,
                                     charitableDonationsTaskListDataConnector: CharitableDonationsTaskListDataConnector,
-                                    interestTaskListDataConnector: InterestTaskListDataConnector)
+                                    interestTaskListDataConnector: InterestTaskListDataConnector,
+                                    cisTaskListDataConnector: CISTaskListDataConnector,//TODO CIS and SelfEmployment needs merging
+                                    stateBenefitsConnector: StateBenefitsTaskListDataConnector
+                                   )
                                    (implicit val ec: ExecutionContext) {
 
   private def getSectionItemMap(taskListModel: TaskListModel): ListMap[SectionTitle, Option[Seq[TaskListSectionItem]]] =
@@ -72,7 +75,7 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
   //
   //      remoteOnlyItems ++ tailoringOnlyItems
   //    }
-  private def handleTaskListSectionResponse(sectionTitleToMerge: SectionTitle,
+  private def mergeSections(sectionTitleToMerge: SectionTitle,
                                             tailoringTaskListModel: TaskListModel,
                                             otherServiceTaskList: Future[TaskListSectionResponseModel]): Future[TaskListModel] = {
 
@@ -103,53 +106,82 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
    * This is created to support different model being returned by pension
    */
 
-  private def handleTaskListModelResponse(sectionTitleToMerge: SectionTitle,
-                                          tailoringTaskListModel: TaskListModel,
-                                          otherServiceTaskList: Future[TaskListPensionResponseModel]): Future[TaskListModel] = {
+//  private def handleTaskListModelResponse(sectionTitleToMerge: SectionTitle,
+//                                          tailoringTaskListModel: TaskListModel,
+//                                          otherServiceTaskList: Future[TaskListPensionResponseModel]): Future[TaskListModel] = {
+//
+//    val tailoringSectionItemsMap = getSectionItemMap(tailoringTaskListModel)
+//    val tailoringSectionItems = tailoringSectionItemsMap.getOrElse(sectionTitleToMerge, Some(Seq.empty)).getOrElse(Seq.empty)
+//
+//    otherServiceTaskList.flatMap {
+//      case Right(Some(remoteModel)) =>
+//
+//        val remoteSectionItems: Seq[TaskListSectionItem] =
+//          remoteModel.taskList.find(_.sectionTitle == sectionTitleToMerge).flatMap(_.taskItems).getOrElse(Seq.empty)
+//        val mergedSectionItems = Some(mergeSectionItemsWithCheckNow(tailoringSectionItems, remoteSectionItems))
+//        val updatedSectionsList = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, mergedSectionItems))
+//        Future.successful(TaskListModel(updatedSectionsList))
+//
+//      case Right(None) => Future.successful(tailoringTaskListModel)
+//      case Left(_) =>
+//        val underMaintenanceItems: Seq[TaskListSectionItem] = tailoringSectionItems.map(_.copy(status = UnderMaintenance, href = None))
+//        val updatedSectionsList = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, Some(underMaintenanceItems)))
+//        Future.successful(TaskListModel(updatedSectionsList))
+//
+//    }.recover {
+//      case _: Throwable =>
+//        val underMaintenanceItems = tailoringSectionItems.map(_.copy(status = UnderMaintenance, href = None))
+//        val updatedSectionsList = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, Some(underMaintenanceItems)))
+//        TaskListModel(updatedSectionsList)
+//    }
+//  }
 
-    val tailoringSectionItemsMap = getSectionItemMap(tailoringTaskListModel)
-    val tailoringSectionItems = tailoringSectionItemsMap.getOrElse(sectionTitleToMerge, Some(Seq.empty)).getOrElse(Seq.empty)
-
-    otherServiceTaskList.flatMap {
-      case Right(Some(remoteModel)) =>
-
-        val remoteSectionItems: Seq[TaskListSectionItem] =
-          remoteModel.taskList.find(_.sectionTitle == sectionTitleToMerge).flatMap(_.taskItems).getOrElse(Seq.empty)
-        val mergedSectionItems = Some(mergeSectionItemsWithCheckNow(tailoringSectionItems, remoteSectionItems))
-        val updatedSectionsList = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, mergedSectionItems))
-        Future.successful(TaskListModel(updatedSectionsList))
-
-      case Right(None) => Future.successful(tailoringTaskListModel)
-      case Left(_) =>
-        val underMaintenanceItems: Seq[TaskListSectionItem] = tailoringSectionItems.map(_.copy(status = UnderMaintenance, href = None))
-        val updatedSectionsList = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, Some(underMaintenanceItems)))
-        Future.successful(TaskListModel(updatedSectionsList))
-
-    }.recover {
-      case _: Throwable =>
-        val underMaintenanceItems = tailoringSectionItems.map(_.copy(status = UnderMaintenance, href = None))
-        val updatedSectionsList = convertMapToSeq(tailoringSectionItemsMap.updated(sectionTitleToMerge, Some(underMaintenanceItems)))
-        TaskListModel(updatedSectionsList)
-    }
-  }
+private def extractSectionByTitle(
+                                   allSections: Future[SeqOfTaskListSection],
+                                   sectionTitle: SectionTitle
+                                 ): Future[TaskListSectionResponseModel] =
+  allSections.map {
+  case Right(value) => Right(value.map((t: Seq[TaskListSection]) => t.filter(_.sectionTitle == sectionTitle).head))
+  case Left(_)      => Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INVALID STATE", "Failed to retrieve tailoring task list data")))
+}
 
   def get(taxYear: Int, nino: String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListModel]]] = {
 
-    val tailoringTaskListResponse = connector.get(taxYear)
-    val pensionTaskListResponse = pensionTaskListDataConnector.get(taxYear, nino)
-    val dividendsTaskListResponse = dividendsTaskListDataConnector.get(taxYear, nino)
-    val additionalInfoTaskListResponse = additionalInfoTaskListDataConnector.get(taxYear, nino)
-    val charitableDonationsTaskListResponse = charitableDonationsTaskListDataConnector.get(taxYear, nino)
-    val interestTaskListResponse = interestTaskListDataConnector.get(taxYear, nino)
+    val allPensionTaskList: Future[SeqOfTaskListSection] = pensionTaskListDataConnector.get(taxYear, nino)
+    val pensionsTaskList = extractSectionByTitle(allPensionTaskList,PensionsTitle)
+    val paymentIntoPensionTaskList = extractSectionByTitle(allPensionTaskList,PaymentsIntoPensionsTitle)
 
-    tailoringTaskListResponse.flatMap {
+
+    val tailoringTaskList           = connector.get(taxYear)
+    val dividendsTaskList           = dividendsTaskListDataConnector.get(taxYear, nino)
+    val additionalInfoTaskList      = additionalInfoTaskListDataConnector.get(taxYear, nino)
+    val charitableDonationsTaskList = charitableDonationsTaskListDataConnector.get(taxYear, nino)
+    val interestTaskList            = interestTaskListDataConnector.get(taxYear, nino)
+    //TODO For self employment we need to merge cis and selfemployment service
+    val selfEmploymentTaskList      = cisTaskListDataConnector.get(taxYear, nino)
+
+    val stateBenefitTaskList: Future[SeqOfTaskListSection] = stateBenefitsConnector.get(taxYear, nino)
+    val esaTaskList                 = extractSectionByTitle(stateBenefitTaskList,EsaTitle)
+    val jsaTaskList                 = extractSectionByTitle(stateBenefitTaskList,JsaTitle)
+
+
+
+
+    tailoringTaskList.flatMap {
       case Right(Some(tailoringData)) =>
         for {
-          mergedWithPensions <- handleTaskListModelResponse(PensionsTitle, tailoringData, pensionTaskListResponse)
-          mergedWithDividends <- handleTaskListSectionResponse(DividendsTitle, mergedWithPensions, dividendsTaskListResponse)
-          mergedWithCharitableDonations <- handleTaskListSectionResponse(CharitableDonationsTitle, mergedWithDividends, charitableDonationsTaskListResponse)
-          mergedWithInterest <- handleTaskListSectionResponse(InterestTitle, mergedWithCharitableDonations, interestTaskListResponse)
-          finalMerged <- handleTaskListSectionResponse(InsuranceGainsTitle, mergedWithInterest, additionalInfoTaskListResponse)
+          mergedPensions            <- mergeSections(PensionsTitle, tailoringData, pensionsTaskList)
+          mergedPaymentIntoPensions <- mergeSections(PaymentsIntoPensionsTitle, mergedPensions, paymentIntoPensionTaskList)
+
+          mergedDividends           <- mergeSections(DividendsTitle, mergedPaymentIntoPensions, dividendsTaskList)
+          mergedCharitableDonations <- mergeSections(CharitableDonationsTitle, mergedDividends, charitableDonationsTaskList)
+          mergedInterest            <- mergeSections(InterestTitle, mergedCharitableDonations, interestTaskList)
+          mergedCIS                 <- mergeSections(SelfEmploymentTitle, mergedInterest, selfEmploymentTaskList)
+
+          mergedESA                 <- mergeSections(EsaTitle, mergedCIS, esaTaskList)
+          mergedJSA                 <- mergeSections(JsaTitle, mergedESA, jsaTaskList)
+
+          finalMerged               <- mergeSections(InsuranceGainsTitle, mergedJSA, additionalInfoTaskList)
         } yield Right(Some(finalMerged))
       case Right(None) =>
         Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INVALID STATE", "Tailoring task list data cannot be empty"))))

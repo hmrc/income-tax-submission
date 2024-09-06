@@ -18,9 +18,7 @@ package connectors.parsers
 
 import play.api.Logging
 
-object TaskListPensionDataParser extends TaskListAPIParser with Logging {
-
+object TaskListStateBenefitsDataParser extends TaskListAPIParser with Logging {
   override val parserName: String = "TaskListParser"
-  override val service: String = "income-tax-pensions"
-
+  override val service: String = "income-tax-state-benefits"
 }

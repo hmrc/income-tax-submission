@@ -17,9 +17,8 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import models.tasklist.SectionTitle.PensionsTitle
-import models.tasklist.TaskTitle.StatePension
-import models.tasklist.{TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus}
+import models.tasklist.TaskTitle.{CIS, LifeInsurance}
+import models.tasklist.{SectionTitle, TaskListSection, TaskListSectionItem, TaskStatus}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -31,57 +30,53 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
-class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
+class CISTaskListDataConnectorISpec extends ConnectorIntegrationTest {
   private val taxYear = LocalDate.now(ZoneId.systemDefault()).getYear
   private val mtdItIdHeader = ("mtditid", "1234567890")
   private val requestHeaders = Seq(new HttpHeader("mtditid", "1234567890"))
-  val nino: String = "123456789"
+  val nino :String = "123456789"
 
-  private val underTest: PensionTaskListDataConnector = new PensionTaskListDataConnector(httpClient, new MockAppConfig())
+  private val underTest: CISTaskListDataConnector = new CISTaskListDataConnector(httpClient, new MockAppConfig())
+  def cisTaskListDataUrl: String = s"/income-tax-cis/$taxYear/tasks/$nino"
 
-  def taskListDataUrl: String = s"/income-tax-pensions/$taxYear/common-task-list/$nino"
+  "CISTaskListDataConnector" should {
 
-  "PensionTaskListDataConnector" should {
-
-    val expectedResult = {
-      Seq(
-        TaskListSection(
-          sectionTitle = PensionsTitle,
-          taskItems = Some(List[TaskListSectionItem](
-            TaskListSectionItem(StatePension, status = TaskStatus.Completed, Some("url"))
-          ))
-        )
+    val expectedResult: TaskListSection =
+      TaskListSection(
+        sectionTitle = SectionTitle.SelfEmploymentTitle,
+        taskItems = Some(List[TaskListSectionItem](
+          TaskListSectionItem(CIS, status = TaskStatus.Completed, Some("url"))
+        ))
       )
-    }
 
     val responseBody = Json.toJson(expectedResult).toString()
     implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue"))).withExtraHeaders(mtdItIdHeader)
 
     "include internal headers" when {
-      val headers = Seq(new HttpHeader(HeaderNames.xSessionId, "sessionIdValue"))
+      val headersSentToCISTaskList = Seq(new HttpHeader(HeaderNames.xSessionId, "sessionIdValue"))
 
       "the host is 'Internal'" in {
-        stubGetWithResponseBody(taskListDataUrl, OK, responseBody, headers)
+        stubGetWithResponseBody(cisTaskListDataUrl, OK, responseBody, headersSentToCISTaskList)
 
-        Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Right(Some(expectedResult))
+        Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Right(Some(expectedResult))
       }
 
       "the host is 'External'" in {
-        stubGetWithResponseBody(taskListDataUrl, OK, responseBody, headers)
+        stubGetWithResponseBody(cisTaskListDataUrl, OK, responseBody, headersSentToCISTaskList)
 
-        Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Right(Some(expectedResult))
+        Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Right(Some(expectedResult))
       }
     }
 
     "return a None for not found" in {
-      stubGetWithResponseBody(taskListDataUrl, NOT_FOUND, "{}", requestHeaders)
+      stubGetWithResponseBody(cisTaskListDataUrl, NOT_FOUND, "{}", requestHeaders)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Right(None)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Right(None)
     }
 
     "API Returns multiple errors" in {
-      val expectedResult = APIErrorModel(BAD_REQUEST, APIErrorsBodyModel(Seq(
+      val expectedErrorResult = APIErrorModel(BAD_REQUEST, APIErrorsBodyModel(Seq(
         APIErrorBodyModel("INVALID_IDTYPE", "ID is invalid"),
         APIErrorBodyModel("INVALID_IDTYPE_2", "ID 2 is invalid")
       )))
@@ -90,73 +85,68 @@ class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
         Json.obj("code" -> "INVALID_IDTYPE", "reason" -> "ID is invalid"),
         Json.obj("code" -> "INVALID_IDTYPE_2", "reason" -> "ID 2 is invalid")
       ))
-      stubGetWithResponseBody(taskListDataUrl, BAD_REQUEST, responseBody.toString(), requestHeaders)
+      stubGetWithResponseBody(cisTaskListDataUrl, BAD_REQUEST, responseBody.toString(), requestHeaders)
 
-      implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
-
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedErrorResult)
     }
 
     "return a BadRequest" in {
       val errorBody: APIErrorBodyModel = APIErrorBodyModel("BAD_REQUEST", "That request was bad")
       val expectedResult = APIErrorModel(BAD_REQUEST, errorBody)
 
-      stubGetWithResponseBody(taskListDataUrl,
+      stubGetWithResponseBody(cisTaskListDataUrl,
         BAD_REQUEST, Json.toJson(errorBody).toString(), requestHeaders)
-      implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
 
     "return an InternalServerError " in {
       val errorBody: APIErrorBodyModel = APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, errorBody)
 
-      stubGetWithResponseBody(taskListDataUrl,
+      stubGetWithResponseBody(cisTaskListDataUrl,
         INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString(), requestHeaders)
-      implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
 
     "return an InternalServerError with parsing error when we can't parse the error body" in {
       val errorResponseBody = Json.toJson("INTERNAL_SERVER_ERROR")
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)
 
-      stubGetWithResponseBody(taskListDataUrl,
+      stubGetWithResponseBody(cisTaskListDataUrl,
         INTERNAL_SERVER_ERROR, errorResponseBody.toString(), requestHeaders)
-      implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
 
     "return an InternalServerError when an unexpected status is thrown" in {
       val errorResponseBody = Json.toJson(APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
 
-      stubGetWithResponseBody(taskListDataUrl, IM_A_TEAPOT, errorResponseBody.toString(), requestHeaders)
+      stubGetWithResponseBody(cisTaskListDataUrl, IM_A_TEAPOT, errorResponseBody.toString(), requestHeaders)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
 
     "return an InternalServerError when an unexpected status is thrown and there is no body" in {
       val expectedResult = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel.parsingError)
 
-      stubGetWithoutResponseBody(taskListDataUrl, IM_A_TEAPOT)
+      stubGetWithoutResponseBody(cisTaskListDataUrl, IM_A_TEAPOT)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
 
     "return a ServiceUnavailableError" in {
       val errorRequestBody = Json.toJson(APIErrorBodyModel("SERVICE_UNAVAILABLE", "Service went down")).toString()
       val expectedResult = APIErrorModel(SERVICE_UNAVAILABLE, APIErrorBodyModel("SERVICE_UNAVAILABLE", "Service went down"))
 
-      stubGetWithResponseBody(taskListDataUrl, SERVICE_UNAVAILABLE, errorRequestBody, requestHeaders)
+      stubGetWithResponseBody(cisTaskListDataUrl, SERVICE_UNAVAILABLE, errorRequestBody, requestHeaders)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear, nino), Duration.Inf) shouldBe Left(expectedResult)
+      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
     }
   }
 }
