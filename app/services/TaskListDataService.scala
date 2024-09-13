@@ -16,7 +16,7 @@
 
 package services
 
-import connectors._
+import connectors.{EmploymentTaskListDataConnector, _}
 import connectors.parsers.TaskListCISDataParser.SeqOfTaskListSection
 import connectors.parsers.TaskListPensionDataParser.TaskListSectionResponseModel
 import models.tasklist.SectionTitle._
@@ -38,7 +38,8 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
                                     charitableDonationsTaskListDataConnector: CharitableDonationsTaskListDataConnector,
                                     interestTaskListDataConnector: InterestTaskListDataConnector,
                                     cisTaskListDataConnector: CISTaskListDataConnector,//TODO CIS and SelfEmployment needs merging
-                                    stateBenefitsConnector: StateBenefitsTaskListDataConnector
+                                    stateBenefitsConnector: StateBenefitsTaskListDataConnector,
+                                    employmentTaskListDataConnector: EmploymentTaskListDataConnector
                                    )
                                    (implicit val ec: ExecutionContext) {
 
@@ -163,7 +164,7 @@ private def extractSectionByTitle(
     val stateBenefitTaskList: Future[SeqOfTaskListSection] = stateBenefitsConnector.get(taxYear, nino)
     val esaTaskList                 = extractSectionByTitle(stateBenefitTaskList,EsaTitle)
     val jsaTaskList                 = extractSectionByTitle(stateBenefitTaskList,JsaTitle)
-
+    val employmentTaskList          = employmentTaskListDataConnector.get(taxYear, nino)
 
 
 
@@ -181,7 +182,9 @@ private def extractSectionByTitle(
           mergedESA                 <- mergeSections(EsaTitle, mergedCIS, esaTaskList)
           mergedJSA                 <- mergeSections(JsaTitle, mergedESA, jsaTaskList)
 
-          finalMerged               <- mergeSections(InsuranceGainsTitle, mergedJSA, additionalInfoTaskList)
+          mergedEmployment          <- mergeSections(EmploymentTitle, mergedJSA, employmentTaskList)
+
+          finalMerged               <- mergeSections(InsuranceGainsTitle, mergedEmployment, additionalInfoTaskList)
         } yield Right(Some(finalMerged))
       case Right(None) =>
         Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INVALID STATE", "Tailoring task list data cannot be empty"))))
