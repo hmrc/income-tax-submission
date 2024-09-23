@@ -17,21 +17,25 @@
 package controllers
 
 import controllers.predicates.AuthorisedAction
+import common.IncomeSources
+import models.User
 import play.api.Logging
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import services.TaskListDataService
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
+import services.{IncomeTaxUserDataService, RefreshCacheService, TaskListDataService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 case class TaskListDataController @Inject()(service: TaskListDataService,
                                             cc: ControllerComponents,
+                                            cacheService: RefreshCacheService,
                                             authorisedAction: AuthorisedAction)
                                            (implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def get(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
+        refreshIncomeSources(taxYear)
         service.get(taxYear, nino)(hc.withExtraHeaders("mtditid" -> user.mtditid)).map {
           case Left(error) =>
             logger.info(s"[TaskListDataController][get] Error with status: ${error.status} and body: ${error.body}")
@@ -42,4 +46,9 @@ case class TaskListDataController @Inject()(service: TaskListDataService,
           }
         }
   }
+
+  private def refreshIncomeSources(taxYear: Int)(implicit user: User[_]): Seq[Future[Result]] =
+    Seq(IncomeSources.STATE_BENEFITS, IncomeSources.CIS).map(source =>
+      cacheService.getLatestDataAndRefreshCache(taxYear, source)
+    )
 }
