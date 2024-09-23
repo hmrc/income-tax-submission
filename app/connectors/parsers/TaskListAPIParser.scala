@@ -89,7 +89,6 @@ trait TaskListAPIParser extends APIParser {
   implicit object TaskListSectionHttpReads extends HttpReads[TaskListSectionResponseModel] {
 
     override def read(method: String, url: String, response: HttpResponse): TaskListSectionResponseModel = {
-      println(response.body)
       response.status match {
         case OK =>
           response.json.validate[TaskListSection].fold(
