@@ -19,25 +19,35 @@ package controllers
 import connectors.parsers.TaskListTailoringDataParser.TaskListResponseModel
 import models._
 import models.tasklist._
-import org.scalamock.handlers.CallHandler3
+import org.scalamock.handlers.{CallHandler3, CallHandler5}
 import play.api.http.Status._
 import play.api.libs.json.Json
+import play.api.mvc.{Result, Results}
 import play.api.test.FakeRequest
-import services.TaskListDataService
+import services.{RefreshCacheService, TaskListDataService}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.{TaxYearUtils, TestUtils}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class TaskListDataControllerSpec extends TestUtils {
 
   private val mockTaskListDataService: TaskListDataService = mock[TaskListDataService]
+  private val mockRefreshCacheService: RefreshCacheService = mock[RefreshCacheService]
 
   def mockGetTaskListData(data: Either[APIErrorModel, Option[TaskListModel]]):
   CallHandler3[Int, String, HeaderCarrier, Future[Either[APIErrorModel, Option[TaskListModel]]]] = {
     (mockTaskListDataService.get(_: Int, _: String)(_: HeaderCarrier))
       .expects(*, *, *)
       .returning(Future.successful(data))
+  }
+
+  def mockRefreshCache():
+  CallHandler5[Int, String, User[_], HeaderCarrier, ExecutionContext, Future[Result]] = {
+    (mockRefreshCacheService.getLatestDataAndRefreshCache(_: Int, _: String)(_: User[_], _: HeaderCarrier, _: ExecutionContext))
+      .expects(*, *, *, *, *)
+      .returning(Future.successful(Results.Ok))
+      .anyNumberOfTimes()
   }
 
   private val taskListData: TaskListResponseModel = Right(Some(TaskListModel(List[TaskListSection](
@@ -48,7 +58,8 @@ class TaskListDataControllerSpec extends TestUtils {
     )
   ))))
 
-  private val controller: TaskListDataController = TaskListDataController(mockTaskListDataService, mockControllerComponents, authorisedAction)
+  private val controller: TaskListDataController =
+    TaskListDataController(mockTaskListDataService, mockControllerComponents, mockRefreshCacheService, authorisedAction)
   private val mtdItId: String = "1234567890"
   private val taxYear: Int = TaxYearUtils.taxYear
   private val nino: String = "AA123456A"
@@ -61,6 +72,7 @@ class TaskListDataControllerSpec extends TestUtils {
     "return an OK response with data" in {
       val result = {
         mockAuth()
+        mockRefreshCache()
         mockGetTaskListData(taskListData)
         controller.get(nino, taxYear)(fakeGetRequest)
       }
@@ -71,6 +83,7 @@ class TaskListDataControllerSpec extends TestUtils {
     "return a NO_CONTENT response with no data" in {
       val result = {
         mockAuth()
+        mockRefreshCache()
         mockGetTaskListData(Right(None))
         controller.get(nino, taxYear)(fakeGetRequest)
       }
@@ -80,6 +93,7 @@ class TaskListDataControllerSpec extends TestUtils {
     "return an SERVICE_UNAVAILABLE response with error model" in {
       val result = {
         mockAuth()
+        mockRefreshCache()
         mockGetTaskListData(Left(APIErrorModel(SERVICE_UNAVAILABLE, APIErrorBodyModel("NOT_GOOD", "something went wrong"))))
         controller.get(nino, taxYear)(fakeGetRequest)
       }
