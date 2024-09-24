@@ -23,7 +23,7 @@ import models.tasklist.SectionTitle._
 import models.tasklist.TaskStatus.{CheckNow, NotStarted, UnderMaintenance}
 import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem}
 import models.{APIErrorBodyModel, APIErrorModel}
-import play.api.http.Status.INTERNAL_SERVER_ERROR
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
@@ -187,7 +187,7 @@ private def extractSectionByTitle(
           finalMerged               <- mergeSections(InsuranceGainsTitle, mergedEmployment, additionalInfoTaskList)
         } yield Right(Some(finalMerged))
       case Right(None) =>
-        Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INVALID STATE", "Tailoring task list data cannot be empty"))))
+        Future.successful(Left(APIErrorModel(NOT_FOUND, APIErrorBodyModel("NOT_FOUND", "Tailoring task list data is not found"))))
       case Left(_) =>
         Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INVALID STATE", "Failed to retrieve tailoring task list data"))))
     }
