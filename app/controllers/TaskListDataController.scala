@@ -22,7 +22,7 @@ import models.User
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
-import services.{IncomeTaxUserDataService, RefreshCacheService, TaskListDataService}
+import services.{RefreshCacheService, TaskListDataService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
