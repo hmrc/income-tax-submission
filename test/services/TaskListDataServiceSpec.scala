@@ -226,9 +226,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
             //was inprogress in pension, but was not selected in tailoring
-            TaskListSectionItem(StatePension, TaskStatus.CheckNow, Some("StatePensionPage")),
+            TaskListSectionItem(StatePension, TaskStatus.NotStarted, Some("StatePensionPage")),
             //was Completed in pension, but was not selected in tailoring
-            TaskListSectionItem(OtherUkPensions, TaskStatus.CheckNow, Some("CYAPage")),
+            TaskListSectionItem(OtherUkPensions, TaskStatus.NotStarted, Some("CYAPage")),
             //was Completed (CYAPage) in Tailoring but pension had InProgress("UnauthorisedPaymentsPage"
             TaskListSectionItem(UnauthorisedPayments, TaskStatus.InProgress, Some("UnauthorisedPaymentsPage")),
             //Below two stays same as similar response
@@ -238,7 +238,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
 
           dividendsSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(CashDividends, TaskStatus.InProgress, Some("CashDividendsPage")),
-            TaskListSectionItem(models.tasklist.TaskTitle.StockDividends, TaskStatus.CheckNow, Some("CYAPage")),
+            TaskListSectionItem(models.tasklist.TaskTitle.StockDividends, TaskStatus.NotStarted, Some("CYAPage")),
             TaskListSectionItem(DividendsFromUnitTrusts, TaskStatus.NotStarted, Some("DividendsFromUnitTrustsPage"))
           )
           //In gains we cover the scenario where response from Tailoring and Downstream are same
