@@ -35,20 +35,26 @@ case class TaskListDataController @Inject()(service: TaskListDataService,
                                            (implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def get(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
-        refreshIncomeSources(taxYear)
-        service.get(taxYear, nino)(hc.withExtraHeaders("mtditid" -> user.mtditid)).map {
-          case Left(error) =>
-            logger.info(s"[TaskListDataController][get] Error with status: ${error.status} and body: ${error.body}")
-            Status(error.status)(error.toJson)
-          case Right(data) => data match {
-            case Some(value) => Ok(Json.toJson(value))
-            case None => NotFound
-          }
-        }
+    refreshIncomeSources(taxYear)
+    service.get(taxYear, nino)(hc.withExtraHeaders("mtditid" -> user.mtditid)).map {
+      case Left(error) =>
+        logger.info(s"[TaskListDataController][get] Error with status: ${error.status} and body: ${error.body}")
+        Status(error.status)(error.toJson)
+      case Right(data) => data match {
+        case Some(value) => Ok(Json.toJson(value))
+        case None => NotFound
+      }
+    }
   }
 
   private def refreshIncomeSources(taxYear: Int)(implicit user: User[_]): Seq[Future[Result]] =
-    Seq(IncomeSources.STATE_BENEFITS, IncomeSources.CIS).map(source =>
+    Seq(
+      IncomeSources.STATE_BENEFITS,
+      IncomeSources.CIS,
+      IncomeSources.INTEREST,
+      IncomeSources.EMPLOYMENT,
+      IncomeSources.GIFT_AID
+    ).map(source =>
       cacheService.getLatestDataAndRefreshCache(taxYear, source)
     )
 }
