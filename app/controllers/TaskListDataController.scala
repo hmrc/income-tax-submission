@@ -16,12 +16,12 @@
 
 package controllers
 
-import controllers.predicates.AuthorisedAction
 import common.IncomeSources
+import controllers.predicates.AuthorisedAction
 import models.User
 import play.api.Logging
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{RefreshCacheService, TaskListDataService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -35,26 +35,30 @@ case class TaskListDataController @Inject()(service: TaskListDataService,
                                            (implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def get(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit user =>
-    refreshIncomeSources(taxYear)
-    service.get(taxYear, nino)(hc.withExtraHeaders("mtditid" -> user.mtditid)).map {
-      case Left(error) =>
-        logger.info(s"[TaskListDataController][get] Error with status: ${error.status} and body: ${error.body}")
-        Status(error.status)(error.toJson)
-      case Right(data) => data match {
-        case Some(value) => Ok(Json.toJson(value))
-        case None => NotFound
+    refreshIncomeSources(taxYear).flatMap { _ =>
+      service.get(taxYear, nino)(hc.withExtraHeaders("mtditid" -> user.mtditid)).map {
+        case Left(error) =>
+          logger.info(s"[TaskListDataController][get] Error with status: ${error.status} and body: ${error.body}")
+          Status(error.status)(error.toJson)
+        case Right(data) => data match {
+          case Some(value) => Ok(Json.toJson(value))
+          case None => NotFound
+        }
       }
     }
   }
 
-  private def refreshIncomeSources(taxYear: Int)(implicit user: User[_]): Seq[Future[Result]] =
-    Seq(
-      IncomeSources.STATE_BENEFITS,
-      IncomeSources.CIS,
-      IncomeSources.INTEREST,
-      IncomeSources.EMPLOYMENT,
-      IncomeSources.GIFT_AID
-    ).map(source =>
-      cacheService.getLatestDataAndRefreshCache(taxYear, source)
+  private def refreshIncomeSources(taxYear: Int)(implicit user: User[_]): Future[Unit] = {
+    // TODO: Async updates with Future.sequence were not updating all sources which is why we chained them, could update
+    //  individual CYA pages to do the cache call as done in the income sources we switched to mini journey
+    cacheService.getLatestDataAndRefreshCache(taxYear, IncomeSources.GIFT_AID).map(_ =>
+      cacheService.getLatestDataAndRefreshCache(taxYear, IncomeSources.CIS).map(_ =>
+        cacheService.getLatestDataAndRefreshCache(taxYear, IncomeSources.EMPLOYMENT).map(_ =>
+          cacheService.getLatestDataAndRefreshCache(taxYear, IncomeSources.INTEREST).map(_ =>
+            cacheService.getLatestDataAndRefreshCache(taxYear, IncomeSources.STATE_BENEFITS)
+          )
+        )
+      )
     )
+  }
 }
