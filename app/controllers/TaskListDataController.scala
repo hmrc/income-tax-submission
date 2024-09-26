@@ -16,18 +16,17 @@
 
 package controllers
 
-import controllers.predicates.AuthorisedAction
 import common.IncomeSources
+import controllers.predicates.AuthorisedAction
 import models.User
 import play.api.Logging
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Result, Results}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{RefreshCacheService, TaskListDataService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 
 case class TaskListDataController @Inject()(service: TaskListDataService,
                                             cc: ControllerComponents,
