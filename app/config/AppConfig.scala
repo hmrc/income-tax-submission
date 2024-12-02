@@ -37,7 +37,9 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
   val additionalInfoBaseUrl: String = servicesConfig.baseUrl("income-tax-additional-information")
   val tailoringPhaseIIBaseUrl: String = servicesConfig.baseUrl("income-tax-tailor-return")
 
+  //Feature switching
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
+  def emaSupportingAgentsEnabled: Boolean = config.get[Boolean]("feature-switch.ema-supporting-agents-enabled")
 
   //Mongo config
   lazy val encryptionKey: String = servicesConfig.getString("mongodb.encryption.key")
@@ -61,7 +63,9 @@ trait AppConfig {
   val stateBenefitsBaseUrl: String
   val tailoringPhaseIIBaseUrl: String
 
+  //Feature switching
   val auditingEnabled: Boolean
+  def emaSupportingAgentsEnabled: Boolean
 
   //Mongo config
   val encryptionKey: String

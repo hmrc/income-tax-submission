@@ -26,7 +26,7 @@ import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import services.ExcludeJourneyService
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestUtils
+import utils.{MockAppConfig, TestUtils}
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -42,7 +42,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
   private val taxYear = 2023
   private lazy val mockService = mock[ExcludeJourneyService]
 
-  private lazy val auth = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, mockControllerComponents)
+  private lazy val auth = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, new MockAppConfig(), mockControllerComponents)
 
   private lazy val controller = new ExcludeJourneyController(
     mockControllerComponents,

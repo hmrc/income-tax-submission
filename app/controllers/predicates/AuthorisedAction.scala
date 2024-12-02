@@ -16,13 +16,15 @@
 
 package controllers.predicates
 
-import common.{EnrolmentIdentifiers, EnrolmentKeys}
+import common.{DelegatedAuthRules, EnrolmentIdentifiers, EnrolmentKeys}
+import config.AppConfig
 import models.User
 import models.logging.CorrelationIdMdc.withEnrichedCorrelationId
 import play.api.Logger
 import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, allEnrolments, confidenceLevel}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
@@ -34,6 +36,7 @@ import scala.util.matching.Regex
 
 class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
                                    defaultActionBuilder: DefaultActionBuilder,
+                                   appConfig: AppConfig,
                                    val cc: ControllerComponents) extends AuthorisedFunctions {
 
   lazy val logger: Logger = Logger.apply(this.getClass)
@@ -112,54 +115,71 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
     }
   }
 
+  private[predicates] def agentAuthPredicate(mtdId: String): Predicate =
+    Enrolment(EnrolmentKeys.Individual)
+      .withIdentifier(EnrolmentIdentifiers.individualId, mtdId)
+      .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule)
+
+  private[predicates] def secondaryAgentPredicate(mtdId: String): Predicate =
+    Enrolment(EnrolmentKeys.SupportingAgent)
+      .withIdentifier(EnrolmentIdentifiers.individualId, mtdId)
+      .withDelegatedAuthRule(DelegatedAuthRules.supportingAgentDelegatedAuthRule)
+
   private[predicates] def agentAuthentication[A](block: User[A] => Future[Result], requestMtdItId: String)
                                                 (implicit request: Request[A], hc: HeaderCarrier): Future[Result] = {
 
-    lazy val agentDelegatedAuthRuleKey = "mtd-it-auth"
+    val ninoRegex: Regex = ".*/nino/(.*)/sources.*".r
 
-    lazy val agentAuthPredicate: String => Enrolment = identifierId =>
-      Enrolment(EnrolmentKeys.Individual)
-        .withIdentifier(EnrolmentIdentifiers.individualId, identifierId)
-        .withDelegatedAuthRule(agentDelegatedAuthRuleKey)
-
-    val nino: Regex = ".*/nino/(.*)/sources.*".r
-
-    val optionalNino = request.uri match {
-      case nino(group) => Some(group)
-      case _ => None
-    }
-
-    optionalNino match {
-      case Some(nino) =>
-
+    request.uri match {
+      case ninoRegex(nino) =>
         authorised(agentAuthPredicate(requestMtdItId))
-          .retrieve(allEnrolments) { enrolments =>
-
-            enrolmentGetIdentifierValue(EnrolmentKeys.Agent, EnrolmentIdentifiers.agentReference, enrolments) match {
-              case Some(arn) =>
-
-                sessionId.fold {
-                  logger.info(s"[AuthorisedAction][individualAuthentication] - No session id in request")
-                  unauthorized
-                } { sessionId =>
-                  block(User(requestMtdItId, Some(arn), nino, sessionId))
-                }
-
-              case None =>
-                logger.info("[AuthorisedAction][agentAuthentication] Agent with no HMRC-AS-AGENT enrolment.")
-                unauthorized
-            }
-          } recover {
-          case _: NoActiveSession =>
-            logger.info(s"[AuthorisedAction][agentAuthentication] - No active session.")
-            Unauthorized
-          case _: AuthorisationException =>
-            logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client.")
-            Unauthorized
-        }
+          .retrieve(allEnrolments) {
+            populateAgent(block, requestMtdItId, nino, _)
+          }.recoverWith(agentRecovery(block, requestMtdItId, nino))
       case _ =>
         logger.info(s"[AuthorisedAction][agentAuthentication] - Could not parse Nino from uri")
         Future(Unauthorized)
+    }
+  }
+
+  private def agentRecovery[A](block: User[A] => Future[Result],
+                               mtdItId: String,
+                               nino: String)
+                              (implicit request: Request[A], hc: HeaderCarrier): PartialFunction[Throwable, Future[Result]] = {
+    case _: NoActiveSession =>
+      logger.info(s"[AuthorisedAction][agentAuthentication] - No active session.")
+      unauthorized
+    case _: AuthorisationException =>
+      if (appConfig.emaSupportingAgentsEnabled) {
+        authorised(secondaryAgentPredicate(mtdItId))
+          .retrieve(allEnrolments) {
+            populateAgent(block, mtdItId, nino, _)
+          }.recoverWith {
+            case _ =>
+              logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have secondary delegated authority for Client.")
+              unauthorized
+          }
+      } else {
+        logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client.")
+        unauthorized
+      }
+  }
+
+  private def populateAgent[A](block: User[A] => Future[Result],
+                               requestMtdItId: String,
+                               nino: String,
+                               enrolments: Enrolments)(implicit request: Request[A], hc: HeaderCarrier): Future[Result] = {
+    enrolmentGetIdentifierValue(EnrolmentKeys.Agent, EnrolmentIdentifiers.agentReference, enrolments) match {
+      case Some(arn) =>
+        sessionId.fold {
+          logger.info(s"[AuthorisedAction][individualAuthentication] - No session id in request")
+          unauthorized
+        } { sessionId =>
+          block(User(requestMtdItId, Some(arn), nino, sessionId))
+        }
+      case None =>
+        logger.info("[AuthorisedAction][agentAuthentication] Agent with no HMRC-AS-AGENT enrolment.")
+        unauthorized
     }
   }
 
