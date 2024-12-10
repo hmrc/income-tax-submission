@@ -134,7 +134,7 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
       case ninoRegex(nino) =>
         authorised(agentAuthPredicate(requestMtdItId))
           .retrieve(allEnrolments) {
-            populateAgent(block, requestMtdItId, nino, _)
+            populateAgent(block, requestMtdItId, nino, _, isSupportingAgent = false)
           }.recoverWith(agentRecovery(block, requestMtdItId, nino))
       case _ =>
         logger.info(s"[AuthorisedAction][agentAuthentication] - Could not parse Nino from uri")
@@ -149,33 +149,32 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
     case _: NoActiveSession =>
       logger.info(s"[AuthorisedAction][agentAuthentication] - No active session.")
       unauthorized
-    case _: AuthorisationException =>
-      if (appConfig.emaSupportingAgentsEnabled) {
-        authorised(secondaryAgentPredicate(mtdItId))
-          .retrieve(allEnrolments) {
-            populateAgent(block, mtdItId, nino, _)
-          }.recoverWith {
-            case _ =>
-              logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have secondary delegated authority for Client.")
-              unauthorized
-          }
-      } else {
-        logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client.")
-        unauthorized
-      }
+    case _: AuthorisationException if appConfig.emaSupportingAgentsEnabled =>
+      authorised(secondaryAgentPredicate(mtdItId))
+        .retrieve(allEnrolments) {
+          populateAgent(block, mtdItId, nino, _, isSupportingAgent = true)
+        }.recoverWith {
+          case _ =>
+            logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have secondary delegated authority for Client.")
+            unauthorized
+        }
+    case _ =>
+      logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client.")
+      unauthorized
   }
 
   private def populateAgent[A](block: User[A] => Future[Result],
                                requestMtdItId: String,
                                nino: String,
-                               enrolments: Enrolments)(implicit request: Request[A], hc: HeaderCarrier): Future[Result] = {
+                               enrolments: Enrolments,
+                               isSupportingAgent: Boolean)(implicit request: Request[A], hc: HeaderCarrier): Future[Result] = {
     enrolmentGetIdentifierValue(EnrolmentKeys.Agent, EnrolmentIdentifiers.agentReference, enrolments) match {
       case Some(arn) =>
         sessionId.fold {
           logger.info(s"[AuthorisedAction][individualAuthentication] - No session id in request")
           unauthorized
         } { sessionId =>
-          block(User(requestMtdItId, Some(arn), nino, sessionId))
+          block(User(requestMtdItId, Some(arn), nino, sessionId, isSupportingAgent))
         }
       case None =>
         logger.info("[AuthorisedAction][agentAuthentication] Agent with no HMRC-AS-AGENT enrolment.")
