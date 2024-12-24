@@ -395,6 +395,7 @@ class AuthorisedActionSpec extends TestUtils {
         }
       }
     }
+
     "return an Unauthorised" when {
 
       "the authorisation service returns an AuthorisationException exception (and ema supporting agent is disabled)" in {
@@ -488,6 +489,38 @@ class AuthorisedActionSpec extends TestUtils {
         status(result) mustBe UNAUTHORIZED
       }
     }
+
+    "return an InternalServerError" when {
+      "initial agent auth call returns an unexpected error" in {
+        object UnexpectedError extends IndexOutOfBoundsException("Some reason")
+
+        lazy val result = {
+          mockAuthReturnException(UnexpectedError)
+          authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
+        }
+        status(result) mustBe INTERNAL_SERVER_ERROR
+      }
+
+      "[EMA enabled] secondary agent auth call returns an unexpected error" in {
+        object AuthException extends AuthorisationException("Some reason")
+        object OtherException extends IndexOutOfBoundsException("Some reason")
+
+        lazy val result = {
+
+          //First auth failure to simulate not being a primary agent
+          mockAuthReturnException(AuthException).once()
+
+          //Enable EMA Supporting Agent feature
+          (() => mockAppConfig.emaSupportingAgentsEnabled).expects().returning(true)
+
+          //Second auth failure to simiulate not being a supporting agent
+          mockAuthReturnException(OtherException).once()
+
+          authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
+        }
+        status(result) mustBe INTERNAL_SERVER_ERROR
+      }
+    }
   }
 
   ".async" should {
@@ -537,8 +570,20 @@ class AuthorisedActionSpec extends TestUtils {
       }
     }
 
-    "return an Unauthorised" when {
+    "return an InternalServerError" when {
+      "the authorisation service returns an unexpected exception" in {
+        object AuthException extends IndexOutOfBoundsException("Some reason")
 
+        lazy val result = {
+          mockAuthReturnException(AuthException)
+          authorisedAction.async(block)
+        }
+
+        status(result(fakeRequest)) mustBe INTERNAL_SERVER_ERROR
+      }
+    }
+
+    "return an Unauthorised" when {
       "the authorisation service returns an AuthorisationException exception" in {
         object AuthException extends AuthorisationException("Some reason")
 
@@ -550,10 +595,6 @@ class AuthorisedActionSpec extends TestUtils {
         status(result(fakeRequest)) mustBe UNAUTHORIZED
       }
 
-    }
-
-    "return an Unauthorised" when {
-
       "the authorisation service returns a NoActiveSession exception" in {
         object NoActiveSession extends NoActiveSession("Some reason")
 
@@ -564,6 +605,7 @@ class AuthorisedActionSpec extends TestUtils {
 
         status(result(fakeRequest)) mustBe UNAUTHORIZED
       }
+
       "the request does not contain mtditid header" in {
         lazy val result = {
           authorisedAction.async(block)
