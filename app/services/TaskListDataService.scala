@@ -103,9 +103,7 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
 
   def safeFutureCall[T](future: Future[Either[APIErrorModel, T]], context: String): Future[Either[APIErrorModel, T]] = {
     future.recover {
-      case ex: java.net.ConnectException =>
-        Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("ERROR", s"Service $context is unavailable")))
-      case ex: Throwable =>
+      case _ =>
         Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("ERROR", s"Downstream service call $context failed")))
     }
   }
