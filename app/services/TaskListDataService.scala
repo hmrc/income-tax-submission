@@ -66,17 +66,6 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
 
     combinedItems ++ remoteOnlyItems
   }
-
-  /**
-   * Below merge is performed on assumption that `check now` status in handled in downstream
-   */
-  //    private def mergeSectionItems(tailoringItems: Seq[TaskListSectionItem], remoteItems: Seq[TaskListSectionItem]): Seq[TaskListSectionItem] = {
-  //      val tailoringOnlyItems = tailoringItems.filterNot(item => remoteItems.exists(_.title == item.title)).map(_.copy(status = NotStarted))
-  //      //This should get all the status including check now
-  //      val remoteOnlyItems = remoteItems.filterNot(item => tailoringItems.exists(_.title == item.title))
-  //
-  //      remoteOnlyItems ++ tailoringOnlyItems
-  //    }
   private def mergeSections(sectionTitleToMerge: SectionTitle,
                             tailoringTaskListModel: TaskListModel,
                             otherServiceTaskList: Future[TaskListSectionResponseModel]): Future[TaskListModel] = {
@@ -112,40 +101,43 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
       case Left(_) => Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INVALID STATE", "Failed to retrieve tailoring task list data")))
     }
 
-  def get(taxYear: Int, nino: String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListModel]]] = {
+  def safeFutureCall[T](future: Future[Either[APIErrorModel, T]], context: String): Future[Either[APIErrorModel, T]] = {
+    future.recover {
+      case _ =>
+        Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("ERROR", s"Downstream service call $context failed")))
+    }
+  }
 
-    val allPensionTaskList: Future[SeqOfTaskListSection] = pensionTaskListDataConnector.get(taxYear, nino)
+  def get(taxYear: Int, nino: String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListModel]]] = {
+    val allPensionTaskList: Future[SeqOfTaskListSection] = safeFutureCall(pensionTaskListDataConnector.get(taxYear, nino),"Pension")
     val pensionsTaskList = extractSectionByTitle(allPensionTaskList, PensionsTitle)
     val paymentIntoPensionTaskList = extractSectionByTitle(allPensionTaskList, PaymentsIntoPensionsTitle)
 
 
-    val tailoringTaskList           = connector.get(taxYear)
-    val dividendsTaskList           = dividendsTaskListDataConnector.get(taxYear, nino)
-    val additionalInfoTaskList      = additionalInfoTaskListDataConnector.get(taxYear, nino)
-    val charitableDonationsTaskList = charitableDonationsTaskListDataConnector.get(taxYear, nino)
-    val interestTaskList            = interestTaskListDataConnector.get(taxYear, nino)
+    val tailoringTaskList           = safeFutureCall(connector.get(taxYear),"Tailoring")
+    val dividendsTaskList           = safeFutureCall(dividendsTaskListDataConnector.get(taxYear, nino),"Dividend")
+    val additionalInfoTaskList      = safeFutureCall(additionalInfoTaskListDataConnector.get(taxYear, nino),"AdditionalInfo")
+    val charitableDonationsTaskList = safeFutureCall(charitableDonationsTaskListDataConnector.get(taxYear, nino),"Gift aid")
+    val interestTaskList            = safeFutureCall(interestTaskListDataConnector.get(taxYear, nino),"Interest")
     //TODO For self employment we need to merge cis and selfemployment service
-    val selfEmploymentTaskList      = cisTaskListDataConnector.get(taxYear, nino)
+    val selfEmploymentTaskList      = safeFutureCall(cisTaskListDataConnector.get(taxYear, nino),"CIS")
 
-    val stateBenefitTaskList: Future[SeqOfTaskListSection] = stateBenefitsConnector.get(taxYear, nino)
-    val esaTaskList                 = extractSectionByTitle(stateBenefitTaskList,EsaTitle)
-    val jsaTaskList                 = extractSectionByTitle(stateBenefitTaskList,JsaTitle)
-    val employmentTaskList          = employmentTaskListDataConnector.get(taxYear, nino)
+    val stateBenefitTaskList: Future[SeqOfTaskListSection] = safeFutureCall(stateBenefitsConnector.get(taxYear, nino),"StateBenefit")
+    val esaTaskList                 = safeFutureCall(extractSectionByTitle(stateBenefitTaskList,EsaTitle),"Esa")
+    val jsaTaskList                 = safeFutureCall(extractSectionByTitle(stateBenefitTaskList,JsaTitle),"Jsa")
+    val employmentTaskList          = safeFutureCall(employmentTaskListDataConnector.get(taxYear, nino),"Employment")
 
     tailoringTaskList.flatMap {
       case Right(Some(tailoringData)) =>
         for {
           mergedPensions            <- mergeSections(PensionsTitle, tailoringData, pensionsTaskList)
           mergedPaymentIntoPensions <- mergeSections(PaymentsIntoPensionsTitle, mergedPensions, paymentIntoPensionTaskList)
-
           mergedDividends           <- mergeSections(DividendsTitle, mergedPaymentIntoPensions, dividendsTaskList)
           mergedCharitableDonations <- mergeSections(CharitableDonationsTitle, mergedDividends, charitableDonationsTaskList)
           mergedInterest            <- mergeSections(InterestTitle, mergedCharitableDonations, interestTaskList)
           mergedCIS                 <- mergeSections(SelfEmploymentTitle, mergedInterest, selfEmploymentTaskList)
-
           mergedESA                 <- mergeSections(EsaTitle, mergedCIS, esaTaskList)
           mergedJSA                 <- mergeSections(JsaTitle, mergedESA, jsaTaskList)
-
           mergedEmployment          <- mergeSections(EmploymentTitle, mergedJSA, employmentTaskList)
           finalMerged               <- mergeSections(InsuranceGainsTitle, mergedEmployment, additionalInfoTaskList)
         } yield Right(Some(finalMerged))
