@@ -101,31 +101,31 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
       case Left(_) => Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INVALID STATE", "Failed to retrieve tailoring task list data")))
     }
 
-  def safeFutureCall[T](future: Future[Either[APIErrorModel, T]], context: String): Future[Either[APIErrorModel, T]] = {
-    future.recover {
+  def safeFutureCall[T](future:() => Future[Either[APIErrorModel, T]], context: String): Future[Either[APIErrorModel, T]] = {
+    future().recover {
       case _ =>
         Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("ERROR", s"Downstream service call $context failed")))
     }
   }
 
   def get(taxYear: Int, nino: String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListModel]]] = {
-    val allPensionTaskList: Future[SeqOfTaskListSection] = safeFutureCall(pensionTaskListDataConnector.get(taxYear, nino),"Pension")
-    val pensionsTaskList = extractSectionByTitle(allPensionTaskList, PensionsTitle)
-    val paymentIntoPensionTaskList = extractSectionByTitle(allPensionTaskList, PaymentsIntoPensionsTitle)
+    val allPensionTaskList: Future[SeqOfTaskListSection] = safeFutureCall(() => pensionTaskListDataConnector.get(taxYear, nino),"Pension")
+    val pensionsTaskList = safeFutureCall( () => extractSectionByTitle(allPensionTaskList, PensionsTitle),"PensionTaskList")
+    val paymentIntoPensionTaskList = safeFutureCall(() => extractSectionByTitle(allPensionTaskList, PaymentsIntoPensionsTitle),"PaymentIntoPensionTaskList")
 
 
-    val tailoringTaskList           = safeFutureCall(connector.get(taxYear),"Tailoring")
-    val dividendsTaskList           = safeFutureCall(dividendsTaskListDataConnector.get(taxYear, nino),"Dividend")
-    val additionalInfoTaskList      = safeFutureCall(additionalInfoTaskListDataConnector.get(taxYear, nino),"AdditionalInfo")
-    val charitableDonationsTaskList = safeFutureCall(charitableDonationsTaskListDataConnector.get(taxYear, nino),"Gift aid")
-    val interestTaskList            = safeFutureCall(interestTaskListDataConnector.get(taxYear, nino),"Interest")
+    val tailoringTaskList           = safeFutureCall(() => connector.get(taxYear),"Tailoring")
+    val dividendsTaskList           = safeFutureCall(() => dividendsTaskListDataConnector.get(taxYear, nino),"Dividend")
+    val additionalInfoTaskList      = safeFutureCall(() => additionalInfoTaskListDataConnector.get(taxYear, nino),"AdditionalInfo")
+    val charitableDonationsTaskList = safeFutureCall(() => charitableDonationsTaskListDataConnector.get(taxYear, nino),"Gift aid")
+    val interestTaskList            = safeFutureCall(() => interestTaskListDataConnector.get(taxYear, nino),"Interest")
     //TODO For self employment we need to merge cis and selfemployment service
-    val selfEmploymentTaskList      = safeFutureCall(cisTaskListDataConnector.get(taxYear, nino),"CIS")
+    val selfEmploymentTaskList      = safeFutureCall(() => cisTaskListDataConnector.get(taxYear, nino),"CIS")
 
-    val stateBenefitTaskList: Future[SeqOfTaskListSection] = safeFutureCall(stateBenefitsConnector.get(taxYear, nino),"StateBenefit")
-    val esaTaskList                 = safeFutureCall(extractSectionByTitle(stateBenefitTaskList,EsaTitle),"Esa")
-    val jsaTaskList                 = safeFutureCall(extractSectionByTitle(stateBenefitTaskList,JsaTitle),"Jsa")
-    val employmentTaskList          = safeFutureCall(employmentTaskListDataConnector.get(taxYear, nino),"Employment")
+    val stateBenefitTaskList: Future[SeqOfTaskListSection] = safeFutureCall(() => stateBenefitsConnector.get(taxYear, nino),"StateBenefit")
+    val esaTaskList                 = safeFutureCall(() => extractSectionByTitle(stateBenefitTaskList,EsaTitle),"Esa")
+    val jsaTaskList                 = safeFutureCall(() => extractSectionByTitle(stateBenefitTaskList,JsaTitle),"Jsa")
+    val employmentTaskList          = safeFutureCall(() => employmentTaskListDataConnector.get(taxYear, nino),"Employment")
 
     tailoringTaskList.flatMap {
       case Right(Some(tailoringData)) =>
