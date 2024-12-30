@@ -66,17 +66,6 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
 
     combinedItems ++ remoteOnlyItems
   }
-
-  /**
-   * Below merge is performed on assumption that `check now` status in handled in downstream
-   */
-  //    private def mergeSectionItems(tailoringItems: Seq[TaskListSectionItem], remoteItems: Seq[TaskListSectionItem]): Seq[TaskListSectionItem] = {
-  //      val tailoringOnlyItems = tailoringItems.filterNot(item => remoteItems.exists(_.title == item.title)).map(_.copy(status = NotStarted))
-  //      //This should get all the status including check now
-  //      val remoteOnlyItems = remoteItems.filterNot(item => tailoringItems.exists(_.title == item.title))
-  //
-  //      remoteOnlyItems ++ tailoringOnlyItems
-  //    }
   private def mergeSections(sectionTitleToMerge: SectionTitle,
                             tailoringTaskListModel: TaskListModel,
                             otherServiceTaskList: Future[TaskListSectionResponseModel]): Future[TaskListModel] = {
