@@ -38,7 +38,6 @@ class MockAppConfig(isEncrypted: Boolean = true,
 
 
   override val auditingEnabled: Boolean = true
-  override val emaSupportingAgentsEnabled: Boolean = supportingAgentsEnabled
 
   override lazy val encryptionKey: String = "encryptionKey12345"
   override lazy val mongoTTL: Int = 1550

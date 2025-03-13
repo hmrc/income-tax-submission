@@ -37,7 +37,7 @@ class AuthorisedActionSpec extends TestUtils {
 
   override lazy val mockAppConfig: AppConfig = mock[AppConfig]
   override val authorisedAction: AuthorisedAction = {
-    new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, mockAppConfig, mockControllerComponents)
+    new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, mockControllerComponents)
   }
 
   ".enrolmentGetIdentifierValue" should {
@@ -356,12 +356,6 @@ class AuthorisedActionSpec extends TestUtils {
 
         val enrolments = Enrolments(Set(
           Enrolment(
-            key = EnrolmentKeys.SupportingAgent,
-            identifiers = Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, "1234567890")),
-            state = "Activated",
-            delegatedAuthRule = Some(DelegatedAuthRules.supportingAgentDelegatedAuthRule)
-          ),
-          Enrolment(
             key = EnrolmentKeys.Agent,
             identifiers = Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, "0987654321")),
             state = "Activated"
@@ -374,24 +368,11 @@ class AuthorisedActionSpec extends TestUtils {
           object AuthException extends AuthorisationException("not primary agent")
           mockAuthReturnException(AuthException).once()
 
-          //Then check if Supporting Agent is enabled
-          (() => mockAppConfig.emaSupportingAgentsEnabled).expects().returning(true)
-
-          //Second call for supporting agent
-          (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-            .expects(*, Retrievals.allEnrolments, *, *)
-            .returning(Future.successful(enrolments))
-            .once()
-
           authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
         }
 
-        "has a status of OK" in {
-          status(result) mustBe OK
-        }
-
-        "has the correct body" in {
-          bodyOf(result) mustBe "1234567890 0987654321"
+        "has a status of UNAUTHORIZED" in {
+          status(result) mustBe UNAUTHORIZED
         }
       }
     }
@@ -404,9 +385,6 @@ class AuthorisedActionSpec extends TestUtils {
         lazy val result = {
           mockAuthReturnException(AuthException)
 
-          //Disable EMA Supporting Agent feature
-          (() => mockAppConfig.emaSupportingAgentsEnabled).expects().returning(false)
-
           authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
         }
         status(result) mustBe UNAUTHORIZED
@@ -418,12 +396,6 @@ class AuthorisedActionSpec extends TestUtils {
         lazy val result = {
 
           //First auth failure to simulate not being a primary agent
-          mockAuthReturnException(AuthException).once()
-
-          //Enable EMA Supporting Agent feature
-          (() => mockAppConfig.emaSupportingAgentsEnabled).expects().returning(true)
-
-          //Second auth failure to simiulate not being a supporting agent
           mockAuthReturnException(AuthException).once()
 
           authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
@@ -510,15 +482,10 @@ class AuthorisedActionSpec extends TestUtils {
           //First auth failure to simulate not being a primary agent
           mockAuthReturnException(AuthException).once()
 
-          //Enable EMA Supporting Agent feature
-          (() => mockAppConfig.emaSupportingAgentsEnabled).expects().returning(true)
-
-          //Second auth failure to simiulate not being a supporting agent
-          mockAuthReturnException(OtherException).once()
 
           authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
         }
-        status(result) mustBe INTERNAL_SERVER_ERROR
+        status(result) mustBe UNAUTHORIZED
       }
     }
   }
@@ -544,17 +511,16 @@ class AuthorisedActionSpec extends TestUtils {
         }
       }
 
-      "the user is successfully verified as a ema supporting agent (feature is enabled)" which {
+      "the user is NOT UNAUTHORIZED when  verified as a ema supporting agent" which {
 
         lazy val result: Future[Result] = {
           mockAuthAsSupportingAgent()
           authorisedAction.async(block)(fakeRequest)
         }
 
-        "should return an OK(200) status" in {
+        "should return an agentAuthentication status" in {
 
-          status(result) mustBe OK
-          bodyOf(result) mustBe "mtditid: 1234567890 arn: 0987654321"
+          status(result) mustBe UNAUTHORIZED
         }
       }
 
