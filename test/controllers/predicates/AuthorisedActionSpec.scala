@@ -352,7 +352,7 @@ class AuthorisedActionSpec extends TestUtils {
         }
       }
 
-      "the agent is authorised as an ema supporting agent, and the supporting agent feature is enabled" which {
+      "the agent is as a supporting agent, not authorised" which {
 
         val enrolments = Enrolments(Set(
           Enrolment(

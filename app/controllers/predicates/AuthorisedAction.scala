@@ -140,7 +140,7 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
 
   private val agentAuthLogString: String = "[AuthorisedAction][agentAuthentication]"
 
-  private def agentRecovery[A](): PartialFunction[Throwable, Future[Result]] = {
+  private def agentRecovery(): PartialFunction[Throwable, Future[Result]] = {
     case _: NoActiveSession =>
       logger.warn(s"$agentAuthLogString - No active session.")
       unauthorized
