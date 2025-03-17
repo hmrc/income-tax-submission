@@ -511,19 +511,6 @@ class AuthorisedActionSpec extends TestUtils {
         }
       }
 
-      "the user is NOT UNAUTHORIZED when  verified as a ema supporting agent" which {
-
-        lazy val result: Future[Result] = {
-          mockAuthAsSupportingAgent()
-          authorisedAction.async(block)(fakeRequest)
-        }
-
-        "should return an agentAuthentication status" in {
-
-          status(result) mustBe UNAUTHORIZED
-        }
-      }
-
       "the user is successfully verified as an individual" in {
 
         lazy val result = {

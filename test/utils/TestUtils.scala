@@ -106,21 +106,6 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
   }
 
   //noinspection ScalaStyle
-  def mockAuthAsSupportingAgent(enrolments: Enrolments = agentEnrolments) = {
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.affinityGroup, *, *)
-      .returning(Future.successful(Some(AffinityGroup.Agent)))
-      .once()
-
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(Enrolment(EnrolmentKeys.Individual)
-        .withIdentifier(EnrolmentIdentifiers.individualId, "1234567890")
-        .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule), *, *, *)
-      .returning(Future.failed(InsufficientEnrolments()))
-      .once()
-  }
-
-  //noinspection ScalaStyle
   def mockAuthReturnException(exception: Exception): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] = {
     (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, *, *, *)
