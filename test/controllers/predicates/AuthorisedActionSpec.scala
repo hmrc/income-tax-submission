@@ -379,18 +379,7 @@ class AuthorisedActionSpec extends TestUtils {
 
     "return an Unauthorised" when {
 
-      "the authorisation service returns an AuthorisationException exception (and ema supporting agent is disabled)" in {
-        object AuthException extends AuthorisationException("Some reason")
-
-        lazy val result = {
-          mockAuthReturnException(AuthException)
-
-          authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
-        }
-        status(result) mustBe UNAUTHORIZED
-      }
-
-      "the authorisation service returns an AuthorisationException exception for a delegated ema Support Agent" in {
+      "the authorisation service returns an AuthorisationException" in {
         object AuthException extends AuthorisationException("Some reason")
 
         lazy val result = {
@@ -471,21 +460,6 @@ class AuthorisedActionSpec extends TestUtils {
           authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
         }
         status(result) mustBe INTERNAL_SERVER_ERROR
-      }
-
-      "[EMA enabled] secondary agent auth call returns an unexpected error" in {
-        object AuthException extends AuthorisationException("Some reason")
-        object OtherException extends IndexOutOfBoundsException("Some reason")
-
-        lazy val result = {
-
-          //First auth failure to simulate not being a primary agent
-          mockAuthReturnException(AuthException).once()
-
-
-          authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
-        }
-        status(result) mustBe UNAUTHORIZED
       }
     }
   }
