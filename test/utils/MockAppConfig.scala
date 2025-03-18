@@ -19,8 +19,7 @@ package utils
 import config.AppConfig
 import org.scalamock.scalatest.MockFactory
 
-class MockAppConfig(isEncrypted: Boolean = true,
-                    supportingAgentsEnabled: Boolean = false) extends AppConfig with MockFactory {
+class MockAppConfig(isEncrypted: Boolean = true) extends AppConfig with MockFactory {
 
   private val host: String = "http://localhost:11111"
 
@@ -38,7 +37,6 @@ class MockAppConfig(isEncrypted: Boolean = true,
 
 
   override val auditingEnabled: Boolean = true
-  override val emaSupportingAgentsEnabled: Boolean = supportingAgentsEnabled
 
   override lazy val encryptionKey: String = "encryptionKey12345"
   override lazy val mongoTTL: Int = 1550

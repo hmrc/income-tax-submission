@@ -61,7 +61,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
   implicit val mockAuthConnector: AuthConnector = mock[AuthConnector]
   implicit val mockAuthService: AuthService = new AuthService(mockAuthConnector)
   val defaultActionBuilder: DefaultActionBuilder = DefaultActionBuilder(mockControllerComponents.parsers.default)
-  val authorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, mockAppConfig, mockControllerComponents)
+  val authorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, mockControllerComponents)
 
 
   def status(awaitable: Future[Result]): Int = await(awaitable).header.status
@@ -103,30 +103,6 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
         .withIdentifier(EnrolmentIdentifiers.individualId, "1234567890")
         .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule), *, *, *)
       .returning(Future.successful(enrolments))
-  }
-
-  //noinspection ScalaStyle
-  def mockAuthAsSupportingAgent(enrolments: Enrolments = agentEnrolments) = {
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.affinityGroup, *, *)
-      .returning(Future.successful(Some(AffinityGroup.Agent)))
-      .once()
-
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(Enrolment(EnrolmentKeys.Individual)
-        .withIdentifier(EnrolmentIdentifiers.individualId, "1234567890")
-        .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule), *, *, *)
-      .returning(Future.failed(InsufficientEnrolments()))
-      .once()
-
-    (() => mockAppConfig.emaSupportingAgentsEnabled).expects().returning(true).once()
-
-    (mockAuthConnector.authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(Enrolment(EnrolmentKeys.SupportingAgent)
-        .withIdentifier(EnrolmentIdentifiers.individualId, "1234567890")
-        .withDelegatedAuthRule(DelegatedAuthRules.supportingAgentDelegatedAuthRule), *, *, *)
-      .returning(Future.successful(enrolments))
-      .once()
   }
 
   //noinspection ScalaStyle

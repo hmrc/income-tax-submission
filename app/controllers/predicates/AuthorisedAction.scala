@@ -17,7 +17,6 @@
 package controllers.predicates
 
 import common.{DelegatedAuthRules, EnrolmentIdentifiers, EnrolmentKeys}
-import config.AppConfig
 import models.User
 import models.logging.CorrelationIdMdc.withEnrichedCorrelationId
 import play.api.Logger
@@ -36,7 +35,6 @@ import scala.util.matching.Regex
 
 class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
                                    defaultActionBuilder: DefaultActionBuilder,
-                                   appConfig: AppConfig,
                                    val cc: ControllerComponents) extends AuthorisedFunctions {
 
   lazy val logger: Logger = Logger.apply(this.getClass)
@@ -123,11 +121,6 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
       .withIdentifier(EnrolmentIdentifiers.individualId, mtdId)
       .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule)
 
-  private[predicates] def secondaryAgentPredicate(mtdId: String): Predicate =
-    Enrolment(EnrolmentKeys.SupportingAgent)
-      .withIdentifier(EnrolmentIdentifiers.individualId, mtdId)
-      .withDelegatedAuthRule(DelegatedAuthRules.supportingAgentDelegatedAuthRule)
-
   private[predicates] def agentAuthentication[A](block: User[A] => Future[Result], requestMtdItId: String)
                                                 (implicit request: Request[A], hc: HeaderCarrier): Future[Result] = {
 
@@ -137,8 +130,8 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
       case ninoRegex(nino) =>
         authorised(agentAuthPredicate(requestMtdItId))
           .retrieve(allEnrolments) {
-            populateAgent(block, requestMtdItId, nino, _, isSupportingAgent = false)
-          }.recoverWith(agentRecovery(block, requestMtdItId, nino))
+            populateAgent(block, requestMtdItId, nino, _)
+          }.recoverWith(agentRecovery())
       case _ =>
         logger.warn(s"$agentAuthLogString - Could not parse Nino from uri")
         Future(Unauthorized)
@@ -147,25 +140,10 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
 
   private val agentAuthLogString: String = "[AuthorisedAction][agentAuthentication]"
 
-  private def agentRecovery[A](block: User[A] => Future[Result],
-                               mtdItId: String,
-                               nino: String)
-                              (implicit request: Request[A], hc: HeaderCarrier): PartialFunction[Throwable, Future[Result]] = {
+  private def agentRecovery(): PartialFunction[Throwable, Future[Result]] = {
     case _: NoActiveSession =>
       logger.warn(s"$agentAuthLogString - No active session.")
       unauthorized
-    case _: AuthorisationException if appConfig.emaSupportingAgentsEnabled =>
-      authorised(secondaryAgentPredicate(mtdItId))
-        .retrieve(allEnrolments) {
-          populateAgent(block, mtdItId, nino, _, isSupportingAgent = true)
-        }.recoverWith {
-          case _: AuthorisationException =>
-            logger.warn(s"$agentAuthLogString - Agent does not have secondary delegated authority for Client.")
-            unauthorized
-          case e =>
-            logger.error(s"$agentAuthLogString - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
-            Future.successful(InternalServerError)
-        }
     case _: AuthorisationException =>
       logger.warn(s"$agentAuthLogString - Agent does not have delegated authority for Client.")
       unauthorized
@@ -177,15 +155,14 @@ class AuthorisedAction @Inject()()(implicit val authConnector: AuthConnector,
   private def populateAgent[A](block: User[A] => Future[Result],
                                requestMtdItId: String,
                                nino: String,
-                               enrolments: Enrolments,
-                               isSupportingAgent: Boolean)(implicit request: Request[A], hc: HeaderCarrier): Future[Result] = {
+                               enrolments: Enrolments)(implicit request: Request[A], hc: HeaderCarrier): Future[Result] = {
     enrolmentGetIdentifierValue(EnrolmentKeys.Agent, EnrolmentIdentifiers.agentReference, enrolments) match {
       case Some(arn) =>
         sessionId.fold {
           logger.warn(s"$agentAuthLogString - No session id in request")
           unauthorized
         } { sessionId =>
-          block(User(requestMtdItId, Some(arn), nino, sessionId, isSupportingAgent))
+          block(User(requestMtdItId, Some(arn), nino, sessionId))
         }
       case None =>
         logger.warn(s"$agentAuthLogString Agent with no HMRC-AS-AGENT enrolment.")

@@ -21,8 +21,7 @@ import play.api.mvc.{Request, WrappedRequest}
 case class User[T](mtditid: String,
                    arn: Option[String],
                    nino: String,
-                   sessionId: String,
-                   isSupportingAgent: Boolean = false)
+                   sessionId: String)
                   (implicit request: Request[T]) extends WrappedRequest[T](request) {
   def isAgent: Boolean = arn.nonEmpty
 }

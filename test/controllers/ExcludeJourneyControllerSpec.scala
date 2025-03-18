@@ -18,15 +18,15 @@ package controllers
 
 import common.IncomeSources._
 import controllers.predicates.AuthorisedAction
-import models.mongo.{DatabaseError, ExclusionUserDataModel, MongoError}
 import models._
+import models.mongo.{DatabaseError, ExclusionUserDataModel, MongoError}
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import services.ExcludeJourneyService
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.{MockAppConfig, TestUtils}
+import utils.TestUtils
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -42,7 +42,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
   private val taxYear = 2023
   private lazy val mockService = mock[ExcludeJourneyService]
 
-  private lazy val auth = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, new MockAppConfig(), mockControllerComponents)
+  private lazy val auth = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder,  mockControllerComponents)
 
   private lazy val controller = new ExcludeJourneyController(
     mockControllerComponents,

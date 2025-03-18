@@ -39,7 +39,6 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
 
   //Feature switching
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  def emaSupportingAgentsEnabled: Boolean = config.get[Boolean]("feature-switch.ema-supporting-agents-enabled")
 
   //Mongo config
   lazy val encryptionKey: String = servicesConfig.getString("mongodb.encryption.key")
@@ -65,7 +64,6 @@ trait AppConfig {
 
   //Feature switching
   val auditingEnabled: Boolean
-  def emaSupportingAgentsEnabled: Boolean
 
   //Mongo config
   val encryptionKey: String
