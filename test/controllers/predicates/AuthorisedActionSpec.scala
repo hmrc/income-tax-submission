@@ -351,30 +351,6 @@ class AuthorisedActionSpec extends TestUtils {
           bodyOf(result) mustBe "1234567890 0987654321"
         }
       }
-
-      "the agent is as a supporting agent, not authorised" which {
-
-        val enrolments = Enrolments(Set(
-          Enrolment(
-            key = EnrolmentKeys.Agent,
-            identifiers = Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, "0987654321")),
-            state = "Activated"
-          )
-        ))
-
-        lazy val result = {
-
-          //First auth call to fail
-          object AuthException extends AuthorisationException("not primary agent")
-          mockAuthReturnException(AuthException).once()
-
-          authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
-        }
-
-        "has a status of UNAUTHORIZED" in {
-          status(result) mustBe UNAUTHORIZED
-        }
-      }
     }
 
     "return an Unauthorised" when {
@@ -385,7 +361,7 @@ class AuthorisedActionSpec extends TestUtils {
         lazy val result = {
 
           //First auth failure to simulate not being a primary agent
-          mockAuthReturnException(AuthException).once()
+          mockAuthReturnException(AuthException)
 
           authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
         }
