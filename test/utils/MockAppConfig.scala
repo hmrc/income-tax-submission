@@ -37,6 +37,7 @@ class MockAppConfig(isEncrypted: Boolean = true) extends AppConfig with MockFact
 
 
   override val auditingEnabled: Boolean = true
+  override val selfEmploymentTaskListEnabled: Boolean = true
 
   override lazy val encryptionKey: String = "encryptionKey12345"
   override lazy val mongoTTL: Int = 1550
