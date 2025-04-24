@@ -39,6 +39,7 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
 
   //Feature switching
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
+  lazy val selfEmploymentTaskListEnabled: Boolean = servicesConfig.getBoolean("feature-switch.selfEmploymentTaskListEnabled")
 
   //Mongo config
   lazy val encryptionKey: String = servicesConfig.getString("mongodb.encryption.key")
@@ -64,6 +65,7 @@ trait AppConfig {
 
   //Feature switching
   val auditingEnabled: Boolean
+  val selfEmploymentTaskListEnabled: Boolean
 
   //Mongo config
   val encryptionKey: String
