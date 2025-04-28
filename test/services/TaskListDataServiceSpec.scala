@@ -20,6 +20,7 @@ package services
 import connectors._
 import models._
 import models.tasklist.SectionTitle._
+import models.tasklist.TaskStatus.NotStarted
 import models.tasklist.TaskTitle._
 import models.tasklist.{TaskListSection, _}
 import org.mockito.ArgumentMatchers.any
@@ -83,7 +84,8 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       ))),
     TaskListSection(
       SelfEmploymentTitle, Some(Seq(
-        TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage"))
+        TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage")),
+        TaskListSectionItem(CheckSEDetails, TaskStatus.Completed, Some("SEDetailsPage"))
       ))),
     TaskListSection(
       EmploymentTitle, Some(Seq(
@@ -150,7 +152,15 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
 
   val cisResponse: Future[Right[Nothing, Some[TaskListSection]]] = Future.successful(Right(Some(TaskListSection(
     SelfEmploymentTitle, Some(Seq(
+      TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage")),
       TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage"))
+    ))
+  ))))
+
+  val seResponse: Future[Right[Nothing, Some[TaskListSection]]] = Future.successful(Right(Some(TaskListSection(
+    SelfEmploymentTitle, Some(Seq(
+      TaskListSectionItem(CheckSEDetails, TaskStatus.Completed, Some("SEDetailsPage")),
+      TaskListSectionItem(IndustrySector, TaskStatus.Completed, Some("IndustrySectorPage"))
     ))
   ))))
 
@@ -179,6 +189,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
   val mockCharitableDonationsConnector: CharitableDonationsTaskListDataConnector = mock[CharitableDonationsTaskListDataConnector]
   val mockInterestTaskListDataConnector: InterestTaskListDataConnector = mock[InterestTaskListDataConnector]
   val mockCISTaskListDataConnector: CISTaskListDataConnector = mock[CISTaskListDataConnector]
+  val mockSETaskListDataConnector: SelfEmploymentTaskListDataConnector = mock[SelfEmploymentTaskListDataConnector]
   val mockStateBenefitsTaskListDataConnector: StateBenefitsTaskListDataConnector = mock[StateBenefitsTaskListDataConnector]
   val mockEmploymentTaskListDataConnector: EmploymentTaskListDataConnector = mock[EmploymentTaskListDataConnector]
 
@@ -186,7 +197,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
     new TaskListDataService(
       mockConnector, mockPensionConnector, mockDividendsConnector, mockAdditionalInfoConnector,
       mockCharitableDonationsConnector, mockInterestTaskListDataConnector,mockCISTaskListDataConnector,
-      mockStateBenefitsTaskListDataConnector, mockEmploymentTaskListDataConnector
+      mockSETaskListDataConnector, mockStateBenefitsTaskListDataConnector, mockEmploymentTaskListDataConnector
     )
 
   "TaskListDataService" should {
@@ -200,6 +211,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockCharitableDonationsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(charitableDonationsResponse)
       when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(interestResponse)
       when(mockCISTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(cisResponse)
+      when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(seResponse)
       when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(stateBenefitsResponse)
       when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(employmentResponse)
 
@@ -263,7 +275,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           )
 
           selfEmploymentSection.get.taskItems.get should contain theSameElementsAs Seq(
-            TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage"))
+            TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage")),
+            TaskListSectionItem(CheckSEDetails, TaskStatus.Completed, Some("SEDetailsPage")),
+            TaskListSectionItem(IndustrySector, NotStarted, Some("IndustrySectorPage"))
           )
 
           employmentSection.get.taskItems.get should contain theSameElementsAs Seq(
@@ -284,6 +298,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockCharitableDonationsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
       when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
       when(mockCISTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
+      when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
       when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
       when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
 
@@ -340,7 +355,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           )
 
           selfEmploymentSection.get.taskItems.get should contain theSameElementsAs Seq(
-            TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage"))
+            TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage")),
+            TaskListSectionItem(CheckSEDetails, TaskStatus.Completed, Some("SEDetailsPage"))
+
           )
 
           employmentSection.get.taskItems.get should contain theSameElementsAs Seq(
@@ -360,6 +377,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockCharitableDonationsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(charitableDonationsResponse)
       when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(interestResponse)
       when(mockCISTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
       when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
       when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
 
@@ -415,7 +433,8 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
             TaskListSectionItem(GiltEdged, TaskStatus.Completed, Some("CYAPage"))
           )
           selfEmploymentSection.get.taskItems.get should contain theSameElementsAs Seq(
-            TaskListSectionItem(CIS, TaskStatus.UnderMaintenance, None)
+            TaskListSectionItem(CIS, TaskStatus.UnderMaintenance, None),
+            TaskListSectionItem(CheckSEDetails, TaskStatus.UnderMaintenance, None)
           )
 
           employmentSection.get.taskItems.get should contain theSameElementsAs Seq(
@@ -483,7 +502,8 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           )
 
           selfEmploymentSection.get.taskItems.get should contain theSameElementsAs Seq(
-            TaskListSectionItem(CIS, TaskStatus.UnderMaintenance, None)
+            TaskListSectionItem(CIS, TaskStatus.UnderMaintenance, None),
+            TaskListSectionItem(CheckSEDetails, TaskStatus.UnderMaintenance, None)
           )
 
           employmentSection.get.taskItems.get should contain theSameElementsAs Seq(

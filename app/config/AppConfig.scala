@@ -33,6 +33,7 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
   val giftAidBaseUrl: String = servicesConfig.baseUrl("income-tax-gift-aid")
   val pensionsBaseUrl: String = servicesConfig.baseUrl("income-tax-pensions")
   val cisBaseUrl: String = servicesConfig.baseUrl("income-tax-cis")
+  val seBaseUrl: String = servicesConfig.baseUrl("income-tax-self-employment")
   val stateBenefitsBaseUrl: String = servicesConfig.baseUrl("income-tax-state-benefits")
   val additionalInfoBaseUrl: String = servicesConfig.baseUrl("income-tax-additional-information")
   val tailoringPhaseIIBaseUrl: String = servicesConfig.baseUrl("income-tax-tailor-return")
@@ -60,6 +61,7 @@ trait AppConfig {
   val giftAidBaseUrl: String
   val pensionsBaseUrl: String
   val cisBaseUrl: String
+  val seBaseUrl: String
   val stateBenefitsBaseUrl: String
   val tailoringPhaseIIBaseUrl: String
 

@@ -35,6 +35,8 @@ class TaskTitleSpec extends AnyFreeSpec with Matchers {
         GiftsToOverseas,
         PayeEmployment,
         CIS,
+        CheckSEDetails,
+        IndustrySector,
         ESA,
         JSA,
         StatePension,

@@ -32,6 +32,7 @@ case class IncomeSources(
                           employment: Option[AllEmploymentData] = None,
                           pensions: Option[Pensions] = None,
                           cis: Option[AllCISDeductions] = None,
+                         // selfEmployment: Option[AllCISDeductions] = None,
                           stateBenefits: Option[AllStateBenefitsData] = None,
                           interestSavings: Option[SavingsIncomeDataModel] = None,
                           gains: Option[InsurancePoliciesModel] = None,
