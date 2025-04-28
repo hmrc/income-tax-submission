@@ -37,6 +37,7 @@ class TaskTitleSpec extends AnyFreeSpec with Matchers {
         CIS,
         CheckSEDetails,
         IndustrySector,
+        YourIncome,
         ESA,
         JSA,
         StatePension,

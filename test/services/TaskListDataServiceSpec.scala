@@ -160,7 +160,8 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
   val seResponse: Future[Right[Nothing, Some[TaskListSection]]] = Future.successful(Right(Some(TaskListSection(
     SelfEmploymentTitle, Some(Seq(
       TaskListSectionItem(CheckSEDetails, TaskStatus.Completed, Some("SEDetailsPage")),
-      TaskListSectionItem(IndustrySector, TaskStatus.Completed, Some("IndustrySectorPage"))
+      TaskListSectionItem(IndustrySector, TaskStatus.Completed, Some("IndustrySectorPage")),
+      TaskListSectionItem(YourIncome, TaskStatus.Completed, Some("YourIncomePage"))
     ))
   ))))
 
@@ -277,7 +278,8 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           selfEmploymentSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage")),
             TaskListSectionItem(CheckSEDetails, TaskStatus.Completed, Some("SEDetailsPage")),
-            TaskListSectionItem(IndustrySector, NotStarted, Some("IndustrySectorPage"))
+            TaskListSectionItem(IndustrySector, NotStarted, Some("IndustrySectorPage")),
+            TaskListSectionItem(YourIncome, NotStarted, Some("YourIncomePage"))
           )
 
           employmentSection.get.taskItems.get should contain theSameElementsAs Seq(
