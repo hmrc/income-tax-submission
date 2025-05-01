@@ -37,6 +37,7 @@ class BackendAppConfig @Inject()(config: Configuration, servicesConfig: Services
   val stateBenefitsBaseUrl: String = servicesConfig.baseUrl("income-tax-state-benefits")
   val additionalInfoBaseUrl: String = servicesConfig.baseUrl("income-tax-additional-information")
   val tailoringPhaseIIBaseUrl: String = servicesConfig.baseUrl("income-tax-tailor-return")
+  val propertyBaseUrl: String = servicesConfig.baseUrl("income-tax-property")
 
   //Feature switching
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
@@ -64,6 +65,7 @@ trait AppConfig {
   val seBaseUrl: String
   val stateBenefitsBaseUrl: String
   val tailoringPhaseIIBaseUrl: String
+  val propertyBaseUrl: String
 
   //Feature switching
   val auditingEnabled: Boolean
