@@ -16,6 +16,7 @@
 
 package services
 
+import config.AppConfig
 import connectors._
 import connectors.parsers.TaskListCISDataParser.SeqOfTaskListSection
 import connectors.parsers.TaskListPensionDataParser.TaskListSectionResponseModel
@@ -40,7 +41,8 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
                                     cisTaskListDataConnector: CISTaskListDataConnector,
                                     seTaskListDataConnector: SelfEmploymentTaskListDataConnector,
                                     stateBenefitsConnector: StateBenefitsTaskListDataConnector,
-                                    employmentTaskListDataConnector: EmploymentTaskListDataConnector
+                                    employmentTaskListDataConnector: EmploymentTaskListDataConnector,
+                                    appConfig: AppConfig
                                    )
                                    (implicit val ec: ExecutionContext) {
 
@@ -120,7 +122,12 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
     val additionalInfoTaskList = safeFutureCall(() => additionalInfoTaskListDataConnector.get(taxYear, nino), "AdditionalInfo")
     val charitableDonationsTaskList = safeFutureCall(() => charitableDonationsTaskListDataConnector.get(taxYear, nino), "Gift aid")
     val interestTaskList: Future[Either[APIErrorModel, Option[TaskListSection]]] = safeFutureCall(() => interestTaskListDataConnector.get(taxYear, nino), "Interest")
-    val selfEmploymentTaskList = getSETaskList(taxYear, nino)
+
+    val selfEmploymentTaskList = if(appConfig.selfEmploymentTaskListEnabled) {
+      getSETaskList(taxYear, nino)
+    } else {
+      safeFutureCall(() => cisTaskListDataConnector.get(taxYear, nino),"CIS")
+    }
 
     val stateBenefitTaskList: Future[SeqOfTaskListSection] = safeFutureCall(() => stateBenefitsConnector.get(taxYear, nino), "StateBenefit")
     val esaTaskList = safeFutureCall(() => extractSectionByTitle(stateBenefitTaskList, EsaTitle), "Esa")
@@ -169,8 +176,8 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
 
   private def getSeTaskLists(se: TaskListSection, cis: TaskListSection): Option[Seq[TaskListSectionItem]] = {
     for {
-      x <- se.taskItems
-      y <- cis.taskItems
-    } yield x ++ y
+      seTaskList <- se.taskItems
+      cisTaskList <- cis.taskItems
+    } yield seTaskList ++ cisTaskList
   }
 }

@@ -17,14 +17,16 @@
 package services
 
 
+import config.AppConfig
 import connectors._
 import models._
 import models.tasklist.SectionTitle._
 import models.tasklist.TaskStatus.NotStarted
 import models.tasklist.TaskTitle._
-import models.tasklist.{TaskListSection, _}
+import models.tasklist._
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -36,7 +38,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFutures with MockitoSugar {
+class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFutures with MockitoSugar with BeforeAndAfterEach {
+
+  override def beforeEach(): Unit = {
+    reset(mockSETaskListDataConnector, mockAppConfig)
+    super.beforeEach()
+  }
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(100, Millis))
@@ -71,16 +78,16 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       ))),
     TaskListSection(
       CharitableDonationsTitle, Some(Seq(
-      TaskListSectionItem(DonationsUsingGiftAid, TaskStatus.Completed, Some("CYAPage")),
-      TaskListSectionItem(GiftsOfLandOrProperty, TaskStatus.Completed, Some("CYAPage")),
-      TaskListSectionItem(GiftsOfShares, TaskStatus.Completed, Some("CYAPage")),
-      TaskListSectionItem(GiftsToOverseas, TaskStatus.Completed, Some("CYAPage"))
+        TaskListSectionItem(DonationsUsingGiftAid, TaskStatus.Completed, Some("CYAPage")),
+        TaskListSectionItem(GiftsOfLandOrProperty, TaskStatus.Completed, Some("CYAPage")),
+        TaskListSectionItem(GiftsOfShares, TaskStatus.Completed, Some("CYAPage")),
+        TaskListSectionItem(GiftsToOverseas, TaskStatus.Completed, Some("CYAPage"))
       ))),
     TaskListSection(
       InterestTitle, Some(Seq(
-      TaskListSectionItem(BanksAndBuilding, TaskStatus.Completed, Some("CYAPage")),
-      TaskListSectionItem(TrustFundBond, TaskStatus.Completed, Some("CYAPage")),
-      TaskListSectionItem(GiltEdged, TaskStatus.Completed, Some("CYAPage"))
+        TaskListSectionItem(BanksAndBuilding, TaskStatus.Completed, Some("CYAPage")),
+        TaskListSectionItem(TrustFundBond, TaskStatus.Completed, Some("CYAPage")),
+        TaskListSectionItem(GiltEdged, TaskStatus.Completed, Some("CYAPage"))
       ))),
     TaskListSection(
       SelfEmploymentTitle, Some(Seq(
@@ -89,24 +96,24 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       ))),
     TaskListSection(
       EmploymentTitle, Some(Seq(
-      TaskListSectionItem(PayeEmployment, TaskStatus.Completed, Some("CYAPage")),
+        TaskListSectionItem(PayeEmployment, TaskStatus.Completed, Some("CYAPage")),
       )))
   )))))
 
   val pensionResponse: Future[Right[Nothing, Some[Seq[TaskListSection]]]] = Future.successful(Right(Some(Seq(
     TaskListSection(
       PensionsTitle, Some(Seq(
-      TaskListSectionItem(StatePension, TaskStatus.InProgress, Some("StatePensionPage")),
-      TaskListSectionItem(OtherUkPensions, TaskStatus.Completed, Some("CYAPage")),
-      TaskListSectionItem(UnauthorisedPayments, TaskStatus.InProgress, Some("UnauthorisedPaymentsPage")),
-      TaskListSectionItem(ShortServiceRefunds, TaskStatus.NotStarted, Some("ShortServiceRefundsPage")),
-      TaskListSectionItem(IncomeFromOverseas, TaskStatus.NotStarted, Some("IncomeFromOverseasPage"))))
+        TaskListSectionItem(StatePension, TaskStatus.InProgress, Some("StatePensionPage")),
+        TaskListSectionItem(OtherUkPensions, TaskStatus.Completed, Some("CYAPage")),
+        TaskListSectionItem(UnauthorisedPayments, TaskStatus.InProgress, Some("UnauthorisedPaymentsPage")),
+        TaskListSectionItem(ShortServiceRefunds, TaskStatus.NotStarted, Some("ShortServiceRefundsPage")),
+        TaskListSectionItem(IncomeFromOverseas, TaskStatus.NotStarted, Some("IncomeFromOverseasPage"))))
     ),
     TaskListSection(
       PaymentsIntoPensionsTitle, Some(Seq(
-      TaskListSectionItem(PaymentsIntoUk, TaskStatus.InProgress, Some("Payments into UK pensions")),
-      TaskListSectionItem(PaymentsIntoOverseas, TaskStatus.Completed, Some("Payments into overseas pensions")),
-      TaskListSectionItem(OverseasTransfer, TaskStatus.InProgress, Some("Overseas transfer charges"))))
+        TaskListSectionItem(PaymentsIntoUk, TaskStatus.InProgress, Some("Payments into UK pensions")),
+        TaskListSectionItem(PaymentsIntoOverseas, TaskStatus.Completed, Some("Payments into overseas pensions")),
+        TaskListSectionItem(OverseasTransfer, TaskStatus.InProgress, Some("Overseas transfer charges"))))
     )
   ))))
 
@@ -130,9 +137,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
   val charitableDonationsResponse: Future[Right[Nothing, Some[TaskListSection]]] = Future.successful(Right(Some(TaskListSection(
     CharitableDonationsTitle, Some(Seq(
       TaskListSectionItem(DonationsUsingGiftAid, TaskStatus.Completed, Some("CYAPage")),
-        TaskListSectionItem(GiftsOfLandOrProperty, TaskStatus.Completed, Some("CYAPage")),
-        TaskListSectionItem(GiftsOfShares, TaskStatus.Completed, Some("CYAPage")),
-        TaskListSectionItem(GiftsToOverseas, TaskStatus.Completed, Some("CYAPage"))
+      TaskListSectionItem(GiftsOfLandOrProperty, TaskStatus.Completed, Some("CYAPage")),
+      TaskListSectionItem(GiftsOfShares, TaskStatus.Completed, Some("CYAPage")),
+      TaskListSectionItem(GiftsToOverseas, TaskStatus.Completed, Some("CYAPage"))
     ))
   ))))
 
@@ -152,7 +159,6 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
 
   val cisResponse: Future[Right[Nothing, Some[TaskListSection]]] = Future.successful(Right(Some(TaskListSection(
     SelfEmploymentTitle, Some(Seq(
-      TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage")),
       TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage"))
     ))
   ))))
@@ -167,10 +173,10 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
 
   val stateBenefitsResponse: Future[Right[Nothing, Some[Seq[TaskListSection]]]] = Future.successful(Right(Some(Seq(
     TaskListSection(
-    EsaTitle, Some(Seq(
-      TaskListSectionItem(ESA, TaskStatus.Completed, Some("ESAPage"))
-    ))
-  ), TaskListSection(
+      EsaTitle, Some(Seq(
+        TaskListSectionItem(ESA, TaskStatus.Completed, Some("ESAPage"))
+      ))
+    ), TaskListSection(
       JsaTitle, Some(Seq(
         TaskListSectionItem(JSA, TaskStatus.Completed, Some("JSAPage"))
       ))
@@ -193,12 +199,14 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
   val mockSETaskListDataConnector: SelfEmploymentTaskListDataConnector = mock[SelfEmploymentTaskListDataConnector]
   val mockStateBenefitsTaskListDataConnector: StateBenefitsTaskListDataConnector = mock[StateBenefitsTaskListDataConnector]
   val mockEmploymentTaskListDataConnector: EmploymentTaskListDataConnector = mock[EmploymentTaskListDataConnector]
+  val mockAppConfig: AppConfig = mock[AppConfig]
 
   val taskListDataService =
     new TaskListDataService(
       mockConnector, mockPensionConnector, mockDividendsConnector, mockAdditionalInfoConnector,
-      mockCharitableDonationsConnector, mockInterestTaskListDataConnector,mockCISTaskListDataConnector,
-      mockSETaskListDataConnector, mockStateBenefitsTaskListDataConnector, mockEmploymentTaskListDataConnector
+      mockCharitableDonationsConnector, mockInterestTaskListDataConnector, mockCISTaskListDataConnector,
+      mockSETaskListDataConnector, mockStateBenefitsTaskListDataConnector, mockEmploymentTaskListDataConnector,
+      mockAppConfig
     )
 
   "TaskListDataService" should {
@@ -215,6 +223,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(seResponse)
       when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(stateBenefitsResponse)
       when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(employmentResponse)
+      when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(true)
 
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
@@ -290,6 +299,92 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       }
     }
 
+    "correctly merge task list sections from all services when selfEmploymentTaskListEnabled feature flag is set to 'false'" in {
+
+      when(mockConnector.get(any[Int])(any[HeaderCarrier])).thenReturn(tailoringResponse)
+      when(mockPensionConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(pensionResponse)
+      when(mockDividendsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(dividendsResponse)
+      when(mockAdditionalInfoConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
+      when(mockCharitableDonationsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(charitableDonationsResponse)
+      when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(interestResponse)
+      when(mockCISTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(cisResponse)
+      when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(seResponse)
+      when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(stateBenefitsResponse)
+      when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(employmentResponse)
+      when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(false)
+
+      val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
+
+      result match {
+        case Right(Some(taskListModel)) =>
+          val pensionsSection = taskListModel.taskList.find(_.sectionTitle == PensionsTitle)
+          val dividendsSection = taskListModel.taskList.find(_.sectionTitle == DividendsTitle)
+          val insuranceGainsSection = taskListModel.taskList.find(_.sectionTitle == InsuranceGainsTitle)
+          val charitableDonationsSection = taskListModel.taskList.find(_.sectionTitle == CharitableDonationsTitle)
+          val interestSection = taskListModel.taskList.find(_.sectionTitle == InterestTitle)
+          val selfEmploymentSection = taskListModel.taskList.find(_.sectionTitle == SelfEmploymentTitle)
+          val employmentSection = taskListModel.taskList.find(_.sectionTitle == EmploymentTitle)
+
+          pensionsSection shouldBe defined
+          dividendsSection shouldBe defined
+          insuranceGainsSection shouldBe defined
+          charitableDonationsSection shouldBe defined
+          interestSection shouldBe defined
+          selfEmploymentSection shouldBe defined
+          employmentSection shouldBe defined
+
+
+          pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
+            //was inprogress in pension, but was not selected in tailoring
+            TaskListSectionItem(StatePension, TaskStatus.NotStarted, Some("StatePensionPage")),
+            //was Completed in pension, but was not selected in tailoring
+            TaskListSectionItem(OtherUkPensions, TaskStatus.NotStarted, Some("CYAPage")),
+            //was Completed (CYAPage) in Tailoring but pension had InProgress("UnauthorisedPaymentsPage"
+            TaskListSectionItem(UnauthorisedPayments, TaskStatus.InProgress, Some("UnauthorisedPaymentsPage")),
+            //Below two stays same as similar response
+            TaskListSectionItem(ShortServiceRefunds, TaskStatus.NotStarted, Some("ShortServiceRefundsPage")),
+            TaskListSectionItem(IncomeFromOverseas, TaskStatus.NotStarted, Some("IncomeFromOverseasPage"))
+          )
+
+          dividendsSection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(CashDividends, TaskStatus.InProgress, Some("CashDividendsPage")),
+            TaskListSectionItem(models.tasklist.TaskTitle.StockDividends, TaskStatus.NotStarted, Some("CYAPage")),
+            TaskListSectionItem(DividendsFromUnitTrusts, TaskStatus.NotStarted, Some("DividendsFromUnitTrustsPage"))
+          )
+          //In gains we cover the scenario where response from Tailoring and Downstream are same
+          insuranceGainsSection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(LifeInsurance, TaskStatus.InProgress, Some("LifeInsurancePage")),
+            TaskListSectionItem(LifeAnnuity, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(CapitalRedemption, TaskStatus.NotStarted, Some("CapitalRedemptionPage")),
+            TaskListSectionItem(VoidedISA, TaskStatus.NotStarted, Some("VoidedISAPage"))
+          )
+
+          charitableDonationsSection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(DonationsUsingGiftAid, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(GiftsOfLandOrProperty, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(GiftsOfShares, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(GiftsToOverseas, TaskStatus.Completed, Some("CYAPage"))
+          )
+
+          interestSection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(BanksAndBuilding, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(TrustFundBond, TaskStatus.Completed, Some("CYAPage")),
+            TaskListSectionItem(GiltEdged, TaskStatus.Completed, Some("CYAPage"))
+          )
+
+          selfEmploymentSection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage")),
+            TaskListSectionItem(CheckSEDetails, TaskStatus.NotStarted, Some("SEDetailsPage"))
+          )
+
+          employmentSection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(PayeEmployment, TaskStatus.Completed, Some("CYAPage"))
+          )
+
+        case _ => fail("Unexpected result")
+      }
+    }
+
     "correctly merge task list sections and return only tailoring data if downstream does not have any known data" in {
       val emptyResponse = Future.successful(Right(None))
 
@@ -303,7 +398,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
       when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
       when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
-
+      when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(true)
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
       result match {
@@ -359,7 +454,6 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           selfEmploymentSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage")),
             TaskListSectionItem(CheckSEDetails, TaskStatus.Completed, Some("SEDetailsPage"))
-
           )
 
           employmentSection.get.taskItems.get should contain theSameElementsAs Seq(
@@ -382,7 +476,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
       when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
       when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
-
+      when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(true)
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
       result match {
@@ -458,7 +552,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockAdditionalInfoConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
       when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(interestResponse)
       when(mockCISTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
       when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(true)
 
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
