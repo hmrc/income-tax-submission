@@ -23,6 +23,7 @@ sealed abstract class TaskTitle(override val entryName: String) extends EnumEntr
   override def toString: String = entryName
 }
 
+//noinspection ScalaStyle
 object TaskTitle extends Enum[TaskTitle] with PlayJsonEnum[TaskTitle] {
 
   val values: IndexedSeq[TaskTitle] = findValues
@@ -102,4 +103,9 @@ object TaskTitle extends Enum[TaskTitle] with PlayJsonEnum[TaskTitle] {
   case object FreeRedeemableShares extends TaskTitle("FreeRedeemableSharesTitle")
 
   case object CloseCompanyLoans extends TaskTitle("CloseCompanyLoansTitle")
+
+  // Property
+  case object UkProperty extends TaskTitle("UkPropertyTitle")
+  case object ForeignProperty extends TaskTitle("ForeignPropertyTitle")
+  case object UkForeignProperty extends TaskTitle("UkForeignPropertyTitle")
 }

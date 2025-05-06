@@ -35,6 +35,7 @@ class MockAppConfig(isEncrypted: Boolean = true) extends AppConfig with MockFact
   override val stateBenefitsBaseUrl: String = host
   override val additionalInfoBaseUrl: String = host
   override val tailoringPhaseIIBaseUrl: String = host
+  override val propertyBaseUrl: String = host
 
 
   override val auditingEnabled: Boolean = true
