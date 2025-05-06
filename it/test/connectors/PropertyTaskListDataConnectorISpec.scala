@@ -17,20 +17,17 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import models.tasklist.TaskTitle.{ESA, ForeignProperty, JSA, UkForeignProperty, UkProperty}
+import models.tasklist.TaskTitle.{ForeignProperty, UkForeignProperty, UkProperty}
 import models.tasklist.{SectionTitle, TaskListSection, TaskListSectionItem, TaskStatus}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId}
 import utils.{ConnectorIntegrationTest, MockAppConfig}
 
 import java.time.{LocalDate, ZoneId}
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
 
 class PropertyTaskListDataConnectorISpec extends ConnectorIntegrationTest {
   private val taxYear = LocalDate.now(ZoneId.systemDefault()).getYear
@@ -38,7 +35,7 @@ class PropertyTaskListDataConnectorISpec extends ConnectorIntegrationTest {
   private val requestHeaders = Seq(new HttpHeader("mtditid", "1234567890"))
   val nino :String = "123456789"
 
-  private val underTest: PropertyTaskListDataConnector = new PropertyTaskListDataConnector(httpClientV2, new MockAppConfig())
+  private val connector: PropertyTaskListDataConnector = new PropertyTaskListDataConnector(httpClientV2, new MockAppConfig())
   def propertyTaskListDataUrl: String = s"/income-tax-property/$taxYear/tasks/$nino"
 
   "PropertyTaskListDataConnector" should {
@@ -74,13 +71,13 @@ class PropertyTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       "the host is 'Internal'" in {
         stubGetWithResponseBody(propertyTaskListDataUrl, OK, responseBody, headersSentToPropertyTaskList)
 
-        Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Right(Some(expectedResult))
+        connector.get(taxYear,nino).futureValue shouldBe Right(Some(expectedResult))
       }
 
       "the host is 'External'" in {
         stubGetWithResponseBody(propertyTaskListDataUrl, OK, responseBody, headersSentToPropertyTaskList)
 
-        Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Right(Some(expectedResult))
+        connector.get(taxYear,nino).futureValue shouldBe Right(Some(expectedResult))
       }
     }
 
@@ -88,7 +85,7 @@ class PropertyTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       stubGetWithResponseBody(propertyTaskListDataUrl, NOT_FOUND, "{}", requestHeaders)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Right(None)
+      connector.get(taxYear,nino).futureValue shouldBe Right(None)
     }
 
     "API Returns multiple errors" in {
@@ -103,7 +100,7 @@ class PropertyTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       ))
       stubGetWithResponseBody(propertyTaskListDataUrl, BAD_REQUEST, responseBody.toString(), requestHeaders)
 
-      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedErrorResult)
+      connector.get(taxYear,nino).futureValue shouldBe Left(expectedErrorResult)
     }
 
     "return a BadRequest" in {
@@ -113,7 +110,7 @@ class PropertyTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       stubGetWithResponseBody(propertyTaskListDataUrl,
         BAD_REQUEST, Json.toJson(errorBody).toString(), requestHeaders)
 
-      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
+      connector.get(taxYear,nino).futureValue shouldBe Left(expectedResult)
     }
 
     "return an InternalServerError " in {
@@ -123,7 +120,7 @@ class PropertyTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       stubGetWithResponseBody(propertyTaskListDataUrl,
         INTERNAL_SERVER_ERROR, Json.toJson(errorBody).toString(), requestHeaders)
 
-      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
+      connector.get(taxYear,nino).futureValue shouldBe Left(expectedResult)
     }
 
     "return an InternalServerError with parsing error when we can't parse the error body" in {
@@ -133,7 +130,7 @@ class PropertyTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       stubGetWithResponseBody(propertyTaskListDataUrl,
         INTERNAL_SERVER_ERROR, errorResponseBody.toString(), requestHeaders)
 
-      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
+      connector.get(taxYear,nino).futureValue shouldBe Left(expectedResult)
     }
 
     "return an InternalServerError when an unexpected status is thrown" in {
@@ -143,7 +140,7 @@ class PropertyTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       stubGetWithResponseBody(propertyTaskListDataUrl, IM_A_TEAPOT, errorResponseBody.toString(), requestHeaders)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
+      connector.get(taxYear,nino).futureValue shouldBe Left(expectedResult)
     }
 
     "return an InternalServerError when an unexpected status is thrown and there is no body" in {
@@ -152,7 +149,7 @@ class PropertyTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       stubGetWithoutResponseBody(propertyTaskListDataUrl, IM_A_TEAPOT)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
+      connector.get(taxYear,nino).futureValue shouldBe Left(expectedResult)
     }
 
     "return a ServiceUnavailableError" in {
@@ -162,7 +159,7 @@ class PropertyTaskListDataConnectorISpec extends ConnectorIntegrationTest {
       stubGetWithResponseBody(propertyTaskListDataUrl, SERVICE_UNAVAILABLE, errorRequestBody, requestHeaders)
       implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
-      Await.result(underTest.get(taxYear,nino), Duration.Inf) shouldBe Left(expectedResult)
+      connector.get(taxYear,nino).futureValue shouldBe Left(expectedResult)
     }
   }
 }

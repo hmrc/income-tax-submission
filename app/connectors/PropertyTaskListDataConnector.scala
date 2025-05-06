@@ -24,8 +24,8 @@ import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class PropertyTaskListDataConnector @Inject()(val http: HttpClientV2, val config: AppConfig)
-                                             (implicit ec: ExecutionContext) extends Connector {
+class PropertyTaskListDataConnector @Inject()(http: HttpClientV2,
+                                              config: AppConfig)(implicit ec: ExecutionContext) extends Connector {
 
   def get(taxYear: Int,nino:String)(implicit hc: HeaderCarrier): Future[SeqOfTaskListSection] = {
     val taskListDataUrl = config.employmentBaseUrl + s"/income-tax-property/$taxYear/tasks/$nino"
