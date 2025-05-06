@@ -96,8 +96,13 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       ))),
     TaskListSection(
       EmploymentTitle, Some(Seq(
-        TaskListSectionItem(PayeEmployment, TaskStatus.Completed, Some("CYAPage")),
-      )))
+        TaskListSectionItem(PayeEmployment, TaskStatus.Completed, Some("CYAPage"))
+      ))),
+    TaskListSection(
+      UkPropertyTitle, Some(Seq(
+        TaskListSectionItem(UkProperty, TaskStatus.NotStarted, Some("/uk-property"))
+      ))
+    )
   )))))
 
   val pensionResponse: Future[Right[Nothing, Some[Seq[TaskListSection]]]] = Future.successful(Right(Some(Seq(
@@ -182,6 +187,23 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       ))
     )))))
 
+  val propertyResponse: Future[Right[Nothing, Some[Seq[TaskListSection]]]] =
+    Future.successful(Right(Some(Seq(
+      TaskListSection(
+        UkPropertyTitle, Some(Seq(
+          TaskListSectionItem(UkProperty, TaskStatus.InProgress, Some("/uk-property"))
+        ))
+      ),
+      TaskListSection(
+        ForeignPropertyTitle, None
+      ),
+      TaskListSection(
+        UkForeignPropertyTitle, Some(Seq(
+          TaskListSectionItem(UkForeignProperty, TaskStatus.InProgress, Some("/uk-and-foreign-property"))
+        ))
+      )
+    ))))
+
   val errorModel: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorsBodyModel(Seq(
     APIErrorBodyModel("INVALID_IDTYPE", "ID is invalid"),
     APIErrorBodyModel("INVALID_IDTYPE_2", "ID 2 is invalid")
@@ -200,13 +222,14 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
   val mockStateBenefitsTaskListDataConnector: StateBenefitsTaskListDataConnector = mock[StateBenefitsTaskListDataConnector]
   val mockEmploymentTaskListDataConnector: EmploymentTaskListDataConnector = mock[EmploymentTaskListDataConnector]
   val mockAppConfig: AppConfig = mock[AppConfig]
+  val mockPropertyTaskListDataConnector: PropertyTaskListDataConnector = mock[PropertyTaskListDataConnector]
 
   val taskListDataService =
     new TaskListDataService(
       mockConnector, mockPensionConnector, mockDividendsConnector, mockAdditionalInfoConnector,
       mockCharitableDonationsConnector, mockInterestTaskListDataConnector, mockCISTaskListDataConnector,
       mockSETaskListDataConnector, mockStateBenefitsTaskListDataConnector, mockEmploymentTaskListDataConnector,
-      mockAppConfig
+      mockPropertyTaskListDataConnector, mockAppConfig
     )
 
   "TaskListDataService" should {
@@ -224,6 +247,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(stateBenefitsResponse)
       when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(employmentResponse)
       when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(true)
+      when(mockPropertyTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(propertyResponse)
 
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
@@ -236,6 +260,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           val interestSection = taskListModel.taskList.find(_.sectionTitle == InterestTitle)
           val selfEmploymentSection = taskListModel.taskList.find(_.sectionTitle == SelfEmploymentTitle)
           val employmentSection = taskListModel.taskList.find(_.sectionTitle == EmploymentTitle)
+          val ukPropertySection = taskListModel.taskList.find(_.sectionTitle == UkPropertyTitle)
+          val foreignPropertySection = taskListModel.taskList.find(_.sectionTitle == ForeignPropertyTitle)
+          val ukForeignPropertySection = taskListModel.taskList.find(_.sectionTitle == UkForeignPropertyTitle)
 
           pensionsSection shouldBe defined
           dividendsSection shouldBe defined
@@ -244,6 +271,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           interestSection shouldBe defined
           selfEmploymentSection shouldBe defined
           employmentSection shouldBe defined
+          ukPropertySection shouldBe defined
+          foreignPropertySection shouldBe None
+          ukForeignPropertySection shouldBe None //Although it is in the property response, it is not in the tailoring response - so should not be shown
 
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
@@ -293,6 +323,10 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
 
           employmentSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(PayeEmployment, TaskStatus.Completed, Some("CYAPage"))
+          )
+
+          ukPropertySection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(UkProperty, TaskStatus.InProgress, Some("/uk-property"))
           )
 
         case _ => fail("Unexpected result")
@@ -399,6 +433,8 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
       when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
       when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(true)
+      when(mockPropertyTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
+
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
       result match {
@@ -410,6 +446,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           val interestSection = taskListModel.taskList.find(_.sectionTitle == InterestTitle)
           val selfEmploymentSection = taskListModel.taskList.find(_.sectionTitle == SelfEmploymentTitle)
           val employmentSection = taskListModel.taskList.find(_.sectionTitle == EmploymentTitle)
+          val ukPropertySection = taskListModel.taskList.find(_.sectionTitle == UkPropertyTitle)
+          val foreignPropertySection = taskListModel.taskList.find(_.sectionTitle == ForeignPropertyTitle)
+          val ukForeignPropertySection = taskListModel.taskList.find(_.sectionTitle == UkForeignPropertyTitle)
 
           pensionsSection shouldBe defined
           dividendsSection shouldBe defined
@@ -418,6 +457,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           interestSection shouldBe defined
           selfEmploymentSection shouldBe defined
           employmentSection shouldBe defined
+          ukPropertySection shouldBe defined
+          foreignPropertySection shouldBe None
+          ukForeignPropertySection shouldBe None
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
             //below section details are as from Tailoring
@@ -460,6 +502,10 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
             TaskListSectionItem(PayeEmployment, TaskStatus.Completed, Some("CYAPage"))
           )
 
+          ukPropertySection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(UkProperty, TaskStatus.NotStarted, Some("/uk-property"))
+          )
+
         case _ => fail("Unexpected result")
       }
     }
@@ -477,6 +523,8 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
       when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
       when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(true)
+      when(mockPropertyTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
+
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
       result match {
@@ -489,6 +537,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           val interestSection = taskListModel.taskList.find(_.sectionTitle == InterestTitle)
           val selfEmploymentSection = taskListModel.taskList.find(_.sectionTitle == SelfEmploymentTitle)
           val employmentSection = taskListModel.taskList.find(_.sectionTitle == EmploymentTitle)
+          val ukPropertySection = taskListModel.taskList.find(_.sectionTitle == UkPropertyTitle)
+          val foreignPropertySection = taskListModel.taskList.find(_.sectionTitle == ForeignPropertyTitle)
+          val ukForeignPropertySection = taskListModel.taskList.find(_.sectionTitle == UkForeignPropertyTitle)
 
           pensionsSection shouldBe defined
           dividendsSection shouldBe defined
@@ -497,6 +548,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           interestSection shouldBe defined
           selfEmploymentSection shouldBe defined
           employmentSection shouldBe defined
+          ukPropertySection shouldBe defined
+          foreignPropertySection shouldBe None
+          ukForeignPropertySection shouldBe None
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(UnauthorisedPayments, TaskStatus.UnderMaintenance, None),
@@ -537,6 +591,10 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
             TaskListSectionItem(PayeEmployment, TaskStatus.UnderMaintenance, None)
           )
 
+          ukPropertySection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(UkProperty, TaskStatus.UnderMaintenance, None)
+          )
+
         case _ => fail("Unexpected result")
       }
 
@@ -555,6 +613,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
       when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
       when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
       when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(true)
+      when(mockPropertyTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
 
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
@@ -567,6 +626,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           val interestSection = taskListModel.taskList.find(_.sectionTitle == InterestTitle)
           val selfEmploymentSection = taskListModel.taskList.find(_.sectionTitle == SelfEmploymentTitle)
           val employmentSection = taskListModel.taskList.find(_.sectionTitle == EmploymentTitle)
+          val ukPropertySection = taskListModel.taskList.find(_.sectionTitle == UkPropertyTitle)
+          val foreignPropertySection = taskListModel.taskList.find(_.sectionTitle == ForeignPropertyTitle)
+          val ukForeignPropertySection = taskListModel.taskList.find(_.sectionTitle == UkForeignPropertyTitle)
 
           pensionsSection shouldBe defined
           dividendsSection shouldBe defined
@@ -574,6 +636,9 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           interestSection shouldBe defined
           selfEmploymentSection shouldBe defined
           employmentSection shouldBe defined
+          ukPropertySection shouldBe defined
+          foreignPropertySection shouldBe None
+          ukForeignPropertySection shouldBe None
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(UnauthorisedPayments, TaskStatus.UnderMaintenance, None),
@@ -606,6 +671,10 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
 
           employmentSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(PayeEmployment, TaskStatus.UnderMaintenance, None)
+          )
+
+          ukPropertySection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(UkProperty, TaskStatus.UnderMaintenance, None)
           )
 
         case _ => fail("Unexpected result")
