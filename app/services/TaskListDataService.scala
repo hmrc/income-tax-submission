@@ -24,11 +24,13 @@ import models.tasklist.TaskStatus.{NotStarted, UnderMaintenance}
 import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem}
 import models.{APIErrorBodyModel, APIErrorModel}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
+import uk.gov.hmrc.audit.HandlerResult.Success
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
 import scala.collection.immutable.ListMap
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 
 
 class TaskListDataService @Inject()(connector: TaskListDataConnector,
@@ -114,13 +116,11 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
     val pensionsTaskList = safeFutureCall(() => extractSectionByTitle(allPensionTaskList, PensionsTitle), "PensionTitle")
     val paymentIntoPensionTaskList = safeFutureCall(() => extractSectionByTitle(allPensionTaskList, PaymentsIntoPensionsTitle), "PaymentIntoPensionTaskList")
 
-
     val tailoringTaskList: Future[Either[APIErrorModel, Option[TaskListModel]]] = safeFutureCall(() => connector.get(taxYear), "Tailoring")
     val dividendsTaskList = safeFutureCall(() => dividendsTaskListDataConnector.get(taxYear, nino), "Dividend")
     val additionalInfoTaskList = safeFutureCall(() => additionalInfoTaskListDataConnector.get(taxYear, nino), "AdditionalInfo")
     val charitableDonationsTaskList = safeFutureCall(() => charitableDonationsTaskListDataConnector.get(taxYear, nino), "Gift aid")
     val interestTaskList: Future[Either[APIErrorModel, Option[TaskListSection]]] = safeFutureCall(() => interestTaskListDataConnector.get(taxYear, nino), "Interest")
-    val selfEmploymentTaskList = getSETaskList(taxYear, nino)
 
     val stateBenefitTaskList: Future[SeqOfTaskListSection] = safeFutureCall(() => stateBenefitsConnector.get(taxYear, nino), "StateBenefit")
     val esaTaskList = safeFutureCall(() => extractSectionByTitle(stateBenefitTaskList, EsaTitle), "Esa")
@@ -135,12 +135,13 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
           mergedDividends <- mergeSections(DividendsTitle, mergedPaymentIntoPensions, dividendsTaskList)
           mergedCharitableDonations <- mergeSections(CharitableDonationsTitle, mergedDividends, charitableDonationsTaskList)
           mergedInterest <- mergeSections(InterestTitle, mergedCharitableDonations, interestTaskList)
-          mergedSEAndCIS <- mergeSections(SelfEmploymentTitle, mergedInterest, selfEmploymentTaskList)
-          mergedESA <- mergeSections(EsaTitle, mergedSEAndCIS, esaTaskList)
+          mergedESA <- mergeSections(EsaTitle, mergedInterest, esaTaskList)
           mergedJSA <- mergeSections(JsaTitle, mergedESA, jsaTaskList)
           mergedEmployment <- mergeSections(EmploymentTitle, mergedJSA, employmentTaskList)
           finalMerged <- mergeSections(InsuranceGainsTitle, mergedEmployment, additionalInfoTaskList)
-        } yield Right(Some(finalMerged))
+          setl <- getSETaskList(taxYear, nino)
+          mergedSEAndCIS = finalMerged.copy(taskList = finalMerged.taskList ++ setl)
+        } yield Right(Some(mergedSEAndCIS))
       case Right(None) =>
         Future.successful(Left(APIErrorModel(NOT_FOUND, APIErrorBodyModel("NOT_FOUND", "Tailoring task list data is not found"))))
       case Left(_) =>
@@ -148,29 +149,15 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
     }
   }
 
-  private def getSETaskList(taxYear: Int, nino: String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListSection]]] = {
-    val result = for {
-      seResponse <- seTaskListDataConnector.get(taxYear, nino)
-      cisResponse <- cisTaskListDataConnector.get(taxYear, nino)
-    } yield {
-      for {
-        seTaskList <- seResponse
-        cisTaskList <- cisResponse
-      } yield (seTaskList, cisTaskList) match {
-        case (Some(a), Some(b)) => Some(TaskListSection(SelfEmploymentTitle, getSeTaskLists(a, b)))
-        case (Some(a), None) => Some(a)
-        case (None, Some(b)) => Some(b)
-        case (None, None) => None
-      }
-    }
-
-    safeFutureCall(() => result, "Self employment or CIS")
-  }
-
-  private def getSeTaskLists(se: TaskListSection, cis: TaskListSection): Option[Seq[TaskListSectionItem]] = {
+  private def getSETaskList(taxYear: Int, nino: String)(implicit hc: HeaderCarrier): Future[Seq[TaskListSection]] = {
     for {
-      x <- se.taskItems
-      y <- cis.taskItems
-    } yield x ++ y
+      seResponse <- seTaskListDataConnector.get(taxYear, nino)
+    } yield seResponse match {
+      case Right(Some(taskListModel)) =>
+        taskListModel.taskList
+      case _ =>
+        Nil
+    }
   }
+
 }
