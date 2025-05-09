@@ -28,7 +28,7 @@ class PropertyTaskListDataConnector @Inject()(http: HttpClientV2,
                                               config: AppConfig)(implicit ec: ExecutionContext) extends Connector {
 
   def get(taxYear: Int,nino:String)(implicit hc: HeaderCarrier): Future[SeqOfTaskListSection] = {
-    val taskListDataUrl = config.employmentBaseUrl + s"/income-tax-property/$taxYear/tasks/$nino"
+    val taskListDataUrl = config.propertyBaseUrl + s"/income-tax-property/$taxYear/tasks/$nino"
     http
       .get(url"$taskListDataUrl")(addHeadersToHeaderCarrier(taskListDataUrl))
       .execute[SeqOfTaskListSection]
