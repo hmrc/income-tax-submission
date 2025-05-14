@@ -18,14 +18,15 @@ package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import models.tasklist.TaskTitle.CIS
-import models.tasklist.{SectionTitle, TaskListSection, TaskListSectionItem, TaskStatus}
+import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId}
 import utils.{ConnectorIntegrationTest, MockAppConfig}
+
 import java.time.{LocalDate, ZoneId}
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
@@ -41,13 +42,14 @@ class SelfEmploymentTaskListDataConnectorISpec extends ConnectorIntegrationTest 
 
   "SelfEmploymentTaskListDataConnector" should {
 
-    val expectedResult: TaskListSection =
-      TaskListSection(
-        sectionTitle = SectionTitle.SelfEmploymentTitle,
-        taskItems = Some(List[TaskListSectionItem](
-          TaskListSectionItem(CIS, status = TaskStatus.Completed, Some("url"))
-        ))
-      )
+    val expectedResult: TaskListModel = TaskListModel(
+      Seq(
+        TaskListSection(
+          sectionTitle = SectionTitle.SelfEmploymentTitle,
+          taskItems = Some(List[TaskListSectionItem](
+            TaskListSectionItem(CIS, status = TaskStatus.Completed, Some("url"))
+          ))))
+    )
 
     val responseBody = Json.toJson(expectedResult).toString()
     implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue"))).withExtraHeaders(mtdItIdHeader)

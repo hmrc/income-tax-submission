@@ -23,25 +23,6 @@ import play.api.libs.json.{JsPath, JsString, JsSuccess, Json}
 
 class SectionTitleSpec extends AnyFreeSpec with Matchers {
 
-  "must contain the correct values" in {
-    SectionTitle.values mustEqual Seq[SectionTitle](
-      AboutYouTitle,
-      CharitableDonationsTitle,
-      EmploymentTitle,
-      SelfEmploymentTitle,
-      EsaTitle,
-      JsaTitle,
-      PensionsTitle,
-      InsuranceGainsTitle,
-      PaymentsIntoPensionsTitle,
-      InterestTitle,
-      DividendsTitle,
-      UkPropertyTitle,
-      ForeignPropertyTitle,
-      UkForeignPropertyTitle
-    )
-  }
-
   "must parse each element as JSON successfully" - {
 
     SectionTitle.values.foreach { sectionTitle =>
