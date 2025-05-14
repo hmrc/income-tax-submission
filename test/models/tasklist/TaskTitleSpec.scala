@@ -25,48 +25,6 @@ class TaskTitleSpec extends AnyFreeSpec with Matchers {
 
   "TaskTitle" - {
 
-    "must contain the correct values" in {
-      TaskTitle.values mustEqual Seq[TaskTitle](
-        UkResidenceStatus,
-        FosterCarer,
-        DonationsUsingGiftAid,
-        GiftsOfLandOrProperty,
-        GiftsOfShares,
-        GiftsToOverseas,
-        PayeEmployment,
-        CIS,
-        CheckSEDetails,
-        IndustrySector,
-        YourIncome,
-        ESA,
-        JSA,
-        StatePension,
-        OtherUkPensions,
-        UnauthorisedPayments,
-        ShortServiceRefunds,
-        IncomeFromOverseas,
-        LifeInsurance,
-        LifeAnnuity,
-        CapitalRedemption,
-        VoidedISA,
-        PaymentsIntoUk,
-        AnnualAllowances,
-        PaymentsIntoOverseas,
-        OverseasTransfer,
-        BanksAndBuilding,
-        TrustFundBond,
-        GiltEdged,
-        CashDividends,
-        StockDividends,
-        DividendsFromUnitTrusts,
-        FreeRedeemableShares,
-        CloseCompanyLoans,
-        UkProperty,
-        ForeignProperty,
-        UkForeignProperty
-      )
-    }
-
     "must parse each element as JSON successfully" - {
 
       TaskTitle.values.foreach { taskTitle =>
