@@ -168,13 +168,22 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
     ))
   ))))
 
-  val seResponse: Future[Right[Nothing, Some[TaskListSection]]] = Future.successful(Right(Some(TaskListSection(
-    SelfEmploymentTitle, Some(Seq(
-      TaskListSectionItem(CheckSEDetails, TaskStatus.Completed, Some("SEDetailsPage")),
-      TaskListSectionItem(IndustrySector, TaskStatus.Completed, Some("IndustrySectorPage")),
-      TaskListSectionItem(YourIncome, TaskStatus.Completed, Some("YourIncomePage"))
-    ))
-  ))))
+  val seResponse: Future[Right[Nothing, Some[TaskListModel]]] = Future.successful(Right(Some(
+    TaskListModel(
+      Seq(
+        TaskListSection(
+          sectionTitle = SelfEmploymentTitle,
+          taskItems = Some(
+            Seq(
+              TaskListSectionItem(CheckSEDetails, TaskStatus.Completed, Some("SEDetailsPage")),
+              TaskListSectionItem(IndustrySector, TaskStatus.Completed, Some("IndustrySectorPage")),
+              TaskListSectionItem(YourIncome, TaskStatus.Completed, Some("YourIncomePage"))
+            )
+          ),
+          titleParams = Option(Seq("Red Arrow"))
+        )
+      )
+    ))))
 
   val stateBenefitsResponse: Future[Right[Nothing, Some[Seq[TaskListSection]]]] = Future.successful(Right(Some(Seq(
     TaskListSection(
@@ -258,7 +267,8 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           val insuranceGainsSection = taskListModel.taskList.find(_.sectionTitle == InsuranceGainsTitle)
           val charitableDonationsSection = taskListModel.taskList.find(_.sectionTitle == CharitableDonationsTitle)
           val interestSection = taskListModel.taskList.find(_.sectionTitle == InterestTitle)
-          val selfEmploymentSection = taskListModel.taskList.find(_.sectionTitle == SelfEmploymentTitle)
+          val cisSection = taskListModel.taskList.find(section =>  section.sectionTitle == SelfEmploymentTitle && section.titleParams.isEmpty)
+          val seSection = taskListModel.taskList.find(section =>  section.sectionTitle == SelfEmploymentTitle && section.titleParams.isDefined)
           val employmentSection = taskListModel.taskList.find(_.sectionTitle == EmploymentTitle)
           val ukPropertySection = taskListModel.taskList.find(_.sectionTitle == UkPropertyTitle)
           val foreignPropertySection = taskListModel.taskList.find(_.sectionTitle == ForeignPropertyTitle)
@@ -269,7 +279,8 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           insuranceGainsSection shouldBe defined
           charitableDonationsSection shouldBe defined
           interestSection shouldBe defined
-          selfEmploymentSection shouldBe defined
+          cisSection shouldBe defined
+          seSection shouldBe defined
           employmentSection shouldBe defined
           ukPropertySection shouldBe defined
           foreignPropertySection shouldBe None
@@ -314,11 +325,10 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
             TaskListSectionItem(GiltEdged, TaskStatus.Completed, Some("CYAPage"))
           )
 
-          selfEmploymentSection.get.taskItems.get should contain theSameElementsAs Seq(
-            TaskListSectionItem(CIS, TaskStatus.Completed, Some("CISPage")),
+          seSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(CheckSEDetails, TaskStatus.Completed, Some("SEDetailsPage")),
-            TaskListSectionItem(IndustrySector, NotStarted, Some("IndustrySectorPage")),
-            TaskListSectionItem(YourIncome, NotStarted, Some("YourIncomePage"))
+            TaskListSectionItem(IndustrySector, TaskStatus.Completed, Some("IndustrySectorPage")),
+            TaskListSectionItem(YourIncome, TaskStatus.Completed, Some("YourIncomePage"))
           )
 
           employmentSection.get.taskItems.get should contain theSameElementsAs Seq(

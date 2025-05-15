@@ -18,6 +18,8 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.TaskListCISDataParser._
+import models.APIErrorModel
+import models.tasklist.TaskListModel
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject
@@ -26,10 +28,10 @@ import scala.concurrent.{ExecutionContext, Future}
 class SelfEmploymentTaskListDataConnector @Inject()(val http: HttpClient, val config: AppConfig)
                                                    (implicit ec: ExecutionContext) extends Connector {
 
-  def get(taxYear: Int,nino:String)(implicit hc: HeaderCarrier): Future[TaskListSectionResponseModel] = {
+  def get(taxYear: Int, nino:String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListModel]]] = {
 
     val taskListDataUrl: String = config.seBaseUrl + s"/income-tax-self-employment/$taxYear/tasks/$nino"
 
-    http.GET[TaskListSectionResponseModel](taskListDataUrl)(TaskListSectionHttpReads, addHeadersToHeaderCarrier(taskListDataUrl), ec)
+    http.GET[Either[APIErrorModel, Option[TaskListModel]]](taskListDataUrl)(SelfEmploymentReads, addHeadersToHeaderCarrier(taskListDataUrl), ec)
   }
 }

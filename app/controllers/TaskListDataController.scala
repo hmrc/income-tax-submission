@@ -41,7 +41,8 @@ case class TaskListDataController @Inject()(service: TaskListDataService,
           logger.info(s"[TaskListDataController][get] Error with status: ${error.status} and body: ${error.body}")
           Status(error.status)(error.toJson)
         case Right(data) => data match {
-          case Some(value) => Ok(Json.toJson(value))
+          case Some(value) =>
+            Ok(Json.toJson(value))
           case None => NotFound
         }
       }
