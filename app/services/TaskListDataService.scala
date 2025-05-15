@@ -136,6 +136,9 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
     val employmentTaskList = safeFutureCall(employmentTaskListDataConnector.get(taxYear, nino), "Employment")
 
     val propertyTaskList: Future[SeqOfTaskListSection] = safeFutureCall(propertyTaskListDataConnector.get(taxYear, nino), "Property")
+    val ukPropertyTaskList = safeFutureCall(extractSectionByTitle(propertyTaskList, UkPropertyTitle), "UkProperty")
+    val foreignPropertyTaskList = safeFutureCall(extractSectionByTitle(propertyTaskList, ForeignPropertyTitle), "ForeignProperty")
+    val ukForeignPropertyTaskList = safeFutureCall(extractSectionByTitle(propertyTaskList, UkForeignPropertyTitle), "UkForeignProperty")
 
     tailoringTaskList.flatMap {
       case Right(Some(tailoringData)) =>
@@ -149,8 +152,10 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
           mergedESA <- mergeSections(EsaTitle, mergedSEAndCIS, esaTaskList)
           mergedJSA <- mergeSections(JsaTitle, mergedESA, jsaTaskList)
           mergedEmployment <- mergeSections(EmploymentTitle, mergedJSA, employmentTaskList)
-          mergedProperty <- mergePropertyTaskList(mergedEmployment, tailoringData, propertyTaskList)
-          finalMerged <- mergeSections(InsuranceGainsTitle, mergedProperty, additionalInfoTaskList)
+          mergedUkProperty <- mergeSections(UkPropertyTitle, mergedEmployment, ukPropertyTaskList)
+          mergedForeignProperty <- mergeSections(ForeignPropertyTitle, mergedUkProperty, foreignPropertyTaskList)
+          mergedUkForeignProperty <- mergeSections(UkForeignPropertyTitle, mergedForeignProperty, ukForeignPropertyTaskList)
+          finalMerged <- mergeSections(InsuranceGainsTitle, mergedUkForeignProperty, additionalInfoTaskList)
         } yield Right(Some(finalMerged))
       case Right(None) =>
         Future.successful(Left(APIErrorModel(NOT_FOUND, APIErrorBodyModel("NOT_FOUND", "Tailoring task list data is not found"))))
@@ -158,19 +163,6 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
         Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INVALID STATE", "Failed to retrieve tailoring task list data"))))
     }
   }
-
-  private def mergePropertyTaskList(mergedTaskList: TaskListModel,
-                                    tailoringData: TaskListModel,
-                                    propertyTaskList: => Future[SeqOfTaskListSection]): Future[TaskListModel] =
-    tailoringData.taskList.find { section =>
-      Seq(UkPropertyTitle, ForeignPropertyTitle, UkForeignPropertyTitle).contains(section.sectionTitle)
-    }.fold(Future.successful(mergedTaskList)){ propertySection =>
-      mergeSections(
-        propertySection.sectionTitle,
-        mergedTaskList,
-        extractSectionByTitle(propertyTaskList, propertySection.sectionTitle)
-      )
-    }
 
   private def getSETaskList(taxYear: Int, nino: String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListSection]]] = {
     val result = for {

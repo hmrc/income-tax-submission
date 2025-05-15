@@ -97,12 +97,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
     TaskListSection(
       EmploymentTitle, Some(Seq(
         TaskListSectionItem(PayeEmployment, TaskStatus.Completed, Some("CYAPage"))
-      ))),
-    TaskListSection(
-      UkPropertyTitle, Some(Seq(
-        TaskListSectionItem(UkProperty, TaskStatus.NotStarted, Some("/uk-property"))
-      ))
-    )
+      )))
   )))))
 
   val pensionResponse: Future[Right[Nothing, Some[Seq[TaskListSection]]]] = Future.successful(Right(Some(Seq(
@@ -273,7 +268,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           employmentSection shouldBe defined
           ukPropertySection shouldBe defined
           foreignPropertySection shouldBe None
-          ukForeignPropertySection shouldBe None //Although it is in the property response, it is not in the tailoring response - so should not be shown
+          ukForeignPropertySection shouldBe defined
 
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
@@ -326,7 +321,11 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           )
 
           ukPropertySection.get.taskItems.get should contain theSameElementsAs Seq(
-            TaskListSectionItem(UkProperty, TaskStatus.InProgress, Some("/uk-property"))
+            TaskListSectionItem(UkProperty, TaskStatus.NotStarted, Some("/uk-property"))
+          )
+
+          ukForeignPropertySection.get.taskItems.get should contain theSameElementsAs Seq(
+            TaskListSectionItem(UkForeignProperty, TaskStatus.NotStarted, Some("/uk-and-foreign-property"))
           )
 
         case _ => fail("Unexpected result")
@@ -457,7 +456,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           interestSection shouldBe defined
           selfEmploymentSection shouldBe defined
           employmentSection shouldBe defined
-          ukPropertySection shouldBe defined
+          ukPropertySection shouldBe None
           foreignPropertySection shouldBe None
           ukForeignPropertySection shouldBe None
 
@@ -502,10 +501,6 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
             TaskListSectionItem(PayeEmployment, TaskStatus.Completed, Some("CYAPage"))
           )
 
-          ukPropertySection.get.taskItems.get should contain theSameElementsAs Seq(
-            TaskListSectionItem(UkProperty, TaskStatus.NotStarted, Some("/uk-property"))
-          )
-
         case _ => fail("Unexpected result")
       }
     }
@@ -537,9 +532,6 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           val interestSection = taskListModel.taskList.find(_.sectionTitle == InterestTitle)
           val selfEmploymentSection = taskListModel.taskList.find(_.sectionTitle == SelfEmploymentTitle)
           val employmentSection = taskListModel.taskList.find(_.sectionTitle == EmploymentTitle)
-          val ukPropertySection = taskListModel.taskList.find(_.sectionTitle == UkPropertyTitle)
-          val foreignPropertySection = taskListModel.taskList.find(_.sectionTitle == ForeignPropertyTitle)
-          val ukForeignPropertySection = taskListModel.taskList.find(_.sectionTitle == UkForeignPropertyTitle)
 
           pensionsSection shouldBe defined
           dividendsSection shouldBe defined
@@ -548,9 +540,6 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           interestSection shouldBe defined
           selfEmploymentSection shouldBe defined
           employmentSection shouldBe defined
-          ukPropertySection shouldBe defined
-          foreignPropertySection shouldBe None
-          ukForeignPropertySection shouldBe None
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(UnauthorisedPayments, TaskStatus.UnderMaintenance, None),
@@ -591,10 +580,6 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
             TaskListSectionItem(PayeEmployment, TaskStatus.UnderMaintenance, None)
           )
 
-          ukPropertySection.get.taskItems.get should contain theSameElementsAs Seq(
-            TaskListSectionItem(UkProperty, TaskStatus.UnderMaintenance, None)
-          )
-
         case _ => fail("Unexpected result")
       }
 
@@ -626,9 +611,6 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           val interestSection = taskListModel.taskList.find(_.sectionTitle == InterestTitle)
           val selfEmploymentSection = taskListModel.taskList.find(_.sectionTitle == SelfEmploymentTitle)
           val employmentSection = taskListModel.taskList.find(_.sectionTitle == EmploymentTitle)
-          val ukPropertySection = taskListModel.taskList.find(_.sectionTitle == UkPropertyTitle)
-          val foreignPropertySection = taskListModel.taskList.find(_.sectionTitle == ForeignPropertyTitle)
-          val ukForeignPropertySection = taskListModel.taskList.find(_.sectionTitle == UkForeignPropertyTitle)
 
           pensionsSection shouldBe defined
           dividendsSection shouldBe defined
@@ -636,9 +618,6 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
           interestSection shouldBe defined
           selfEmploymentSection shouldBe defined
           employmentSection shouldBe defined
-          ukPropertySection shouldBe defined
-          foreignPropertySection shouldBe None
-          ukForeignPropertySection shouldBe None
 
           pensionsSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(UnauthorisedPayments, TaskStatus.UnderMaintenance, None),
@@ -671,10 +650,6 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
 
           employmentSection.get.taskItems.get should contain theSameElementsAs Seq(
             TaskListSectionItem(PayeEmployment, TaskStatus.UnderMaintenance, None)
-          )
-
-          ukPropertySection.get.taskItems.get should contain theSameElementsAs Seq(
-            TaskListSectionItem(UkProperty, TaskStatus.UnderMaintenance, None)
           )
 
         case _ => fail("Unexpected result")
