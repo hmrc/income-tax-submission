@@ -31,7 +31,6 @@ import javax.inject.Inject
 import scala.collection.immutable.ListMap
 import scala.concurrent.{ExecutionContext, Future}
 
-
 class TaskListDataService @Inject()(connector: TaskListDataConnector,
                                     pensionTaskListDataConnector: PensionTaskListDataConnector,
                                     dividendsTaskListDataConnector: DividendsTaskListDataConnector,
@@ -124,11 +123,7 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
     val charitableDonationsTaskList = safeFutureCall(charitableDonationsTaskListDataConnector.get(taxYear, nino), "Gift aid")
     val interestTaskList: Future[Either[APIErrorModel, Option[TaskListSection]]] = safeFutureCall(interestTaskListDataConnector.get(taxYear, nino), "Interest")
 
-    val selfEmploymentTaskList = if(appConfig.selfEmploymentTaskListEnabled) {
-      getSETaskList(taxYear, nino)
-    } else {
-      safeFutureCall(cisTaskListDataConnector.get(taxYear, nino),"CIS")
-    }
+    val selfEmploymentTaskList      = safeFutureCall(cisTaskListDataConnector.get(taxYear, nino),"CIS")
 
     val stateBenefitTaskList: Future[SeqOfTaskListSection] = safeFutureCall(stateBenefitsConnector.get(taxYear, nino), "StateBenefit")
     val esaTaskList = safeFutureCall(extractSectionByTitle(stateBenefitTaskList, EsaTitle), "Esa")
@@ -150,8 +145,10 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
           mergedJSA <- mergeSections(JsaTitle, mergedESA, jsaTaskList)
           mergedEmployment <- mergeSections(EmploymentTitle, mergedJSA, employmentTaskList)
           mergedProperty <- mergePropertyTaskList(mergedEmployment, tailoringData, propertyTaskList)
-          finalMerged <- mergeSections(InsuranceGainsTitle, mergedProperty, additionalInfoTaskList)
-        } yield Right(Some(finalMerged))
+          insuranceMerged <- mergeSections(InsuranceGainsTitle, mergedProperty, additionalInfoTaskList)
+          setl <- getSETaskList(taxYear, nino)
+          withSE = insuranceMerged.copy(taskList = insuranceMerged.taskList ++ setl)
+        } yield Right(Some(withSE))
       case Right(None) =>
         Future.successful(Left(APIErrorModel(NOT_FOUND, APIErrorBodyModel("NOT_FOUND", "Tailoring task list data is not found"))))
       case Left(_) =>
@@ -172,29 +169,12 @@ class TaskListDataService @Inject()(connector: TaskListDataConnector,
       )
     }
 
-  private def getSETaskList(taxYear: Int, nino: String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListSection]]] = {
-    val result = for {
-      seResponse <- seTaskListDataConnector.get(taxYear, nino)
-      cisResponse <- cisTaskListDataConnector.get(taxYear, nino)
-    } yield {
-      for {
-        seTaskList <- seResponse
-        cisTaskList <- cisResponse
-      } yield (seTaskList, cisTaskList) match {
-        case (Some(a), Some(b)) => Some(TaskListSection(SelfEmploymentTitle, getSeTaskLists(a, b)))
-        case (Some(a), None) => Some(a)
-        case (None, Some(b)) => Some(b)
-        case (None, None) => None
-      }
+  private def getSETaskList(taxYear: Int, nino: String)(implicit hc: HeaderCarrier): Future[Seq[TaskListSection]] =
+    seTaskListDataConnector.get(taxYear, nino).map{
+      case Right(Some(taskListModel)) =>
+        taskListModel.taskList
+      case _ =>
+        Nil
     }
 
-    safeFutureCall(result, "Self employment or CIS")
-  }
-
-  private def getSeTaskLists(se: TaskListSection, cis: TaskListSection): Option[Seq[TaskListSectionItem]] = {
-    for {
-      seTaskList <- se.taskItems
-      cisTaskList <- cis.taskItems
-    } yield seTaskList ++ cisTaskList
-  }
 }
