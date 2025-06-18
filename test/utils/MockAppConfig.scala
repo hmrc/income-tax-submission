@@ -17,9 +17,8 @@
 package utils
 
 import config.AppConfig
-import org.scalamock.scalatest.MockFactory
 
-class MockAppConfig(isEncrypted: Boolean = true) extends AppConfig with MockFactory {
+class MockAppConfig(isEncrypted: Boolean = true) extends AppConfig {
 
   private val host: String = "http://localhost:11111"
 
