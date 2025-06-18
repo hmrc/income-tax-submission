@@ -43,7 +43,6 @@ lazy val microservice = Project(appName, file("."))
     scalacOptions += "-Wconf:cat=unused&src=.*routes.*:s"
   )
   .configs(Test)
-  .settings(resolvers += Resolver.jcenterRepo)
   .settings(coverageSettings *)
 
 lazy val it = project
