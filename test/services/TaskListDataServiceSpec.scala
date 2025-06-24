@@ -21,7 +21,6 @@ import config.AppConfig
 import connectors._
 import models._
 import models.tasklist.SectionTitle._
-import models.tasklist.TaskStatus.NotStarted
 import models.tasklist.TaskTitle._
 import models.tasklist._
 import org.mockito.ArgumentMatchers.any

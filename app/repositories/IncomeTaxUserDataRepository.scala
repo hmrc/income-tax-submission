@@ -49,31 +49,29 @@ class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
 ) with IncomeTaxUserDataRepository with Logging {
 
   def update(userData: UserData): Future[Either[DatabaseError, Unit]] = {
-
     lazy val start = "[IncomeTaxUserDataRepositoryImpl][update]"
 
-    Try {
-      encryptionService.encryptUserData(userData)
-    }.toEither match {
-      case Left(exception: Exception) => Future.successful(handleEncryptionDecryptionException(exception, start))
-      case Right(encryptedData) =>
-
-        collection.findOneAndReplace(
-          filter = filter(userData.sessionId, userData.mtdItId, userData.nino, userData.taxYear),
-          replacement = encryptedData,
-          options = FindOneAndReplaceOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-        ).toFutureOption().map {
-          case Some(_) => Right(())
-          case None =>
-            pagerDutyLog(FAILED_TO_UPDATE_DATA, s"$start Failed to update user data.")
-            Left(DataNotUpdated)
-        }.recover {
-          case exception: Exception =>
-            pagerDutyLog(FAILED_TO_UPDATE_DATA, s"$start Failed to update user data. Exception: ${exception.getMessage}")
-            Left(MongoError(exception.getMessage))
+    Try(encryptionService.encryptUserData(userData))
+      .fold(
+        throwable => Future.successful(handleEncryptionDecryptionException(throwable, start)),
+        encryptedData => {
+          collection.findOneAndReplace(
+            filter = filter(userData.sessionId, userData.mtdItId, userData.nino, userData.taxYear),
+            replacement = encryptedData,
+            options = FindOneAndReplaceOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+          ).toFutureOption().map {
+            case Some(_) => Right(())
+            case None =>
+              pagerDutyLog(FAILED_TO_UPDATE_DATA, s"$start Failed to update user data.")
+              Left(DataNotUpdated)
+          }.recover {
+            case exception: Exception =>
+              pagerDutyLog(FAILED_TO_UPDATE_DATA, s"$start Failed to update user data. Exception: ${exception.getMessage}")
+              Left(MongoError(exception.getMessage))
+          }
         }
+      )
     }
-  }
 
   def find[T](user: User[T], taxYear: Int): Future[Either[DatabaseError, Option[UserData]]] = {
 
@@ -92,12 +90,10 @@ class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
     findResult.map {
       case Left(error) => Left(error)
       case Right(encryptedData) =>
-        Try {
-          encryptedData.map(encryptionService.decryptUserData)
-        }.toEither match {
-          case Left(exception: Exception) => handleEncryptionDecryptionException(exception, start)
-          case Right(decryptedData) => Right(decryptedData)
-        }
+        Try(encryptedData.map(encryptionService.decryptUserData)).fold(
+          throwable => handleEncryptionDecryptionException(throwable, start),
+          Right(_)
+        )
     }
   }
 
@@ -108,9 +104,9 @@ class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
     equal("taxYear", toBson(taxYear))
   )
 
-  def handleEncryptionDecryptionException[T](exception: Exception, startOfMessage: String): Left[DatabaseError, T] = {
-    pagerDutyLog(ENCRYPTION_DECRYPTION_ERROR, s"$startOfMessage ${exception.getMessage}")
-    Left(EncryptionDecryptionError(exception.getMessage))
+  def handleEncryptionDecryptionException[T](throwable: Throwable, startOfMessage: String): Left[DatabaseError, T] = {
+    pagerDutyLog(ENCRYPTION_DECRYPTION_ERROR, s"$startOfMessage ${throwable.getMessage}")
+    Left(EncryptionDecryptionError(throwable.getMessage))
   }
 }
 

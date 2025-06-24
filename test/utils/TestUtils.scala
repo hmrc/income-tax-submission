@@ -48,6 +48,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
 
   implicit val actorSystem: ActorSystem = ActorSystem()
 
+  // TODO: Delete
   def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, Duration.Inf)
 
   implicit val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("GET",

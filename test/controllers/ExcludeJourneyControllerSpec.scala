@@ -37,7 +37,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
   private val nino = "AA000000A"
   private val sessionId = "1234567890987654321"
 
-  implicit val user: User[AnyContentAsEmpty.type] = User(mtditid, None, nino, sessionId)
+  implicit val user: User[AnyContentAsEmpty.type] = User(mtditid, None, nino, sessionId)(fakeRequest)
 
   private val taxYear = 2023
   private lazy val mockService = mock[ExcludeJourneyService]
@@ -57,14 +57,14 @@ class ExcludeJourneyControllerSpec extends TestUtils {
   }
 
   private def mockCreateOrUpdate(result: Either[DatabaseError, Boolean]) = {
-    (mockService.createOrUpdate(_: ExcludeJourneyModel, _: ExclusionUserDataModel, _: Boolean)(_: User[_]))
-      .expects(*, *, *, *)
+    (mockService.createOrUpdate(_: ExcludeJourneyModel, _: ExclusionUserDataModel, _: Boolean))
+      .expects(*, *, *)
       .returning(Future.successful(result))
   }
 
   private def mockCreateOrUpdateMultiple(expectedInput: ExclusionUserDataModel, result: Either[DatabaseError, Boolean]) = {
-    (mockService.createOrUpdate(_: ExclusionUserDataModel, _: Boolean)(_: User[_]))
-      .expects(expectedInput, *, *)
+    (mockService.createOrUpdate(_: ExclusionUserDataModel, _: Boolean))
+      .expects(expectedInput, *)
       .returning(Future.successful(result))
   }
 

@@ -19,7 +19,7 @@ package models.tasklist
 import models.tasklist.TaskTitle._
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
-import play.api.libs.json.{JsPath, JsString, JsSuccess, JsValue, Json}
+import play.api.libs.json.{JsPath, JsString, JsSuccess, Json}
 
 class TaskTitleSpec extends AnyFreeSpec with Matchers {
 

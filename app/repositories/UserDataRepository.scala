@@ -42,7 +42,7 @@ trait UserDataRepository[C <: ExclusionUserDataTemplate, V] {
 
   def decryptionMethod: C => V
 
-  def create[T](userData: V)(implicit user: User[T]): Future[Either[DatabaseError, Boolean]] = {
+  def create[T](userData: V): Future[Either[DatabaseError, Boolean]] = {
     lazy val start = s"[$repoName][create]"
     Try {
       encryptionMethod(userData)

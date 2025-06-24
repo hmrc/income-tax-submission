@@ -17,7 +17,6 @@
 package services
 
 import common.IncomeSources._
-import config.AppConfig
 import models._
 import models.cis.AllCISDeductions
 import models.employment.AllEmploymentData
@@ -37,8 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesService,
-                                    incomeTaxUserDataService: IncomeTaxUserDataService,
-                                    implicit private val appConfig: AppConfig) extends Logging {
+                                    incomeTaxUserDataService: IncomeTaxUserDataService) extends Logging {
 
   def getLatestDataAndRefreshCache(taxYear: Int, incomeSource: String)
                                   (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
@@ -75,6 +73,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case STATE_BENEFITS => getIncomeSourcesService.getStateBenefits(nino, taxYear, user.mtditid)
       case INTEREST_SAVINGS => getIncomeSourcesService.getSavingsInterest(nino, taxYear, user.mtditid)
       case GAINS => getIncomeSourcesService.getGains(nino, taxYear, user.mtditid)
+      case _ => throw new IllegalArgumentException("Input for income source is invalid. Got: " + incomeSource)
     }
   }
 
@@ -109,11 +108,12 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case STATE_BENEFITS => currentData.copy(stateBenefits = None)
       case INTEREST_SAVINGS => currentData.copy(interestSavings = None)
       case GAINS => currentData.copy(gains = None)
+      case _ => currentData
     }
   }
 
   private def updateCacheBasedOnNewData[A](taxYear: Int, incomeSource: String, newData: Option[A])
-                                          (implicit user: User[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] = {
+                                          (implicit user: User[_], ec: ExecutionContext): Future[Result] = {
 
     incomeTaxUserDataService.findUserData(user, taxYear).flatMap {
       case Right(None) | Right(Some(IncomeSources(None, None, None, None, None, None, None, None, None, None, None))) =>
@@ -161,6 +161,7 @@ class RefreshCacheService @Inject()(getIncomeSourcesService: GetIncomeSourcesSer
       case STATE_BENEFITS => noDataLog(data.stateBenefits.isEmpty)
       case INTEREST_SAVINGS => noDataLog(data.interestSavings.isEmpty)
       case GAINS => noDataLog(data.gains.isEmpty)
+      case _ => ()
     }
   }
 }

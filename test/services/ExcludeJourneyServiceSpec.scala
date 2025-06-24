@@ -80,8 +80,8 @@ class ExcludeJourneyServiceSpec extends TestUtils {
   }
 
   private def mockCreate(expectedInput: ExclusionUserDataModel, result: Either[DatabaseError, Boolean]) = {
-    (excludeRepository.create(_: ExclusionUserDataModel)(_: User[_]))
-      .expects(expectedInput, *)
+    (excludeRepository.create(_: ExclusionUserDataModel))
+      .expects(expectedInput)
       .returning(Future.successful(result))
   }
 

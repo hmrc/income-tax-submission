@@ -36,7 +36,7 @@ class IncomeTaxUserDataServiceSpec extends TestUtils with MockIncomeTaxUserDataR
 
   private val taxYear = 2022
   private implicit val user: User[AnyContentAsEmpty.type] =
-    User(mtditid = "1234567890", arn = None, nino = "AA123456A", sessionId = "sessionId-1618a1e8-4979-41d8-a32e-5ffbe69fac81")
+    User(mtditid = "1234567890", arn = None, nino = "AA123456A", sessionId = "sessionId-1618a1e8-4979-41d8-a32e-5ffbe69fac81")(fakeRequest)
 
   private val underTest: IncomeTaxUserDataService = new IncomeTaxUserDataService(mockRepository, mockAppConfig)
 

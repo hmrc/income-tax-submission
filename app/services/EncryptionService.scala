@@ -236,7 +236,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
     val hmrcEmploymentData = employment.hmrcEmploymentData.map(encryptHmrcEmploymentSource)
     val customerEmploymentData: Seq[EncryptedEmploymentSource] = employment.customerEmploymentData.map(encryptEmploymentSource)
 
-    val otherEmploymentIncome: Option[EncryptedOtherEmploymentIncome] = employment.otherEmploymentIncome.map(_.encrypted)
+    val otherEmploymentIncome: Option[EncryptedOtherEmploymentIncome] = employment.otherEmploymentIncome.map(_.encrypted())
 
     EncryptedAllEmploymentData(
       hmrcEmploymentData = hmrcEmploymentData,
