@@ -24,6 +24,7 @@ import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{contentAsJson, contentAsString, status}
 import services.ExcludeJourneyService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
@@ -100,7 +101,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
       }
 
       "contain the data in the body" in {
-        bodyOf(result) mustBe GetExclusionsDataModel(userData.exclusionModel).toJson.toString
+        contentAsJson(result) mustBe GetExclusionsDataModel(userData.exclusionModel).toJson
       }
     }
 
@@ -212,7 +213,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
         }
 
         "has the body of 'Invalid Body'" in {
-          bodyOf(result) mustBe "Invalid Body"
+          contentAsString(result) mustBe "Invalid Body"
         }
 
         "has the status of BAD_REQUEST(400)" in {
@@ -231,7 +232,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
         }
 
         "has the body of 'Incorrect Json Body'" in {
-          bodyOf(result) mustBe "Incorrect Json Body"
+          contentAsString(result) mustBe "Incorrect Json Body"
         }
 
         "has the status of BAD_REQUEST(400)" in {
@@ -254,7 +255,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
         }
 
         "has the body of 'Invalid Journey Key'" in {
-          bodyOf(result) mustBe "Invalid Journey Key"
+          contentAsString(result) mustBe "Invalid Journey Key"
         }
       }
 
@@ -322,7 +323,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
         }
 
         "has the body of 'Invalid Body'" in {
-          bodyOf(result) mustBe "Invalid Body"
+          contentAsString(result) mustBe "Invalid Body"
         }
 
         "has the status of BAD_REQUEST(400)" in {

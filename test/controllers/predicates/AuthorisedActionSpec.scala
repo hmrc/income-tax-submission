@@ -23,6 +23,7 @@ import play.api.http.Status._
 import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Result}
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{contentAsString, status}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
@@ -97,7 +98,7 @@ class AuthorisedActionSpec extends TestUtils {
         }
 
         "returns a body of the mtditid" in {
-          bodyOf(result) mustBe mtditid
+          contentAsString(result) mustBe mtditid
         }
       }
 
@@ -348,7 +349,7 @@ class AuthorisedActionSpec extends TestUtils {
         }
 
         "has the correct body" in {
-          bodyOf(result) mustBe "1234567890 0987654321"
+          contentAsString(result) mustBe "1234567890 0987654321"
         }
       }
     }
@@ -457,7 +458,7 @@ class AuthorisedActionSpec extends TestUtils {
         "should return an OK(200) status" in {
 
           status(result) mustBe OK
-          bodyOf(result) mustBe "mtditid: 1234567890 arn: 0987654321"
+          contentAsString(result) mustBe "mtditid: 1234567890 arn: 0987654321"
         }
       }
 
@@ -469,7 +470,7 @@ class AuthorisedActionSpec extends TestUtils {
         }
 
         status(result) mustBe OK
-        bodyOf(result) mustBe "mtditid: 1234567890"
+        contentAsString(result) mustBe "mtditid: 1234567890"
       }
     }
 
