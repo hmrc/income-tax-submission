@@ -30,6 +30,7 @@ import services.EncryptionService
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import uk.gov.hmrc.play.http.logging.Mdc
 import utils.PagerDutyHelper.PagerDutyKeys.{ENCRYPTION_DECRYPTION_ERROR, FAILED_TO_FIND_DATA, FAILED_TO_UPDATE_DATA}
 import utils.PagerDutyHelper.pagerDutyLog
 
@@ -38,6 +39,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
+import scala.util.control.NonFatal
 
 @Singleton
 class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig: AppConfig, encryptionService: EncryptionService)(implicit ec: ExecutionContext
@@ -48,58 +50,50 @@ class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
   indexes = IncomeTaxUserDataIndexes.indexes(appConfig)
 ) with IncomeTaxUserDataRepository with Logging {
 
-  def update(userData: UserData): Future[Either[DatabaseError, Unit]] = {
-
-    lazy val start = "[IncomeTaxUserDataRepositoryImpl][update]"
-
-    Try {
-      encryptionService.encryptUserData(userData)
-    }.toEither match {
-      case Left(exception: Exception) => Future.successful(handleEncryptionDecryptionException(exception, start))
-      case Right(encryptedData) =>
-
-        collection.findOneAndReplace(
-          filter = filter(userData.sessionId, userData.mtdItId, userData.nino, userData.taxYear),
-          replacement = encryptedData,
-          options = FindOneAndReplaceOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-        ).toFutureOption().map {
-          case Some(_) => Right(())
-          case None =>
-            pagerDutyLog(FAILED_TO_UPDATE_DATA, s"$start Failed to update user data.")
-            Left(DataNotUpdated)
-        }.recover {
-          case exception: Exception =>
-            pagerDutyLog(FAILED_TO_UPDATE_DATA, s"$start Failed to update user data. Exception: ${exception.getMessage}")
-            Left(MongoError(exception.getMessage))
+  def update(userData: UserData): Future[Either[DatabaseError, Unit]] =
+    Try(encryptionService.encryptUserData(userData))
+      .fold(
+        throwable => {
+          pagerDutyLog(ENCRYPTION_DECRYPTION_ERROR, s"[update] ${throwable.getMessage}")
+          Future.successful(Left(EncryptionDecryptionError(throwable.getMessage)))
+        },
+        encryptedData => {
+          Mdc.preservingMdc(collection.findOneAndReplace(
+            filter = filter(userData.sessionId, userData.mtdItId, userData.nino, userData.taxYear),
+            replacement = encryptedData,
+            options = FindOneAndReplaceOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+          ).toFutureOption()).map {
+            case Some(_) => Right(())
+            case None =>
+              pagerDutyLog(FAILED_TO_UPDATE_DATA, s"[update] Failed to update user data.")
+              Left(DataNotUpdated)
+          }.recover {
+            case exception: Exception =>
+              pagerDutyLog(FAILED_TO_UPDATE_DATA, s"[update] Failed to update user data. Exception: ${exception.getMessage}")
+              Left(MongoError(exception.getMessage))
+          }
         }
-    }
-  }
+      )
 
-  def find[T](user: User[T], taxYear: Int): Future[Either[DatabaseError, Option[UserData]]] = {
-
-    lazy val start = "[IncomeTaxUserDataRepositoryImpl][find]"
-
-    val findResult = collection.findOneAndUpdate(
-      filter = filter(user.sessionId, user.mtditid, user.nino, taxYear),
-      update = set("lastUpdated", toBson(Instant.now())),
-      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-    ).toFutureOption().map(Right(_)).recover {
-      case exception: Exception =>
-        pagerDutyLog(FAILED_TO_FIND_DATA, s"$start Failed to find user data. Exception: ${exception.getMessage}")
-        Left(MongoError(exception.getMessage))
-    }
-
-    findResult.map {
-      case Left(error) => Left(error)
-      case Right(encryptedData) =>
-        Try {
-          encryptedData.map(encryptionService.decryptUserData)
-        }.toEither match {
-          case Left(exception: Exception) => handleEncryptionDecryptionException(exception, start)
-          case Right(decryptedData) => Right(decryptedData)
-        }
-    }
-  }
+  def find[T](user: User[T], taxYear: Int): Future[Either[DatabaseError, Option[UserData]]] =
+    Mdc.preservingMdc(collection.findOneAndUpdate(
+        filter = filter(user.sessionId, user.mtditid, user.nino, taxYear),
+        update = set("lastUpdated", toBson(Instant.now())),
+        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+      ).toFutureOption()).map { encryptedData =>
+        Try(encryptedData.map(encryptionService.decryptUserData)).fold(
+          throwable => {
+            pagerDutyLog(ENCRYPTION_DECRYPTION_ERROR, s"[find] ${throwable.getMessage}")
+            Left(EncryptionDecryptionError(throwable.getMessage))
+          },
+          Right(_)
+        )
+      }
+      .recover {
+        case NonFatal(exception) =>
+          pagerDutyLog(FAILED_TO_FIND_DATA, s"[find] Failed to find user data. Exception: ${exception.getMessage}")
+          Left(MongoError(exception.getMessage))
+      }
 
   private def filter(sessionId: String, mtdItId: String, nino: String, taxYear: Int): Bson = and(
     equal("sessionId", toBson(sessionId)),
@@ -108,14 +102,11 @@ class IncomeTaxUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
     equal("taxYear", toBson(taxYear))
   )
 
-  def handleEncryptionDecryptionException[T](exception: Exception, startOfMessage: String): Left[DatabaseError, T] = {
-    pagerDutyLog(ENCRYPTION_DECRYPTION_ERROR, s"$startOfMessage ${exception.getMessage}")
-    Left(EncryptionDecryptionError(exception.getMessage))
-  }
 }
 
 trait IncomeTaxUserDataRepository {
   def find[T](user: User[T], taxYear: Int): Future[Either[DatabaseError, Option[UserData]]]
+
   def update(userData: UserData): Future[Either[DatabaseError, Unit]]
 }
 

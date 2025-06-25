@@ -78,13 +78,6 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
     }
   }
 
-  "handleEncryptionDecryptionException" should {
-    "handle an exception" in {
-      val res = repoWithInvalidEncryption.handleEncryptionDecryptionException(new Exception("fail"), "")
-      res mustBe Left(EncryptionDecryptionError("fail"))
-    }
-  }
-
   "update" should {
     "fail to add a document to the collection when a mongo error occurs" in new EmptyDatabase {
 

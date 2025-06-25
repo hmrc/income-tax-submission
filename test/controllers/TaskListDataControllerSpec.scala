@@ -24,6 +24,7 @@ import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.mvc.{Result, Results}
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{contentAsJson, status}
 import services.{RefreshCacheService, TaskListDataService}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.{TaxYearUtils, TestUtils}
@@ -77,7 +78,7 @@ class TaskListDataControllerSpec extends TestUtils {
         controller.get(nino, taxYear)(fakeGetRequest)
       }
       status(result) mustBe OK
-      Json.parse(bodyOf(result)) mustBe Json.toJson(taskListData.toOption.get)
+      contentAsJson(result) mustBe Json.toJson(taskListData.toOption.get)
     }
 
     "return a NO_CONTENT response with no data" in {
@@ -98,7 +99,7 @@ class TaskListDataControllerSpec extends TestUtils {
         controller.get(nino, taxYear)(fakeGetRequest)
       }
       status(result) mustBe SERVICE_UNAVAILABLE
-      Json.parse(bodyOf(result)) mustBe APIErrorModel(SERVICE_UNAVAILABLE, APIErrorBodyModel("NOT_GOOD", "something went wrong")).toJson
+      contentAsJson(result) mustBe APIErrorModel(SERVICE_UNAVAILABLE, APIErrorBodyModel("NOT_GOOD", "something went wrong")).toJson
     }
   }
 }

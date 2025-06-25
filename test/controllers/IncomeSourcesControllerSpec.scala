@@ -27,6 +27,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.mvc.Results._
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{contentAsJson, status}
 import services.{GetIncomeSourcesService, IncomeTaxUserDataService, RefreshCacheService}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
@@ -110,7 +111,7 @@ class IncomeSourcesControllerSpec extends TestUtils {
           controller.getIncomeSourcesFromSession(nino, taxYear)(fakeGetRequestWithExcludedHeader)
         }
         status(result) mustBe OK
-        Json.parse(bodyOf(result)) mustBe Json.toJson(anIncomeSources)
+        contentAsJson(result) mustBe Json.toJson(anIncomeSources)
       }
 
       "return a NO_CONTENT response when data is empty" in {
@@ -176,7 +177,7 @@ class IncomeSourcesControllerSpec extends TestUtils {
           controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeaderAndSession)
         }
         status(result) mustBe OK
-        Json.parse(bodyOf(result)) mustBe Json.toJson(incomeSources)
+        contentAsJson(result) mustBe Json.toJson(incomeSources)
       }
 
       "return an OK 200 response when called as an agent" in {
@@ -187,7 +188,7 @@ class IncomeSourcesControllerSpec extends TestUtils {
           controller.getIncomeSources(nino, taxYear)(fakeGetRequestWithHeaderAndSession)
         }
         status(result) mustBe OK
-        Json.parse(bodyOf(result)) mustBe Json.toJson(incomeSources)
+        contentAsJson(result) mustBe Json.toJson(incomeSources)
       }
     }
 

@@ -45,7 +45,7 @@ class ExclusionUserDataRepositoryImpl @Inject()(
 
 @ImplementedBy(classOf[ExclusionUserDataRepositoryImpl])
 trait ExclusionUserDataRepository {
-  def create[T](userData: ExclusionUserDataModel)(implicit user: User[T]): Future[Either[DatabaseError, Boolean]]
+  def create[T](userData: ExclusionUserDataModel): Future[Either[DatabaseError, Boolean]]
   def find[T](taxYear: Int)(implicit user: User[T]): Future[Either[DatabaseError, Option[ExclusionUserDataModel]]]
   def update(userData: ExclusionUserDataModel): Future[Either[DatabaseError, Boolean]]
 }

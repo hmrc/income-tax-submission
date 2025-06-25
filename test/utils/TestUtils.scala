@@ -26,8 +26,8 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, DefaultActionBuilder, Result}
-import play.api.test.{FakeRequest, Helpers}
+import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, DefaultActionBuilder}
+import play.api.test._
 import services.AuthService
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -36,10 +36,9 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Awaitable, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
-trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAndAfterEach {
+trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAndAfterEach with FutureAwaits with DefaultAwaitTimeout {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -47,8 +46,6 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
   }
 
   implicit val actorSystem: ActorSystem = ActorSystem()
-
-  def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, Duration.Inf)
 
   implicit val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("GET",
     "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890", "sessionId" -> "sessionId")
@@ -63,13 +60,6 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with BeforeAn
   val defaultActionBuilder: DefaultActionBuilder = DefaultActionBuilder(mockControllerComponents.parsers.default)
   val authorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, mockControllerComponents)
 
-
-  def status(awaitable: Future[Result]): Int = await(awaitable).header.status
-
-  def bodyOf(awaitable: Future[Result]): String = {
-    val awaited = await(awaitable)
-    await(awaited.body.consumeData.map(_.utf8String))
-  }
 
   val individualEnrolments: Enrolments = Enrolments(Set(
     Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, "1234567890")), "Activated"),

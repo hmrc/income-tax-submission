@@ -42,12 +42,12 @@ class RefreshCacheServiceSpec extends TestUtils {
   private val taxYear = 2022
 
   private implicit val user: User[AnyContent] = User(mtditid = "1234567890", arn = None, nino = "AA123456A",
-    sessionId = "sessionId-1618a1e8-4979-41d8-a32e-5ffbe69fac81")
+    sessionId = "sessionId-1618a1e8-4979-41d8-a32e-5ffbe69fac81")(fakeRequest)
 
   private val getIncomeSourcesService = mock[GetIncomeSourcesService]
   private val incomeTaxUserDataService = mock[IncomeTaxUserDataService]
 
-  private val underTest = new RefreshCacheService(getIncomeSourcesService, incomeTaxUserDataService, mockAppConfig)
+  private val underTest = new RefreshCacheService(getIncomeSourcesService, incomeTaxUserDataService)
 
   ".getLatestDataAndRefreshCache" should {
     "return an error when get call errors" in {

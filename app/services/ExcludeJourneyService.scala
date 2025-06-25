@@ -66,7 +66,7 @@ class ExcludeJourneyService @Inject()(
                       dataModel: ExcludeJourneyModel,
                       rootExclusionModel: ExclusionUserDataModel,
                       preExisting: Boolean
-                    )(implicit user: User[_]): Future[Either[DatabaseError, Boolean]] = {
+                    ): Future[Either[DatabaseError, Boolean]] = {
 
     val exclusionSeq = if (rootExclusionModel.exclusionModel.map(_.journey).contains(dataModel.journey)) {
       rootExclusionModel.exclusionModel
@@ -85,7 +85,7 @@ class ExcludeJourneyService @Inject()(
   def createOrUpdate(
                       exclusionModel: ExclusionUserDataModel,
                       preExisting: Boolean
-                    )(implicit user: User[_]): Future[Either[DatabaseError, Boolean]] = {
+                    ): Future[Either[DatabaseError, Boolean]] = {
     if (preExisting) {
       exclusionUserDataRepository.update(exclusionModel)
     } else {
