@@ -18,17 +18,19 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.TaskListTailoringDataParser.{TaskListHttpReads, TaskListResponseModel}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class TaskListDataConnector @Inject()(val http: HttpClient, val config: AppConfig)
+class TaskListDataConnector @Inject()(val http: HttpClientV2, val config: AppConfig)
                                      (implicit ec: ExecutionContext) extends Connector {
 
   def get(taxYear: Int)(implicit hc: HeaderCarrier): Future[TaskListResponseModel] = {
     val taskListDataUrl: String = config.tailoringPhaseIIBaseUrl + s"/income-tax-tailor-return/task-list/data/$taxYear"
 
-    http.GET[TaskListResponseModel](taskListDataUrl)(TaskListHttpReads, addHeadersToHeaderCarrier(taskListDataUrl), ec)
+    http.get(url"$taskListDataUrl")(addHeadersToHeaderCarrier(taskListDataUrl))
+      .execute[TaskListResponseModel]
   }
 }

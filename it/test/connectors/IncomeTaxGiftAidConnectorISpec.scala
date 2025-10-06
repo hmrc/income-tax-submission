@@ -47,7 +47,7 @@ class IncomeTaxGiftAidConnectorISpec extends ConnectorIntegrationTest {
 
   private val gifts = Gifts(Some(List("charity name")), Some(12345.67), Some(12345.67), Some(12345.67))
 
-  private val underTest = new IncomeTaxGiftAidConnector(httpClient, new MockAppConfig())
+  private val underTest = new IncomeTaxGiftAidConnector(httpClientV2, new MockAppConfig())
 
   "IncomeTaxGiftAidConnector" should {
     "include internal headers" when {

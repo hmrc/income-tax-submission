@@ -37,7 +37,7 @@ class IncomeTaxCISConnectorISpec extends ConnectorIntegrationTest {
 
   implicit private val headerCarrier: HeaderCarrier = HeaderCarrier().withExtraHeaders("mtditid" -> mtditid, "X-Session-ID" -> sessionId)
 
-  private val underTest = new IncomeTaxCISConnector(httpClient, new MockAppConfig())
+  private val underTest = new IncomeTaxCISConnector(httpClientV2, new MockAppConfig())
 
   "IncomeTaxCISConnector" should {
     val headers = Seq(new HttpHeader("X-Session-ID", sessionId), new HttpHeader("mtditid", mtditid))

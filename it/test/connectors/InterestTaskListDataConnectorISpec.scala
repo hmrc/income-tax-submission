@@ -37,7 +37,7 @@ class InterestTaskListDataConnectorISpec extends ConnectorIntegrationTest {
   private val taxYear = LocalDate.now(ZoneId.systemDefault()).getYear
   private val mtdItIdHeader = ("mtditid", "1234567890")
   private val requestHeaders = Seq(new HttpHeader("mtditid", "1234567890"))
-  private val underTest: InterestTaskListDataConnector = new InterestTaskListDataConnector(httpClient, new MockAppConfig())
+  private val underTest: InterestTaskListDataConnector = new InterestTaskListDataConnector(httpClientV2, new MockAppConfig())
   implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(mtdItIdHeader)
 
   def taskListDataUrl: String = s"/income-tax-interest/$taxYear/tasks/$nino"

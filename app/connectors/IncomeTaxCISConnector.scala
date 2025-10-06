@@ -18,17 +18,19 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.SubmittedCISParser.{IncomeSourcesResponseModel, SubmittedCISHttpReads}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class IncomeTaxCISConnector @Inject()(val http: HttpClient,
+class IncomeTaxCISConnector @Inject()(val http: HttpClientV2,
                                       val config: AppConfig)(implicit ec: ExecutionContext) extends Connector {
 
   def getSubmittedCIS(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
     val submittedCISUrl: String = config.cisBaseUrl + s"/income-tax-cis/income-tax/nino/$nino/sources?taxYear=$taxYear"
 
-    http.GET[IncomeSourcesResponseModel](submittedCISUrl)(SubmittedCISHttpReads, addHeadersToHeaderCarrier(submittedCISUrl), ec)
+    http.get(url"$submittedCISUrl")(addHeadersToHeaderCarrier(submittedCISUrl))
+      .execute[IncomeSourcesResponseModel]
   }
 }

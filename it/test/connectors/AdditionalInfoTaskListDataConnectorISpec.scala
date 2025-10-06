@@ -38,7 +38,7 @@ class AdditionalInfoTaskListDataConnectorISpec extends ConnectorIntegrationTest 
   private val requestHeaders = Seq(new HttpHeader("mtditid", "1234567890"))
   val nino :String = "123456789"
 
-  private val underTest: AdditionalInfoTaskListDataConnector = new AdditionalInfoTaskListDataConnector(httpClient, new MockAppConfig())
+  private val underTest: AdditionalInfoTaskListDataConnector = new AdditionalInfoTaskListDataConnector(httpClientV2, new MockAppConfig())
   def additionalInfoTaskListDataUrl: String = s"/income-tax-additional-information/$taxYear/tasks/$nino"
 
   "AdditionalInfoTaskListDataConnector" should {

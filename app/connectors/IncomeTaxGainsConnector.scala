@@ -18,16 +18,18 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.SubmittedGainsParser._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class IncomeTaxGainsConnector @Inject()(val http: HttpClient, val config: AppConfig)
+class IncomeTaxGainsConnector @Inject()(val http: HttpClientV2, val config: AppConfig)
                                        (implicit ec: ExecutionContext) extends Connector {
 
   def getSubmittedGains(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[InsurancePoliciesResponseModel] = {
     val submittedGainsUrl: String = config.additionalInfoBaseUrl + s"/income-tax-additional-information/income-tax/insurance-policies/income/$nino/$taxYear"
-    http.GET[InsurancePoliciesResponseModel](submittedGainsUrl)(SubmittedGainsHttpReads, addHeadersToHeaderCarrier(submittedGainsUrl), ec)
+    http.get(url"$submittedGainsUrl")(addHeadersToHeaderCarrier(submittedGainsUrl))
+      .execute[InsurancePoliciesResponseModel]
   }
 }

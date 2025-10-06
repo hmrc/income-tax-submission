@@ -18,18 +18,20 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.TaskListEmploymentDataParser._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class EmploymentTaskListDataConnector @Inject()(val http: HttpClient, val config: AppConfig)
+class EmploymentTaskListDataConnector @Inject()(val http: HttpClientV2, val config: AppConfig)
                                                (implicit ec: ExecutionContext) extends Connector {
 
   def get(taxYear: Int,nino:String)(implicit hc: HeaderCarrier): Future[TaskListSectionResponseModel] = {
 
     val taskListDataUrl: String = config.employmentBaseUrl + s"/income-tax-employment/$taxYear/tasks/$nino"
 
-    http.GET[TaskListSectionResponseModel](taskListDataUrl)(TaskListSectionHttpReads, addHeadersToHeaderCarrier(taskListDataUrl), ec)
+    http.get(url"$taskListDataUrl")(addHeadersToHeaderCarrier(taskListDataUrl))
+      .execute[TaskListSectionResponseModel]
   }
 }

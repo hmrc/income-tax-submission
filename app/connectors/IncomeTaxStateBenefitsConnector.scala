@@ -18,17 +18,19 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.SubmittedStateBenefitsParser.{IncomeSourcesResponseModel, SubmittedStateBenefitsHttpReads}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class IncomeTaxStateBenefitsConnector @Inject()(val http: HttpClient, val config: AppConfig)
+class IncomeTaxStateBenefitsConnector @Inject()(val http: HttpClientV2, val config: AppConfig)
                                                (implicit ec: ExecutionContext) extends Connector {
 
   def getSubmittedStateBenefits(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
     val submittedStateBenefitsUrl: String = config.stateBenefitsBaseUrl + s"/income-tax-state-benefits/benefits/nino/$nino/tax-year/$taxYear"
 
-    http.GET[IncomeSourcesResponseModel](submittedStateBenefitsUrl)(SubmittedStateBenefitsHttpReads, addHeadersToHeaderCarrier(submittedStateBenefitsUrl), ec)
+    http.get(url"$submittedStateBenefitsUrl")(addHeadersToHeaderCarrier(submittedStateBenefitsUrl))
+      .execute[IncomeSourcesResponseModel]
   }
 }

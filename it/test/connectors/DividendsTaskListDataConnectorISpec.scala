@@ -36,7 +36,7 @@ class DividendsTaskListDataConnectorISpec extends ConnectorIntegrationTest {
   private val requestHeaders = Seq(new HttpHeader("mtditid", "1234567890"))
   val nino :String = "123456789"
 
-  private val underTest: DividendsTaskListDataConnector = new DividendsTaskListDataConnector(httpClient, new MockAppConfig())
+  private val underTest: DividendsTaskListDataConnector = new DividendsTaskListDataConnector(httpClientV2, new MockAppConfig())
   def dividendsTaskListDataUrl: String = s"/income-tax-dividends/$taxYear/tasks/$nino"
 
   "DividendsTaskListDataConnector" should {

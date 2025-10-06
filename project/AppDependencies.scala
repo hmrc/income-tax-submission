@@ -18,8 +18,8 @@ import sbt.*
 
 object AppDependencies {
 
-  private val bootstrapPlay30Version = "10.1.0"
-  private val mongoVersion = "2.7.0"
+  private val bootstrapPlay30Version = "10.2.0"
+  private val mongoVersion = "2.9.0"
 
   private val jacksonAndPlayExclusions: Seq[InclusionRule] = Seq(
     ExclusionRule(organization = "com.fasterxml.jackson.core"),

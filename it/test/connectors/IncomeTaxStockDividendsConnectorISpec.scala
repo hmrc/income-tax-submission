@@ -35,7 +35,7 @@ class IncomeTaxStockDividendsConnectorISpec extends ConnectorIntegrationTest {
   private val mtditidHeader = ("mtditid", "123123123")
   private val requestHeaders = Seq(new HttpHeader("mtditid", "123123123"))
 
-  private val underTest: IncomeTaxStockDividendsConnector = new IncomeTaxStockDividendsConnector(httpClient, new MockAppConfig())
+  private val underTest: IncomeTaxStockDividendsConnector = new IncomeTaxStockDividendsConnector(httpClientV2, new MockAppConfig())
 
   "IncomeTaxDividendsConnector" should {
     val expectedResult = Some(anStockDividends)

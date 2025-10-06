@@ -35,7 +35,7 @@ class IncomeTaxInterestSavingsConnectorISpec extends ConnectorIntegrationTest {
   private val mtditidHeader = ("mtditid", "123123123")
   private val requestHeaders = Seq(new HttpHeader("mtditid", "123123123"))
 
-  private val underTest: IncomeTaxInterestSavingsConnector = new IncomeTaxInterestSavingsConnector(httpClient, new MockAppConfig())
+  private val underTest: IncomeTaxInterestSavingsConnector = new IncomeTaxInterestSavingsConnector(httpClientV2, new MockAppConfig())
 
   "IncomeTaxInterestSavingsConnector" should {
     val expectedResult = Some(anSavingIncome)

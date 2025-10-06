@@ -35,7 +35,7 @@ class TaskListDataConnectorISpec extends ConnectorIntegrationTest {
   private val mtdItIdHeader = ("mtditid", "1234567890")
   private val requestHeaders = Seq(new HttpHeader("mtditid", "1234567890"))
 
-  private val underTest: TaskListDataConnector = new TaskListDataConnector(httpClient, new MockAppConfig())
+  private val underTest: TaskListDataConnector = new TaskListDataConnector(httpClientV2, new MockAppConfig())
 
   "TaskListDataConnector" should {
 
