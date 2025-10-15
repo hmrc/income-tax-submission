@@ -18,17 +18,19 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.SubmittedEmploymentParser.{IncomeSourcesResponseModel, SubmittedEmploymentHttpReads}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class IncomeTaxEmploymentConnector @Inject()(val http: HttpClient, val config: AppConfig)
+class IncomeTaxEmploymentConnector @Inject()(val http: HttpClientV2, val config: AppConfig)
                                             (implicit ec: ExecutionContext) extends Connector {
 
   def getSubmittedEmployment(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
     val submittedEmploymentUrl: String = config.employmentBaseUrl + s"/income-tax-employment/income-tax/nino/$nino/sources?taxYear=$taxYear"
 
-    http.GET[IncomeSourcesResponseModel](submittedEmploymentUrl)(SubmittedEmploymentHttpReads, addHeadersToHeaderCarrier(submittedEmploymentUrl), ec)
+    http.get(url"$submittedEmploymentUrl")(addHeadersToHeaderCarrier(submittedEmploymentUrl))
+      .execute[IncomeSourcesResponseModel]
   }
 }

@@ -18,17 +18,19 @@ package connectors
 
 import config.AppConfig
 import connectors.parsers.SubmittedDividendsParser.{IncomeSourcesResponseModel, SubmittedDividendsHttpReads}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class IncomeTaxDividendsConnector @Inject()(val http: HttpClient, val config: AppConfig)
+class IncomeTaxDividendsConnector @Inject()(val http: HttpClientV2, val config: AppConfig)
                                            (implicit ec: ExecutionContext) extends Connector {
 
   def getSubmittedDividends(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[IncomeSourcesResponseModel] = {
     val submittedDividendsUrl: String = config.dividendsBaseUrl + s"/income-tax-dividends/income-tax/nino/$nino/sources?taxYear=$taxYear"
 
-    http.GET[IncomeSourcesResponseModel](submittedDividendsUrl)(SubmittedDividendsHttpReads, addHeadersToHeaderCarrier(submittedDividendsUrl), ec)
+    http.get(url"$submittedDividendsUrl")(addHeadersToHeaderCarrier(submittedDividendsUrl))
+      .execute[IncomeSourcesResponseModel]
   }
 }

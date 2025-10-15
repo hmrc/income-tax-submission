@@ -47,7 +47,7 @@ class IncomeTaxGainsConnectorISpec extends ConnectorIntegrationTest {
     foreign = Some(Seq(ForeignModel(Some("RefNo13254687"), 123.45, Some(123.45), Some(3))))
   )
 
-  private val underTest = new IncomeTaxGainsConnector(httpClient, new MockAppConfig())
+  private val underTest = new IncomeTaxGainsConnector(httpClientV2, new MockAppConfig())
 
   "IncomeTaxGainsConnector" should {
     "include internal headers" when {

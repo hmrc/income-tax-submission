@@ -17,21 +17,22 @@
 package connectors
 
 import config.AppConfig
-import connectors.parsers.TaskListDividendDataParser.{TaskListSectionHttpReads}
+import connectors.parsers.TaskListDividendDataParser.TaskListSectionHttpReads
 import models.APIErrorModel
 import models.tasklist.TaskListSection
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class DividendsTaskListDataConnector @Inject()(val http: HttpClient, val config: AppConfig)
+class DividendsTaskListDataConnector @Inject()(val http: HttpClientV2, val config: AppConfig)
                                               (implicit ec: ExecutionContext) extends Connector {
 
   def get(taxYear: Int,nino:String)(implicit hc: HeaderCarrier): Future[Either[APIErrorModel, Option[TaskListSection]]] = {
     val taskListDataUrl: String = config.dividendsBaseUrl + s"/income-tax-dividends/$taxYear/tasks/$nino"
 
-
-    http.GET[Either[APIErrorModel, Option[TaskListSection]]](taskListDataUrl)(TaskListSectionHttpReads, addHeadersToHeaderCarrier(taskListDataUrl), ec)
+    http.get(url"$taskListDataUrl")(addHeadersToHeaderCarrier(taskListDataUrl))
+      .execute[Either[APIErrorModel, Option[TaskListSection]]]
   }
 }

@@ -36,7 +36,7 @@ class StateBenefitsTaskListDataConnectorISpec extends ConnectorIntegrationTest {
   private val requestHeaders = Seq(new HttpHeader("mtditid", "1234567890"))
   val nino :String = "123456789"
 
-  private val underTest: StateBenefitsTaskListDataConnector = new StateBenefitsTaskListDataConnector(httpClient, new MockAppConfig())
+  private val underTest: StateBenefitsTaskListDataConnector = new StateBenefitsTaskListDataConnector(httpClientV2, new MockAppConfig())
   def StateBenefitsTaskListDataUrl: String = s"/income-tax-state-benefits/$taxYear/tasks/$nino"
 
   "StateBenefitsTaskListDataConnector" should {

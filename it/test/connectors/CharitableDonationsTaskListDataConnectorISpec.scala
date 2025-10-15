@@ -37,7 +37,7 @@ class CharitableDonationsTaskListDataConnectorISpec extends ConnectorIntegration
   private val requestHeaders = Seq(new HttpHeader("mtditid", "1234567890"))
   val nino :String = "123456789"
 
-  private val underTest: CharitableDonationsTaskListDataConnector = new CharitableDonationsTaskListDataConnector(httpClient, new MockAppConfig())
+  private val underTest: CharitableDonationsTaskListDataConnector = new CharitableDonationsTaskListDataConnector(httpClientV2, new MockAppConfig())
   def taskListDataUrl: String = s"/income-tax-gift-aid/income-tax/$taxYear/tasks/$nino"
 
   "CharitableDonationsTaskListDataConnector" should {

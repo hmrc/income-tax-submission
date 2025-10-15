@@ -36,7 +36,7 @@ class CISTaskListDataConnectorISpec extends ConnectorIntegrationTest {
   private val requestHeaders = Seq(new HttpHeader("mtditid", "1234567890"))
   val nino :String = "123456789"
 
-  private val underTest: CISTaskListDataConnector = new CISTaskListDataConnector(httpClient, new MockAppConfig())
+  private val underTest: CISTaskListDataConnector = new CISTaskListDataConnector(httpClientV2, new MockAppConfig())
   def cisTaskListDataUrl: String = s"/income-tax-cis/$taxYear/tasks/$nino"
 
   "CISTaskListDataConnector" should {

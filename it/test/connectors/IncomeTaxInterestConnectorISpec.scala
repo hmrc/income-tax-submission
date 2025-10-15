@@ -36,7 +36,7 @@ class IncomeTaxInterestConnectorISpec extends ConnectorIntegrationTest {
 
   private val accountName = "SomeName"
   private val incomeSourceId = "12345"
-  private val underTest = new IncomeTaxInterestConnector(httpClient, new MockAppConfig())
+  private val underTest = new IncomeTaxInterestConnector(httpClientV2, new MockAppConfig())
 
   "IncomeTaxInterestConnector" should {
     "include internal headers" when {

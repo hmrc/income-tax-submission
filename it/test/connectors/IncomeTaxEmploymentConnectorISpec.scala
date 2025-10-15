@@ -37,7 +37,7 @@ class IncomeTaxEmploymentConnectorISpec extends ConnectorIntegrationTest {
   private val mtditidHeader = ("mtditid", "123123123")
   private val requestHeaders = Seq(new HttpHeader("mtditid", "123123123"))
 
-  private val underTest = new IncomeTaxEmploymentConnector(httpClient, new MockAppConfig())
+  private val underTest = new IncomeTaxEmploymentConnector(httpClientV2, new MockAppConfig())
 
   "IncomeTaxEmploymentConnector" should {
     "include internal headers" when {

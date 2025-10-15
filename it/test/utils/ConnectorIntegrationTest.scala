@@ -23,7 +23,6 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.http.test.{HttpClientSupport, HttpClientV2Support}
 
 trait ConnectorIntegrationTest extends AnyWordSpec with Matchers
-  with HttpClientSupport
   with HttpClientV2Support
   with WireMockHelper
   with WiremockStubHelpers

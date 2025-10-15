@@ -37,7 +37,7 @@ class PensionTaskListDataConnectorISpec extends ConnectorIntegrationTest {
   private val requestHeaders = Seq(new HttpHeader("mtditid", "1234567890"))
   val nino: String = "123456789"
 
-  private val underTest: PensionTaskListDataConnector = new PensionTaskListDataConnector(httpClient, new MockAppConfig())
+  private val underTest: PensionTaskListDataConnector = new PensionTaskListDataConnector(httpClientV2, new MockAppConfig())
 
   def taskListDataUrl: String = s"/income-tax-pensions/$taxYear/common-task-list/$nino"
 

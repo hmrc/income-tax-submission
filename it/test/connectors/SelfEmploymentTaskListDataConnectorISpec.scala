@@ -36,7 +36,7 @@ class SelfEmploymentTaskListDataConnectorISpec extends ConnectorIntegrationTest 
   private val requestHeaders = Seq(new HttpHeader("mtditid", "1234567890"))
   val nino: String = "123456789"
 
-  private val underTest: SelfEmploymentTaskListDataConnector = new SelfEmploymentTaskListDataConnector(httpClient, new MockAppConfig())
+  private val underTest: SelfEmploymentTaskListDataConnector = new SelfEmploymentTaskListDataConnector(httpClientV2, new MockAppConfig())
 
   def taskListDataUrl: String = s"/income-tax-self-employment/$taxYear/tasks/$nino"
 
