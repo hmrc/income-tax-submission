@@ -19,7 +19,7 @@ package connectors
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import models.tasklist.SectionTitle.PensionsTitle
 import models.tasklist.TaskTitle.StatePension
-import models.tasklist.{TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus}
+import models.tasklist.{TaskListSection, TaskListSectionItem, TaskStatus}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
 import play.api.http.Status._
 import play.api.libs.json.Json

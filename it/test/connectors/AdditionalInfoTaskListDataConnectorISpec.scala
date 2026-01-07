@@ -17,11 +17,9 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.http.HttpHeader
-import models.tasklist.SectionTitle.InsuranceGainsTitle
 import models.tasklist.TaskTitle.LifeInsurance
-import models.tasklist.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem, TaskStatus, TaskTitle}
+import models.tasklist.{SectionTitle, TaskListSection, TaskListSectionItem, TaskStatus}
 import models.{APIErrorBodyModel, APIErrorModel, APIErrorsBodyModel}
-import org.mockito.ArgumentMatchers.{any, anyString}
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId}

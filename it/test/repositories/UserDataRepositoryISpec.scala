@@ -45,7 +45,7 @@ class UserDataRepositoryISpec extends IntegrationSpec with FutureAwaits with Def
 
   class EmptyDatabase {
     await(excludedRepo.collection.drop().toFuture())
-    await(excludedRepo.ensureIndexes)
+    await(excludedRepo.ensureIndexes())
   }
 
   lazy val excludedUserData: ExclusionUserDataModel = ExclusionUserDataModel(
