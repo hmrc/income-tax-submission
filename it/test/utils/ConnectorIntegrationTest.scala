@@ -20,7 +20,7 @@ import helpers.{WireMockHelper, WiremockStubHelpers}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.http.test.{HttpClientSupport, HttpClientV2Support}
+import uk.gov.hmrc.http.test.HttpClientV2Support
 
 trait ConnectorIntegrationTest extends AnyWordSpec with Matchers
   with HttpClientV2Support

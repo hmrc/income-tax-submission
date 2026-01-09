@@ -49,9 +49,9 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
 
   class EmptyDatabase {
     await(repo.collection.drop().toFuture())
-    await(repo.ensureIndexes)
+    await(repo.ensureIndexes())
     await(repoWithInvalidEncryption.collection.drop().toFuture())
-    await(repoWithInvalidEncryption.ensureIndexes)
+    await(repoWithInvalidEncryption.ensureIndexes())
   }
 
   val serviceWithInvalidEncryption: EncryptionService = appWithInvalidEncryptionKey.injector.instanceOf[EncryptionService]
@@ -94,7 +94,7 @@ class IncomeTaxUserDataRepositoryISpec extends IntegrationSpec
       count mustBe 1
 
       val res2: Either[DatabaseError, Unit] = await(repo.update(aUserData.copy(sessionId = "1234567890")))
-      res2.left.e.swap.getOrElse(new Exception("").getMessage).toString must include("Command failed with error 11000 (DuplicateKey)")
+      res2.left.e.swap.getOrElse(new Exception("").getMessage).toString must include("error 11000 (DuplicateKey)")
       count mustBe 1
     }
 

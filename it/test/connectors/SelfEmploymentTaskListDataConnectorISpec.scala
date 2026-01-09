@@ -26,7 +26,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId}
 import utils.{ConnectorIntegrationTest, MockAppConfig}
 
 import java.time.{LocalDate, ZoneId}
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 

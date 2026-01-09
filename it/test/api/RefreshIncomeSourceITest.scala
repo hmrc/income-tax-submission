@@ -63,7 +63,7 @@ class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
     val xSessionIdHeader: (String, String) = ("X-Session-ID", userData.sessionId)
     auditStubs()
     await(repo.collection.drop().toFuture())
-    await(repo.ensureIndexes)
+    await(repo.ensureIndexes())
     count mustBe 0
   }
 
