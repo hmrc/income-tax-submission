@@ -19,7 +19,7 @@ import sbt.*
 object AppDependencies {
 
   private val bootstrapPlay30Version = "10.5.0"
-  private val mongoVersion = "2.11.0"
+  private val mongoVersion = "2.12.0"
 
   private val jacksonAndPlayExclusions: Seq[InclusionRule] = Seq(
     ExclusionRule(organization = "com.fasterxml.jackson.core"),
@@ -32,15 +32,15 @@ object AppDependencies {
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                   %% "bootstrap-backend-play-30"  % bootstrapPlay30Version,
     "uk.gov.hmrc.mongo"             %% "hmrc-mongo-play-30"         % mongoVersion,
-    "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.20.1",
-    "com.beachape"                  %% "enumeratum"                 % "1.9.0",
-    "com.beachape"                  %% "enumeratum-play-json"       % "1.9.0" excludeAll (jacksonAndPlayExclusions *),
+    "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % "2.21.0",
+    "com.beachape"                  %% "enumeratum"                 % "1.9.4",
+    "com.beachape"                  %% "enumeratum-play-json"       % "1.9.4" excludeAll (jacksonAndPlayExclusions *),
     "org.typelevel"                 %% "cats-core"                  % "2.13.0"
   )
 
   val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                   %%  "bootstrap-test-play-30"   % bootstrapPlay30Version,
-    "org.scalamock"                 %%  "scalamock"                % "7.5.2",
+    "org.scalamock"                 %%  "scalamock"                % "7.5.5",
     "uk.gov.hmrc.mongo"             %%  "hmrc-mongo-test-play-30"  % mongoVersion
   ).map(_ % "test")
 
