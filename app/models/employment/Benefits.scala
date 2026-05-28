@@ -113,7 +113,7 @@ object Benefits {
       Option[BigDecimal], Option[BigDecimal]),
       (Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal], Option[BigDecimal],
         Option[BigDecimal])) => Benefits, {
-      benefits: Benefits =>
+      (benefits: Benefits) =>
         (
           (benefits.accommodation, benefits.assets, benefits.assetTransfer, benefits.beneficialLoan, benefits.car, benefits.carFuel,
             benefits.educationalServices, benefits.entertaining, benefits.expenses, benefits.medicalInsurance, benefits.telephone,
@@ -231,7 +231,7 @@ object EncryptedBenefits {
       Option[EncryptedValue], Option[EncryptedValue]),
       (Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue], Option[EncryptedValue],
         Option[EncryptedValue])) => EncryptedBenefits, {
-      benefits: EncryptedBenefits =>
+      (benefits: EncryptedBenefits) =>
         (
           (benefits.accommodation, benefits.assets, benefits.assetTransfer, benefits.beneficialLoan, benefits.car, benefits.carFuel,
             benefits.educationalServices, benefits.entertaining, benefits.expenses, benefits.medicalInsurance, benefits.telephone,

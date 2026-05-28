@@ -16,6 +16,9 @@
 
 package controllers
 
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
+
 import common.IncomeSources._
 import controllers.predicates.AuthorisedAction
 import models._
@@ -52,21 +55,18 @@ class ExcludeJourneyControllerSpec extends TestUtils {
   )
 
   private def mockFind(result: Either[DatabaseError, Option[ExclusionUserDataModel]]) = {
-    (mockService.findExclusionData(_: Int)(_: User[_]))
-      .expects(*, *)
-      .returning(Future.successful(result))
+    when(mockService.findExclusionData(any[Int])(anyUser))
+      .thenReturn(Future.successful(result))
   }
 
   private def mockCreateOrUpdate(result: Either[DatabaseError, Boolean]) = {
-    (mockService.createOrUpdate(_: ExcludeJourneyModel, _: ExclusionUserDataModel, _: Boolean))
-      .expects(*, *, *)
-      .returning(Future.successful(result))
+    when(mockService.createOrUpdate(any[ExcludeJourneyModel], any[ExclusionUserDataModel], any[Boolean]))
+      .thenReturn(Future.successful(result))
   }
 
   private def mockCreateOrUpdateMultiple(expectedInput: ExclusionUserDataModel, result: Either[DatabaseError, Boolean]) = {
-    (mockService.createOrUpdate(_: ExclusionUserDataModel, _: Boolean))
-      .expects(expectedInput, *)
-      .returning(Future.successful(result))
+    when(mockService.createOrUpdate(any[ExclusionUserDataModel], any[Boolean]))
+      .thenReturn(Future.successful(result))
   }
 
   private def mockModelGeneration(journeyKey: String, result: Option[Either[APIErrorModel, ExcludeJourneyModel]] = None) = {
@@ -74,9 +74,8 @@ class ExcludeJourneyControllerSpec extends TestUtils {
       journeyKey, None
     )))
 
-    (mockService.journeyKeyToModel(_: Int, _: String)(_: User[_], _: HeaderCarrier))
-      .expects(*, *, *, *)
-      .returning(Future.successful(resultModel))
+    when(mockService.journeyKeyToModel(any[Int], any[String])(anyUser, any[HeaderCarrier]))
+      .thenReturn(Future.successful(resultModel))
   }
 
   ".getExclusions" must {

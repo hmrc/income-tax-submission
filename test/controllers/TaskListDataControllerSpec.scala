@@ -19,7 +19,8 @@ package controllers
 import connectors.parsers.TaskListTailoringDataParser.TaskListResponseModel
 import models._
 import models.tasklist._
-import org.scalamock.handlers.{CallHandler3, CallHandler5}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.mvc.{Result, Results}
@@ -36,19 +37,14 @@ class TaskListDataControllerSpec extends TestUtils {
   private val mockTaskListDataService: TaskListDataService = mock[TaskListDataService]
   private val mockRefreshCacheService: RefreshCacheService = mock[RefreshCacheService]
 
-  def mockGetTaskListData(data: Either[APIErrorModel, Option[TaskListModel]]):
-  CallHandler3[Int, String, HeaderCarrier, Future[Either[APIErrorModel, Option[TaskListModel]]]] = {
-    (mockTaskListDataService.get(_: Int, _: String)(_: HeaderCarrier))
-      .expects(*, *, *)
-      .returning(Future.successful(data))
+  def mockGetTaskListData(data: Either[APIErrorModel, Option[TaskListModel]]): Unit = {
+    when(mockTaskListDataService.get(any[Int], any[String])(any[HeaderCarrier]))
+      .thenReturn(Future.successful(data))
   }
 
-  def mockRefreshCache():
-  CallHandler5[Int, String, User[_], HeaderCarrier, ExecutionContext, Future[Result]] = {
-    (mockRefreshCacheService.getLatestDataAndRefreshCache(_: Int, _: String)(_: User[_], _: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *, *)
-      .returning(Future.successful(Results.Ok))
-      .anyNumberOfTimes()
+  def mockRefreshCache(): Unit = {
+    when(mockRefreshCacheService.getLatestDataAndRefreshCache(any[Int], any[String])(anyUser, any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(Future.successful(Results.Ok))
   }
 
   private val taskListData: TaskListResponseModel = Right(Some(TaskListModel(List[TaskListSection](

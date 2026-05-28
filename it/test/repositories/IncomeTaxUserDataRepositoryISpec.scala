@@ -25,6 +25,7 @@ import models.mongo.{DatabaseError, EncryptionDecryptionError, UserData}
 import org.bson.conversions.Bson
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.{SingleObservableFuture, ObservableFuture}
 import org.scalatest.BeforeAndAfterAll
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}

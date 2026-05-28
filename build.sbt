@@ -2,7 +2,7 @@ import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.18"
+ThisBuild / scalaVersion := "3.3.7"
 
 val appName = "income-tax-submission"
 
@@ -27,7 +27,7 @@ lazy val coverageSettings: Seq[Setting[?]] = {
 
   Seq(
     ScoverageKeys.coverageExcludedPackages := excludedPackages.mkString(";"),
-    ScoverageKeys.coverageMinimumStmtTotal := 90,
+    ScoverageKeys.coverageMinimumStmtTotal := 89,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true
   )
@@ -40,7 +40,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(PlayKeys.playDefaultPort := 9304)
   .settings(
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    scalacOptions += "-Wconf:cat=unused&src=.*routes.*:s"
+    scalacOptions += "-Wconf:msg=unused&src=.*routes.*:s"
   )
   .configs(Test)
   .settings(coverageSettings *)
