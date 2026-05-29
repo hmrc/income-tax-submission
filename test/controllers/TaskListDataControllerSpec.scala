@@ -19,7 +19,7 @@ package controllers
 import connectors.parsers.TaskListTailoringDataParser.TaskListResponseModel
 import models._
 import models.tasklist._
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito.when
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -38,12 +38,12 @@ class TaskListDataControllerSpec extends TestUtils {
   private val mockRefreshCacheService: RefreshCacheService = mock[RefreshCacheService]
 
   def mockGetTaskListData(data: Either[APIErrorModel, Option[TaskListModel]]): Unit = {
-    when(mockTaskListDataService.get(any[Int], any[String])(any[HeaderCarrier]))
+    when(mockTaskListDataService.get(eqTo(taxYear), eqTo(nino))(any[HeaderCarrier]))
       .thenReturn(Future.successful(data))
   }
 
   def mockRefreshCache(): Unit = {
-    when(mockRefreshCacheService.getLatestDataAndRefreshCache(any[Int], any[String])(anyUser, any[HeaderCarrier], any[ExecutionContext]))
+    when(mockRefreshCacheService.getLatestDataAndRefreshCache(eqTo(taxYear), any[String])(anyUser, any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(Future.successful(Results.Ok))
   }
 

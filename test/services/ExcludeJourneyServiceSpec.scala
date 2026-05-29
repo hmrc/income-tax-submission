@@ -16,7 +16,7 @@
 
 package services
 
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito.when
 import common.IncomeSources.{CIS, DIVIDENDS, GIFT_AID, INTEREST}
 import models._
@@ -53,7 +53,7 @@ class ExcludeJourneyServiceSpec extends TestUtils {
   )
 
   private def mockFind(result: Either[DatabaseError, Option[ExclusionUserDataModel]]) = {
-    when(excludeRepository.find(any[Int])(anyUser))
+    when(excludeRepository.find(eqTo(taxYear))(anyUser))
       .thenReturn(Future.successful(result))
   }
 
@@ -62,7 +62,7 @@ class ExcludeJourneyServiceSpec extends TestUtils {
       Interest("Whiterun Account", "", None, None)
     )))
 
-    when(incomeSourcesConnector.getInterest(any[String], any[Int], any[String], any[Seq[String]])(any[HeaderCarrier]))
+    when(incomeSourcesConnector.getInterest(eqTo(nino), eqTo(taxYear), eqTo(mtditid), any[Seq[String]])(any[HeaderCarrier]))
       .thenReturn(Future.successful(result.getOrElse(defaultResult)))
   }
 
@@ -74,7 +74,7 @@ class ExcludeJourneyServiceSpec extends TestUtils {
       )
     ))
 
-    when(incomeSourcesConnector.getGiftAid(any[String], any[Int], any[String], any[Seq[String]])(any[HeaderCarrier]))
+    when(incomeSourcesConnector.getGiftAid(eqTo(nino), eqTo(taxYear), eqTo(mtditid), any[Seq[String]])(any[HeaderCarrier]))
       .thenReturn(Future.successful(result.getOrElse(defaultResult)))
   }
 

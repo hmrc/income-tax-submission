@@ -16,7 +16,7 @@
 
 package controllers
 
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito.when
 
 import common.IncomeSources._
@@ -55,7 +55,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
   )
 
   private def mockFind(result: Either[DatabaseError, Option[ExclusionUserDataModel]]) = {
-    when(mockService.findExclusionData(any[Int])(anyUser))
+    when(mockService.findExclusionData(eqTo(taxYear))(anyUser))
       .thenReturn(Future.successful(result))
   }
 
@@ -74,7 +74,7 @@ class ExcludeJourneyControllerSpec extends TestUtils {
       journeyKey, None
     )))
 
-    when(mockService.journeyKeyToModel(any[Int], any[String])(anyUser, any[HeaderCarrier]))
+    when(mockService.journeyKeyToModel(eqTo(taxYear), any[String])(anyUser, any[HeaderCarrier]))
       .thenReturn(Future.successful(resultModel))
   }
 

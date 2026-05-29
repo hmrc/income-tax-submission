@@ -24,12 +24,13 @@ import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, status}
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito.when
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
-import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.authorise.{EmptyPredicate, Predicate}
 import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{allEnrolments, confidenceLevel}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import utils.TestUtils
@@ -89,7 +90,7 @@ class AuthorisedActionSpec extends TestUtils {
             Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, mtditid)), "Activated")))
 
         lazy val result: Future[Result] = {
-          when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+          when(mockAuthConnector.authorise(eqTo(EmptyPredicate), eqTo(allEnrolments and confidenceLevel))(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(Future.successful(enrolments and ConfidenceLevel.L250))
           authorisedAction.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
         }
@@ -115,7 +116,7 @@ class AuthorisedActionSpec extends TestUtils {
         ))
 
         lazy val result: Future[Result] = {
-          when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+          when(mockAuthConnector.authorise(eqTo(EmptyPredicate), eqTo(allEnrolments and confidenceLevel))(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(Future.successful(enrolments and ConfidenceLevel.L250))
           authorisedAction.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
         }
@@ -136,7 +137,7 @@ class AuthorisedActionSpec extends TestUtils {
         ))
 
         lazy val result: Future[Result] = {
-          when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+          when(mockAuthConnector.authorise(eqTo(EmptyPredicate), eqTo(allEnrolments and confidenceLevel))(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(Future.successful(enrolments and ConfidenceLevel.L50))
           authorisedAction.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
         }
@@ -155,7 +156,7 @@ class AuthorisedActionSpec extends TestUtils {
         ))
 
         lazy val result: Future[Result] = {
-          when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+          when(mockAuthConnector.authorise(eqTo(EmptyPredicate), eqTo(allEnrolments and confidenceLevel))(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(Future.successful(enrolments and ConfidenceLevel.L250))
           authorisedAction.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
         }
@@ -173,7 +174,7 @@ class AuthorisedActionSpec extends TestUtils {
         ))
 
         lazy val result: Future[Result] = {
-          when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+          when(mockAuthConnector.authorise(eqTo(EmptyPredicate), eqTo(allEnrolments and confidenceLevel))(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(Future.successful(enrolments and ConfidenceLevel.L250))
           authorisedAction.individualAuthentication(block, id)(fakeRequest, emptyHeaderCarrier)
         }
@@ -192,7 +193,7 @@ class AuthorisedActionSpec extends TestUtils {
         val enrolments = Enrolments(Set(Enrolment("notAnIndividualOops", Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, mtditid)), "Activated")))
 
         lazy val result: Future[Result] = {
-          when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+          when(mockAuthConnector.authorise(eqTo(EmptyPredicate), eqTo(allEnrolments and confidenceLevel))(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(Future.successful(enrolments and ConfidenceLevel.L250))
           authorisedAction.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
         }
@@ -215,7 +216,7 @@ class AuthorisedActionSpec extends TestUtils {
       ))
 
       lazy val result: Future[Result] = {
-        when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+        when(mockAuthConnector.authorise(eqTo(EmptyPredicate), eqTo(allEnrolments and confidenceLevel))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(enrolments and ConfidenceLevel.L250))
         authorisedAction.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
       }
@@ -236,7 +237,7 @@ class AuthorisedActionSpec extends TestUtils {
         "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890")
 
       lazy val result: Future[Result] = {
-        when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+        when(mockAuthConnector.authorise(eqTo(EmptyPredicate), eqTo(allEnrolments and confidenceLevel))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(enrolments and ConfidenceLevel.L250))
         authorisedAction.individualAuthentication(block, mtditid)(request, emptyHeaderCarrier)
       }
@@ -257,7 +258,7 @@ class AuthorisedActionSpec extends TestUtils {
       ))
 
       lazy val result: Future[Result] = {
-        when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+        when(mockAuthConnector.authorise(eqTo(EmptyPredicate), eqTo(allEnrolments and confidenceLevel))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(enrolments and ConfidenceLevel.L50))
         authorisedAction.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
       }
@@ -276,7 +277,7 @@ class AuthorisedActionSpec extends TestUtils {
       ))
 
       lazy val result: Future[Result] = {
-        when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+        when(mockAuthConnector.authorise(eqTo(EmptyPredicate), eqTo(allEnrolments and confidenceLevel))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(enrolments and ConfidenceLevel.L250))
         authorisedAction.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
       }
@@ -294,7 +295,7 @@ class AuthorisedActionSpec extends TestUtils {
       ))
 
       lazy val result: Future[Result] = {
-        when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+        when(mockAuthConnector.authorise(eqTo(EmptyPredicate), eqTo(allEnrolments and confidenceLevel))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(enrolments and ConfidenceLevel.L250))
         authorisedAction.individualAuthentication(block, id)(fakeRequest, emptyHeaderCarrier)
       }
@@ -328,7 +329,7 @@ class AuthorisedActionSpec extends TestUtils {
         ))
 
         lazy val result = {
-          when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+          when(mockAuthConnector.authorise(eqTo(authorisedAction.agentAuthPredicate("1234567890")), eqTo(allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(Future.successful(enrolments))
 
           authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
@@ -369,7 +370,7 @@ class AuthorisedActionSpec extends TestUtils {
           "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022").withHeaders("mtditid" -> "1234567890")
 
         lazy val result = {
-          when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+          when(mockAuthConnector.authorise(eqTo(authorisedAction.agentAuthPredicate("1234567890")), eqTo(allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(Future.successful(enrolments))
 
           authorisedAction.agentAuthentication(block, "1234567890")(request, emptyHeaderCarrier)
@@ -397,7 +398,7 @@ class AuthorisedActionSpec extends TestUtils {
         ))
 
         lazy val result = {
-          when(mockAuthConnector.authorise(any[Predicate], any[Retrieval[Any]])(any[HeaderCarrier], any[ExecutionContext]))
+          when(mockAuthConnector.authorise(eqTo(authorisedAction.agentAuthPredicate("1234567890")), eqTo(allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(Future.successful(enrolments))
           authorisedAction.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
         }

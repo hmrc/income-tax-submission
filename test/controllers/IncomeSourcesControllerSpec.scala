@@ -21,7 +21,7 @@ import builders.models.IncomeSourcesBuilder.anIncomeSources
 import builders.models.employment.AllEmploymentDataBuilder.anAllEmploymentData
 import models._
 import models.gifts.{GiftAid, GiftAidPayments, Gifts}
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito.when
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -41,12 +41,12 @@ class IncomeSourcesControllerSpec extends TestUtils {
   private val mockRefreshCacheService = mock[RefreshCacheService]
 
   def mockSaveData(data: Option[IncomeSources], outcome: Result): Unit = {
-    when(mockIncomeTaxUserDataService.saveUserData(any[Int], any[Option[IncomeSources]])(any[Result])(anyUser, any[ExecutionContext]))
+    when(mockIncomeTaxUserDataService.saveUserData(eqTo(taxYear), any[Option[IncomeSources]])(any[Result])(anyUser, any[ExecutionContext]))
       .thenReturn(Future.successful(outcome))
   }
 
   def mockFindData(data: Either[APIErrorModel, Option[IncomeSources]]): Unit = {
-    when(mockIncomeTaxUserDataService.findUserData(anyUser, any[Int])(any[ExecutionContext]))
+    when(mockIncomeTaxUserDataService.findUserData(anyUser, eqTo(taxYear))(any[ExecutionContext]))
       .thenReturn(Future.successful(data))
   }
 
@@ -64,7 +64,7 @@ class IncomeSourcesControllerSpec extends TestUtils {
     "/income-tax-submission-service/income-tax/nino/AA123456A/sources?taxYear=2022")
 
   def mockGetIncomeSourcesTurnedOff(): Unit = {
-    when(getIncomeSourcesService.getAllIncomeSources(any[String], any[Int], any[String], any[Seq[String]])(any[HeaderCarrier]))
+    when(getIncomeSourcesService.getAllIncomeSources(eqTo(nino), eqTo(taxYear), any[String], any[Seq[String]])(any[HeaderCarrier]))
       .thenReturn(Future.successful(Right(IncomeSources())))
   }
 
@@ -77,13 +77,13 @@ class IncomeSourcesControllerSpec extends TestUtils {
     Some(Seq(Interest("someName", "12345", Some(12345.67), Some(12345.67)))), Some(GiftAid(Some(giftAidPayments), Some(gifts))), Some(anAllEmploymentData))
 
   def mockGetIncomeSourcesValid(): Unit = {
-    when(getIncomeSourcesService.getAllIncomeSources(any[String], any[Int], any[String], any[Seq[String]])(any[HeaderCarrier]))
+    when(getIncomeSourcesService.getAllIncomeSources(eqTo(nino), eqTo(taxYear), any[String], any[Seq[String]])(any[HeaderCarrier]))
       .thenReturn(Future.successful(Right(incomeSources)))
   }
 
   def mockGetIncomeSourcesInvalid(): Unit = {
     val invalidIncomeSource: APIErrorModel = APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong"))
-    when(getIncomeSourcesService.getAllIncomeSources(any[String], any[Int], any[String], any[Seq[String]])(any[HeaderCarrier]))
+    when(getIncomeSourcesService.getAllIncomeSources(eqTo(nino), eqTo(taxYear), any[String], any[Seq[String]])(any[HeaderCarrier]))
       .thenReturn(Future.successful(Left(invalidIncomeSource)))
   }
 
@@ -131,7 +131,7 @@ class IncomeSourcesControllerSpec extends TestUtils {
     "return a 204 response when it refreshed the cache for dividends" in {
       val result: Future[Result] = {
         mockAuth()
-        when(mockRefreshCacheService.getLatestDataAndRefreshCache(any[Int], any[String])(anyUser, any[HeaderCarrier], any[ExecutionContext]))
+        when(mockRefreshCacheService.getLatestDataAndRefreshCache(eqTo(taxYear), any[String])(anyUser, any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(NoContent))
 
         controller.refreshIncomeSource(nino, taxYear)(fakeGetRequestWithHeaderAndSession.withJsonBody(Json.toJson(RefreshIncomeSource("dividends"))))

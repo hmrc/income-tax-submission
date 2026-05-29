@@ -16,7 +16,7 @@
 
 package services
 
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito.when
 import builders.models.SavingsIncomeBuilder.anSavingIncome
 import builders.models.StockDividendsBuilder.anStockDividends
@@ -115,34 +115,34 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           Some(anStockDividends)
         ))
 
-        when(dividendsConnector.getSubmittedDividends(any[String], any[Int])(any[HeaderCarrier]))
+        when(dividendsConnector.getSubmittedDividends(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(expectedDividendsResult))
 
-        when(interestConnector.getSubmittedInterest(any[String], any[Int])(any[HeaderCarrier]))
+        when(interestConnector.getSubmittedInterest(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(expectedInterestResult))
 
-        when(employmentConnector.getSubmittedEmployment(any[String], any[Int])(any[HeaderCarrier]))
+        when(employmentConnector.getSubmittedEmployment(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(Some(anAllEmploymentDataWithOccPen))))
 
-        when(giftsConnector.getSubmittedGiftAid(any[String], any[Int])(any[HeaderCarrier]))
+        when(giftsConnector.getSubmittedGiftAid(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(Some(GiftAid(Some(giftAidPayments), Some(gifts))))))
 
-        when(pensionsConnector.getSubmittedPensions(any[String], any[Int])(any[HeaderCarrier]))
+        when(pensionsConnector.getSubmittedPensions(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(Some(aPensionsWithEmployments))))
 
-        when(cisConnector.getSubmittedCIS(any[String], any[Int])(any[HeaderCarrier]))
+        when(cisConnector.getSubmittedCIS(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(Some(anAllCISDeductions))))
 
-        when(stateBenefitsConnector.getSubmittedStateBenefits(any[String], any[Int])(any[HeaderCarrier]))
+        when(stateBenefitsConnector.getSubmittedStateBenefits(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(Some(anAllStateBenefitsData))))
 
-        when(incomeTaxInterestSavingsConnector.getSubmittedInterestSavings(any[String], any[Int])(any[HeaderCarrier]))
+        when(incomeTaxInterestSavingsConnector.getSubmittedInterestSavings(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(Some(anSavingIncome))))
 
-        when(gainsConnector.getSubmittedGains(any[String], any[Int])(any[HeaderCarrier]))
+        when(gainsConnector.getSubmittedGains(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(Some(anGains))))
 
-        when(stockDividendsConnector.getSubmittedStockDividends(any[String], any[Int])(any[HeaderCarrier]))
+        when(stockDividendsConnector.getSubmittedStockDividends(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(Some(anStockDividends))))
 
         await(underTest.getAllIncomeSources("12345678", taxYear, "87654321")) mustBe incomeSourcesResult
@@ -169,34 +169,34 @@ class GetIncomeSourcesServiceSpec extends TestUtils {
           Some(StockDividends(None, None, None, None, None, None))
         ))
 
-        when(dividendsConnector.getSubmittedDividends(any[String], any[Int])(any[HeaderCarrier]))
+        when(dividendsConnector.getSubmittedDividends(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(expectedDividendsResult))
 
-        when(interestConnector.getSubmittedInterest(any[String], any[Int])(any[HeaderCarrier]))
+        when(interestConnector.getSubmittedInterest(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
 
-        when(employmentConnector.getSubmittedEmployment(any[String], any[Int])(any[HeaderCarrier]))
+        when(employmentConnector.getSubmittedEmployment(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(Some(anAllEmploymentDataWithOccPen))))
 
-        when(giftsConnector.getSubmittedGiftAid(any[String], any[Int])(any[HeaderCarrier]))
+        when(giftsConnector.getSubmittedGiftAid(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
 
-        when(pensionsConnector.getSubmittedPensions(any[String], any[Int])(any[HeaderCarrier]))
+        when(pensionsConnector.getSubmittedPensions(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
 
-        when(cisConnector.getSubmittedCIS(any[String], any[Int])(any[HeaderCarrier]))
+        when(cisConnector.getSubmittedCIS(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(Some(anAllCISDeductions))))
 
-        when(stateBenefitsConnector.getSubmittedStateBenefits(any[String], any[Int])(any[HeaderCarrier]))
+        when(stateBenefitsConnector.getSubmittedStateBenefits(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(Some(anAllStateBenefitsData))))
 
-        when(incomeTaxInterestSavingsConnector.getSubmittedInterestSavings(any[String], any[Int])(any[HeaderCarrier]))
+        when(incomeTaxInterestSavingsConnector.getSubmittedInterestSavings(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
 
-        when(gainsConnector.getSubmittedGains(any[String], any[Int])(any[HeaderCarrier]))
+        when(gainsConnector.getSubmittedGains(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
 
-        when(stockDividendsConnector.getSubmittedStockDividends(any[String], any[Int])(any[HeaderCarrier]))
+        when(stockDividendsConnector.getSubmittedStockDividends(eqTo("12345678"), eqTo(taxYear))(any[HeaderCarrier]))
           .thenReturn(Future.successful(Left(APIErrorModel(INTERNAL_SERVER_ERROR, APIErrorBodyModel("INTERNAL_SERVER_ERROR", "Something went wrong")))))
 
         await(underTest.getAllIncomeSources("12345678", taxYear, "87654321")) mustBe incomeSourcesResult
