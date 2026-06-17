@@ -979,7 +979,7 @@ class EncryptionService @Inject()(implicit val aesGcmAdCrypto: AesGcmAdCrypto) {
     }
 
     val stateBenefitsModel: Option[AllStateBenefitsData] = pensions.stateBenefits.map {
-      s: EncryptedAllStateBenefitsData =>
+      (s: EncryptedAllStateBenefitsData) =>
         AllStateBenefitsData(
           stateBenefitsData = s.stateBenefitsData.map(_.decrypted()),
           customerAddedStateBenefitsData = s.customerAddedStateBenefitsData.map(_.decrypted())

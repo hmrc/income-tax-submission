@@ -18,28 +18,24 @@ package utils
 
 import models.User
 import models.mongo.{DatabaseError, UserData}
-import org.scalamock.handlers.{CallHandler1, CallHandler2}
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.TestSuite
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import repositories.IncomeTaxUserDataRepository
 
 import scala.concurrent.Future
 
-trait MockIncomeTaxUserDataRepository extends MockFactory { _: TestSuite =>
+trait MockIncomeTaxUserDataRepository extends MockitoSugar {
 
   val mockRepository: IncomeTaxUserDataRepository = mock[IncomeTaxUserDataRepository]
 
-  def mockUpdate(response: Either[DatabaseError, Unit] = Right(())): CallHandler1[UserData, Future[Either[DatabaseError, Unit]]] = {
-    (mockRepository.update(_: UserData))
-      .expects(*)
-      .returns(Future.successful(response))
-      .anyNumberOfTimes()
+  private def anyUser[A]: User[A] = any[User[Any]].asInstanceOf[User[A]]
+
+  def mockUpdate(response: Either[DatabaseError, Unit] = Right(())): Unit = {
+    when(mockRepository.update(any[UserData])).thenReturn(Future.successful(response))
   }
 
-  def mockFind(data: Either[DatabaseError, Option[UserData]]): CallHandler2[User[_], Int, Future[Either[DatabaseError, Option[UserData]]]] = {
-    (mockRepository.find(_: User[_], _: Int))
-      .expects(*, *)
-      .returns(Future.successful(data))
-      .anyNumberOfTimes()
+  def mockFind(data: Either[DatabaseError, Option[UserData]]): Unit = {
+    when(mockRepository.find(anyUser, any[Int])).thenReturn(Future.successful(data))
   }
 }

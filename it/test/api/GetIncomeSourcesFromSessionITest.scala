@@ -23,10 +23,12 @@ import builders.models.gifts.GiftAidBuilder.aGiftAid
 import builders.models.pensions.PensionsBuilder.aPensions
 import helpers.IntegrationSpec
 import models.mongo.{DatabaseError, UserData}
+import org.mongodb.scala._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
 import repositories.IncomeTaxUserDataRepositoryImpl
 
 class GetIncomeSourcesFromSessionITest extends IntegrationSpec with ScalaFutures {

@@ -19,9 +19,10 @@ package repositories
 import helpers.IntegrationSpec
 import models.mongo._
 import models.{EncryptedExcludeJourneyModel, ExcludeJourneyModel, User}
+import org.mongodb.scala._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.result.InsertOneResult
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.shouldBe
 import play.api.mvc.{AnyContent, AnyContentAsEmpty}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.crypto.EncryptedValue

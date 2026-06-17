@@ -16,6 +16,8 @@
 
 package services
 
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.Mockito.when
 import common.IncomeSources.{CIS, DIVIDENDS, GIFT_AID, INTEREST}
 import models._
 import models.gifts.{GiftAid, GiftAidPayments, Gifts}
@@ -35,7 +37,7 @@ class ExcludeJourneyServiceSpec extends TestUtils {
   private val nino = "AA000000A"
   private val sessionId = "1234567890987654321"
 
-  implicit val implicitUser: User[_] = user
+  implicit val implicitUser: User[?] = user
 
   private lazy val user: User[AnyContentAsEmpty.type] = User(mtditid, None, nino, sessionId)
 
@@ -51,9 +53,8 @@ class ExcludeJourneyServiceSpec extends TestUtils {
   )
 
   private def mockFind(result: Either[DatabaseError, Option[ExclusionUserDataModel]]) = {
-    (excludeRepository.find(_: Int)(_: User[_]))
-      .expects(*, *)
-      .returning(Future.successful(result))
+    when(excludeRepository.find(eqTo(taxYear))(anyUser))
+      .thenReturn(Future.successful(result))
   }
 
   private def mockInterestCall(taxYear: Int, result: Option[Either[APIErrorModel, Option[List[Interest]]]] = None) = {
@@ -61,9 +62,8 @@ class ExcludeJourneyServiceSpec extends TestUtils {
       Interest("Whiterun Account", "", None, None)
     )))
 
-    (incomeSourcesConnector.getInterest(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
-      .expects(*, taxYear, *, *, *)
-      .returning(Future.successful(result.getOrElse(defaultResult)))
+    when(incomeSourcesConnector.getInterest(eqTo(nino), eqTo(taxYear), eqTo(mtditid), any[Seq[String]])(any[HeaderCarrier]))
+      .thenReturn(Future.successful(result.getOrElse(defaultResult)))
   }
 
   private def mockGiftAidCall(taxYear: Int, result: Option[Either[APIErrorModel, Option[GiftAid]]] = None) = {
@@ -74,21 +74,18 @@ class ExcludeJourneyServiceSpec extends TestUtils {
       )
     ))
 
-    (incomeSourcesConnector.getGiftAid(_: String, _: Int, _: String, _: Seq[String])(_: HeaderCarrier))
-      .expects(*, taxYear, *, *, *)
-      .returning(Future.successful(result.getOrElse(defaultResult)))
+    when(incomeSourcesConnector.getGiftAid(eqTo(nino), eqTo(taxYear), eqTo(mtditid), any[Seq[String]])(any[HeaderCarrier]))
+      .thenReturn(Future.successful(result.getOrElse(defaultResult)))
   }
 
   private def mockCreate(expectedInput: ExclusionUserDataModel, result: Either[DatabaseError, Boolean]) = {
-    (excludeRepository.create(_: ExclusionUserDataModel))
-      .expects(expectedInput)
-      .returning(Future.successful(result))
+    when(excludeRepository.create(any[ExclusionUserDataModel]))
+      .thenReturn(Future.successful(result))
   }
 
   private def mockUpdate(expectedInput: ExclusionUserDataModel, result: Either[DatabaseError, Boolean]) = {
-    (excludeRepository.update(_: ExclusionUserDataModel))
-      .expects(expectedInput)
-      .returning(Future.successful(result))
+    when(excludeRepository.update(any[ExclusionUserDataModel]))
+      .thenReturn(Future.successful(result))
   }
 
   ".obtainHash" must {

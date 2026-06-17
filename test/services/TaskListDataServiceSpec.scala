@@ -23,7 +23,7 @@ import models._
 import models.tasklist.SectionTitle._
 import models.tasklist.TaskTitle._
 import models.tasklist._
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
@@ -244,18 +244,18 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
 
     "correctly merge task list sections from all services" in {
 
-      when(mockConnector.get(any[Int])(any[HeaderCarrier])).thenReturn(tailoringResponse)
-      when(mockPensionConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(pensionResponse)
-      when(mockDividendsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(dividendsResponse)
-      when(mockAdditionalInfoConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
-      when(mockCharitableDonationsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(charitableDonationsResponse)
-      when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(interestResponse)
-      when(mockCISTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(cisResponse)
-      when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(seResponse)
-      when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(stateBenefitsResponse)
-      when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(employmentResponse)
+      when(mockConnector.get(eqTo(taxYear2023))(any[HeaderCarrier])).thenReturn(tailoringResponse)
+      when(mockPensionConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(pensionResponse)
+      when(mockDividendsConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(dividendsResponse)
+      when(mockAdditionalInfoConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
+      when(mockCharitableDonationsConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(charitableDonationsResponse)
+      when(mockInterestTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(interestResponse)
+      when(mockCISTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(cisResponse)
+      when(mockSETaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(seResponse)
+      when(mockStateBenefitsTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(stateBenefitsResponse)
+      when(mockEmploymentTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(employmentResponse)
       when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(true)
-      when(mockPropertyTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(propertyResponse)
+      when(mockPropertyTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(propertyResponse)
 
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
@@ -344,16 +344,16 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
 
     "correctly merge task list sections from all services when selfEmploymentTaskListEnabled feature flag is set to 'false'" in {
 
-      when(mockConnector.get(any[Int])(any[HeaderCarrier])).thenReturn(tailoringResponse)
-      when(mockPensionConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(pensionResponse)
-      when(mockDividendsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(dividendsResponse)
-      when(mockAdditionalInfoConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
-      when(mockCharitableDonationsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(charitableDonationsResponse)
-      when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(interestResponse)
-      when(mockCISTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(cisResponse)
-      when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(seResponse)
-      when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(stateBenefitsResponse)
-      when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(employmentResponse)
+      when(mockConnector.get(eqTo(taxYear2023))(any[HeaderCarrier])).thenReturn(tailoringResponse)
+      when(mockPensionConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(pensionResponse)
+      when(mockDividendsConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(dividendsResponse)
+      when(mockAdditionalInfoConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
+      when(mockCharitableDonationsConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(charitableDonationsResponse)
+      when(mockInterestTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(interestResponse)
+      when(mockCISTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(cisResponse)
+      when(mockSETaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(seResponse)
+      when(mockStateBenefitsTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(stateBenefitsResponse)
+      when(mockEmploymentTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(employmentResponse)
       when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(false)
 
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
@@ -431,18 +431,18 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
     "correctly merge task list sections and return only tailoring data if downstream does not have any known data" in {
       val emptyResponse = Future.successful(Right(None))
 
-      when(mockConnector.get(any[Int])(any[HeaderCarrier])).thenReturn(tailoringResponse)
-      when(mockPensionConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
-      when(mockDividendsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
-      when(mockAdditionalInfoConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
-      when(mockCharitableDonationsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
-      when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
-      when(mockCISTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
-      when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
-      when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
-      when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
+      when(mockConnector.get(eqTo(taxYear2023))(any[HeaderCarrier])).thenReturn(tailoringResponse)
+      when(mockPensionConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(emptyResponse)
+      when(mockDividendsConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(emptyResponse)
+      when(mockAdditionalInfoConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
+      when(mockCharitableDonationsConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(emptyResponse)
+      when(mockInterestTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(emptyResponse)
+      when(mockCISTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(emptyResponse)
+      when(mockSETaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(emptyResponse)
+      when(mockStateBenefitsTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(emptyResponse)
+      when(mockEmploymentTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(emptyResponse)
       when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(true)
-      when(mockPropertyTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(emptyResponse)
+      when(mockPropertyTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(emptyResponse)
 
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
@@ -521,18 +521,18 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
 
     "return under maintenance if service has internal error" in {
 
-      when(mockConnector.get(any[Int])(any[HeaderCarrier])).thenReturn(tailoringResponse)
-      when(mockPensionConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
-      when(mockDividendsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
-      when(mockAdditionalInfoConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
-      when(mockCharitableDonationsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(charitableDonationsResponse)
-      when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(interestResponse)
-      when(mockCISTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
-      when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
-      when(mockStateBenefitsTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
-      when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockConnector.get(eqTo(taxYear2023))(any[HeaderCarrier])).thenReturn(tailoringResponse)
+      when(mockPensionConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockDividendsConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockAdditionalInfoConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
+      when(mockCharitableDonationsConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(charitableDonationsResponse)
+      when(mockInterestTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(interestResponse)
+      when(mockCISTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockSETaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockStateBenefitsTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockEmploymentTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(errorResponse)
       when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(true)
-      when(mockPropertyTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockPropertyTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(errorResponse)
 
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
@@ -613,16 +613,16 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
 
       val serviceError = Future.failed(new RuntimeException("Service failed"))
 
-      when(mockConnector.get(any[Int])(any[HeaderCarrier])).thenReturn(tailoringResponse)
-      when(mockPensionConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(serviceError)
-      when(mockDividendsConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(serviceError)
-      when(mockAdditionalInfoConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
-      when(mockInterestTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(interestResponse)
-      when(mockCISTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
-      when(mockSETaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
-      when(mockEmploymentTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockConnector.get(eqTo(taxYear2023))(any[HeaderCarrier])).thenReturn(tailoringResponse)
+      when(mockPensionConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(serviceError)
+      when(mockDividendsConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(serviceError)
+      when(mockAdditionalInfoConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(additionalInfoResponse)
+      when(mockInterestTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(interestResponse)
+      when(mockCISTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockSETaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockEmploymentTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(errorResponse)
       when(mockAppConfig.selfEmploymentTaskListEnabled).thenReturn(true)
-      when(mockPropertyTaskListDataConnector.get(any[Int], any[String])(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockPropertyTaskListDataConnector.get(eqTo(taxYear2023), eqTo(nino))(any[HeaderCarrier])).thenReturn(errorResponse)
 
       val result: Either[APIErrorModel, Option[TaskListModel]] = taskListDataService.get(taxYear2023, nino).futureValue
 
@@ -693,7 +693,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
     "return an error if tailoring data is empty" in {
       val tailoringNoneResponse = Future.successful(Right(None))
 
-      when(mockConnector.get(any[Int])(any[HeaderCarrier])).thenReturn(tailoringNoneResponse)
+      when(mockConnector.get(eqTo(taxYear2023))(any[HeaderCarrier])).thenReturn(tailoringNoneResponse)
 
       val result = taskListDataService.get(taxYear2023, nino).futureValue
 
@@ -701,7 +701,7 @@ class TaskListDataServiceSpec extends AnyWordSpec with Matchers with ScalaFuture
     }
 
     "return an error if tailoring data service fails" in {
-      when(mockConnector.get(any[Int])(any[HeaderCarrier])).thenReturn(errorResponse)
+      when(mockConnector.get(eqTo(taxYear2023))(any[HeaderCarrier])).thenReturn(errorResponse)
 
       val result = taskListDataService.get(taxYear2023, nino).futureValue
 

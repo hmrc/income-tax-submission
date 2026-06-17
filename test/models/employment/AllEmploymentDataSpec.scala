@@ -41,4 +41,22 @@ class AllEmploymentDataSpec extends TestUtils {
       )
     }
   }
+
+  ".buildEmploymentPensions" should {
+    "return both hmrc and customer data" in {
+      val hmrcEmploymentSourceWithPension = aHmrcEmploymentSource.copy(occupationalPension = Some(true))
+      val customerEmploymentSourceWithPension = anEmploymentSource.copy(occupationalPension = Some(true))
+
+      val underTest = anAllEmploymentData.copy(
+        hmrcEmploymentData = Seq(hmrcEmploymentSourceWithPension),
+        customerEmploymentData = Seq(customerEmploymentSourceWithPension)
+      )
+
+      val result = underTest.buildEmploymentPensions()
+
+      result.employmentData.head.isCustomerEmploymentData mustBe Some(false)
+      result.employmentData(1).isCustomerEmploymentData mustBe Some(true)
+    }
+
+  }
 }

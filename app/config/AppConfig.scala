@@ -69,11 +69,11 @@ trait AppConfig {
 
   //Feature switching
   val auditingEnabled: Boolean
-  val selfEmploymentTaskListEnabled: Boolean
+  def selfEmploymentTaskListEnabled: Boolean
 
   //Mongo config
-  val encryptionKey: String
-  val mongoTTL: Int
+  def encryptionKey: String
+  def mongoTTL: Int
 
-  val useEncryption: Boolean
+  def useEncryption: Boolean
 }

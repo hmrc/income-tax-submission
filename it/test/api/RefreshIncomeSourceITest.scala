@@ -25,11 +25,14 @@ import com.github.tomakehurst.wiremock.http.HttpHeader
 import helpers.IntegrationSpec
 import models.mongo.{DatabaseError, UserData}
 import models.{APIErrorBodyModel, IncomeSources, RefreshIncomeSource}
+import org.mongodb.scala._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import play.api.http.HeaderNames
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
+import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import repositories.IncomeTaxUserDataRepositoryImpl
 
 class RefreshIncomeSourceITest extends IntegrationSpec with ScalaFutures {
